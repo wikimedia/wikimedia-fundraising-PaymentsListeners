@@ -1,0 +1,46 @@
+<?php
+/**
+ * This is an example of how you might run the stompPFPPendingProcessingSA
+ *
+ * It's just an example, so do what you want.  Take a look in 
+ * stompPFPPendingProcessingSA to see more about how things work.
+ * 
+ * @author Arthur Richards <arichards@wikimedia.org>
+ * @TODO command line argument processing
+ */
+
+
+// define a file where you can log the output from the listener
+$log_file = "logs/out_" . date( 'Ymd' ) . '.log';
+// create a file resource pointer
+$output_handle = fopen( $log_file, 'a' );
+
+// require the actual listener
+require_once( 'stompPFPPendingProcessorSA.php' );
+
+// set some configuration variables (for more info, check in PaypalIPNListener.php
+$config = array (
+	'pfp_url' => 'https://payflowpro.paypal.com',
+	'pfp_partner_id' => '',
+	'pfp_vendor_id' => '',
+	'pfp_user_id' => '',
+	'pfp_password' => '',
+	'activemq_stomp_uri' => '',
+	'activemq_pending_queue' => '',
+	'activemq_confirmed_queue' => '',
+	'batch_size' => 20,
+	'log_level' => 2,
+	'stomp_path' => 'stomp/Stomp.php',
+	'output_handle' => $output_handle );
+
+// instantaite the processor with our config options
+$processor = new StompPFPPendingProcessorSA( $config );
+
+$processor->execute();
+
+// shutdown the processor
+unset( $processor );
+
+// cleanly close the file pointer for output
+fclose( $output_handle );
+?>
