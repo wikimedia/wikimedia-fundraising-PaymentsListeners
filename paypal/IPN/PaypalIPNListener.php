@@ -158,22 +158,25 @@ class PaypalIPNProcessor {
 			$this->out( "Message: " . print_r( $contribution, TRUE ), LOG_LEVEL_DEBUG );
 		}
 
-
-		//verify the message with PayPal
-		if ( !$this->ipn_verify( $data )) {
-			$this->out( "Message did not pass PayPal verification." );
-			$this->out( "\$_POST contents: " . print_r( $data, TRUE ), LOG_LEVEL_DEBUG );
-			return;
-		}
-
-		// pull the message off of the pending queue using a 'selector' to make sure we're getting the right msg
+		// define a selector property for pulling a particular msg off the queue
 		$properties['selector'] = "JMSCorrelationID = '" . $this->tx_id . "'";
+
+		// pull the message object from the pending queue without completely removing it 
 		$this->out( "Attempting to pull mssage from pending queue with JMSCorrelationID = " . $this->tx_id, LOG_LEVEL_DEBUG );
 		$msg = $this->fetch_message( $this->pending_queue, $properties );
 		if ( $msg ) {
 			$this->out( "Pulled message from pending queue: " . print_r( json_decode( $msg ), TRUE ), LOG_LEVEL_DEBUG);
 		} else {
 			$this->out( "FAILED retrieving message from pending queue.", LOG_LEVEL_DEBUG );
+			return;
+		}
+		
+		//verify the message with PayPal
+		if ( !$this->ipn_verify( $data )) {
+			// remove the message from pending queue
+			$this->dequeue_message( $msg );
+			$this->out( "Message did not pass PayPal verification." );
+			$this->out( "\$_POST contents: " . print_r( $data, TRUE ), LOG_LEVEL_DEBUG );
 			return;
 		}
 
@@ -185,10 +188,7 @@ class PaypalIPNProcessor {
 		}
 
 		// remove from pending
-		$this->out( "Attempting to remove message from pending.", LOG_LEVEL_DEBUG );
-		if ( !$this->stomp->ack( $msg )) {
-			$this->out( "There was a problem remoivng the verified message from the pending queue: " . print_r( json_decode( $msg, TRUE )));
-		}
+		$this->dequeue_message( $msg );
 	}
 
 	/**
@@ -349,6 +349,19 @@ class PaypalIPNProcessor {
         return $sent;
     }   
 
+    /**
+     * Remove a message from the queue.
+     * @param bool $msg
+     */
+    public function dequeue_message( $msg ) {
+    	$this->out( "Attempting to remove message from pending.", LOG_LEVEL_DEBUG );
+		if ( !$this->stomp->ack( $msg )) {
+			$this->out( "There was a problem remoivng the verified message from the pending queue: " . print_r( json_decode( $msg, TRUE )));
+			return false;
+		}
+		return true;
+    }
+    
     /**
      * Fetch latest raw message from a queue
      *
