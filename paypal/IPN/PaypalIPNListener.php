@@ -143,7 +143,7 @@ class PaypalIPNProcessor {
 
 		// generate a unique id for the message 2 ensure we're manipulating the correct message later on
 		$tx_id = time() . '_' . mt_rand(); //should be sufficiently unique...
-		$headers = array( 'persistent' => TRUE, 'JMSCorrelationID' => $tx_id );
+		$headers = array( 'persistent' => 'true', 'JMSCorrelationID' => $tx_id );
 		$this->out( "Setting JMSCorrelationID: $tx_id", LOG_LEVEL_DEBUG );
 
 		// do the queueing - perhaps move out the tracking checking to its own func?
@@ -337,7 +337,7 @@ class PaypalIPNProcessor {
      * @param $options array of additional Stomp options
      * @return bool result from send, FALSE on failure
      */
-    public function queue_message( $destination, $message, $options = array( 'persistent' => TRUE )) {
+    public function queue_message( $destination, $message, $options = array( 'persistent' => 'true' )) {
         $this->out( "Attempting to queue message to $destination", LOG_LEVEL_DEBUG );
         $sent = $this->stomp->send( $destination, $message, $options );
         $this->out( "Result of queuing message: $sent", LOG_LEVEL_DEBUG );
