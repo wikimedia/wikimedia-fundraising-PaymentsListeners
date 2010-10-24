@@ -80,6 +80,11 @@ class PaypalIPNProcessor {
 	protected $output_handle = NULL;
 
 	/**
+	 * @var string A unique ID to identify a message
+	 */
+	public $tx_id = NULL;
+	
+	/**
 	 * Class constructor, sets configurable parameters
 	 *
 	 * @param $opts array of key, value pairs where the 'key' is the parameter name and the
@@ -98,6 +103,9 @@ class PaypalIPNProcessor {
 			unset( $opts[ 'output_handle' ] );
 		}
 
+		// generate a unique id for the message 2 ensure we're manipulating the correct message later on
+		$this->tx_id = time() . '_' . mt_rand(); //should be sufficiently unique...
+		
 		$this->out( "Loading Paypal IPN processor with log level: " . $this->log_level ); 
 
 		// set parameters
@@ -141,10 +149,8 @@ class PaypalIPNProcessor {
 		//push message to pending queue
 		$contribution = $this->ipn_parse( $data );
 
-		// generate a unique id for the message 2 ensure we're manipulating the correct message later on
-		$tx_id = time() . '_' . mt_rand(); //should be sufficiently unique...
-		$headers = array( 'persistent' => 'true', 'JMSCorrelationID' => $tx_id );
-		$this->out( "Setting JMSCorrelationID: $tx_id", LOG_LEVEL_DEBUG );
+		$headers = array( 'persistent' => 'true', 'JMSCorrelationID' => $this->tx_id );
+		$this->out( "Setting JMSCorrelationID: $this->tx_id", LOG_LEVEL_DEBUG );
 
 		// do the queueing - perhaps move out the tracking checking to its own func?
 		if ( !$this->queue_message( $this->pending_queue, json_encode( $contribution ), $headers )) {
@@ -161,8 +167,8 @@ class PaypalIPNProcessor {
 		}
 
 		// pull the message off of the pending queue using a 'selector' to make sure we're getting the right msg
-		$properties['selector'] = "JMSCorrelationID = '$tx_id'";
-		$this->out( "Attempting to pull mssage from pending queue with JMSCorrelationID = $tx_id", LOG_LEVEL_DEBUG );
+		$properties['selector'] = "JMSCorrelationID = '" . $this->tx_id . "'";
+		$this->out( "Attempting to pull mssage from pending queue with JMSCorrelationID = " . $this->tx_id, LOG_LEVEL_DEBUG );
 		$msg = $this->fetch_message( $this->pending_queue, $properties );
 		if ( $msg ) {
 			$this->out( "Pulled message from pending queue: " . print_r( json_decode( $msg ), TRUE ), LOG_LEVEL_DEBUG);
@@ -400,7 +406,7 @@ class PaypalIPNProcessor {
 		$out = NULL;
 
 		// format the output message if the apropriate log level is set
-		if ( $this->log_level >= $level ) $out = date( 'c' ) . ": " . $msg . "\n";
+		if ( $this->log_level >= $level ) $out = date( 'c' ) . "\t" . $this->tx_id . "\t" . $msg . "\n";
 
 		// if we have an output resource handle, write to the resource.  otherwise, echo
 		if ( $this->output_handle ) {
