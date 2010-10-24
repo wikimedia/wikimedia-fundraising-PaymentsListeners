@@ -248,9 +248,8 @@ class PaypalIPNProcessor {
 			// get the database connection to the tracking table
 			$this->contribution_tracking_connection();
 			$tracking_data = $this->get_tracking_data( $post_data['option_selection1'] );
-			if ( !$tracking_data ) { //we have a problem!
+			if ( !$tracking_data ) { //we have a problem! The received contribution tracking id does not match anything in the db...
 				$this->out( "There is no contribution ID associated with this transaction." );
-				exit();
 			}
 			$contribution['contribution_tracking_id'] = $post_data['option_selection1'];
 			$contribution['optout'] = $tracking_data['optout'];
@@ -270,13 +269,13 @@ class PaypalIPNProcessor {
 
 		$contribution['street_address'] = $split[0];
 		$contribution['supplemental_address_1'] = $split[1];
-    $contribution['city'] = $post_data['address_city'];
-    $contribution['state_province'] = $post_data['address_state'];
-    $contribution['country'] = $post_data['address_country_code'];
-    $contribution['postal_code'] = $post_data['address_zip'];
-
-    $contribution['gateway_txn_id'] = $post_data['txn_id'];
-    $contribution['original_currency'] = $post_data['mc_currency'];
+    	$contribution['city'] = $post_data['address_city'];
+    	$contribution['state_province'] = $post_data['address_state'];
+    	$contribution['country'] = $post_data['address_country_code'];
+    	$contribution['postal_code'] = $post_data['address_zip'];
+		$contribution[ 'gateway' ] = ( strlen( $post_data[ 'gateway' ] )) ? $post_data[ 'gateway' ] : 'paypal';
+    	$contribution['gateway_txn_id'] = $post_data['txn_id'];
+    	$contribution['original_currency'] = $post_data['mc_currency'];
 		$contribution['original_gross'] = $post_data['mc_gross'];
 		$contribution['fee'] = $post_data['mc_fee'];  
 		$contribution['gross'] = $post_data['mc_gross']; 
