@@ -171,8 +171,8 @@ class PaypalIPNProcessor {
 			return;
 		}
 		
-		//verify the message with PayPal
-		if ( !$this->ipn_verify( $data )) {
+		// check that the message is legitimate enough to consume
+		if ( !$this->msg_sanity_check( $data )) {
 			// remove the message from pending queue
 			$this->dequeue_message( $msg );
 			$this->out( "Message did not pass PayPal verification." );
@@ -192,6 +192,49 @@ class PaypalIPNProcessor {
 	}
 
 	/**
+	 * Perform message sanity check
+	 *  
+	 * A warpper for various message verification methods.
+	 * At the moment this includes checking for our required fields and
+	 * then verifying the message a authentic against PayPal's IPN service
+	 * @param array $data
+	 */
+	public function msg_sanity_check( $data ) {
+		if ( !$this->msg_check_reqd_fields( $data )) {
+			return false;
+		}
+		
+		if ( !$this->ipn_verify( $data )) {
+			return false;
+		}
+		
+		return true;
+	}
+	
+	/**
+	 * Make sure that our criteria are met for a consumable message
+	 * 
+	 * I realize that the criteria this currenctly checks is probably not fully
+	 * complete.  Still pulling together a definition for req'd fields.
+	 * This was essentially pulled out of old fundcore_paypal_verify()
+	 * @param array $data
+	 * @return bool
+	 */
+	public function msg_check_reqd_fields( $data ) {
+		if ( $data[ 'payment_status' ] != 'Completed' ) {
+			// order not completed
+			$this->out( "Message not marked as complete." );
+			return false;
+		}
+
+		if ( $data[ 'mc_gross' ] <= 0 ) {
+			$this->out( "Message has 0 or less in the mc_gross field." );
+			return false;
+		}		
+		return true;
+	}
+	
+	/**
 	 * Verify IPN's message validitiy
 	 * 
 	 * Yoinked from fundcore_paypal_verify() in fundcore/gateways/fundcore_paypal.module Drupal module
@@ -199,36 +242,44 @@ class PaypalIPNProcessor {
 	 * @return bool
 	 */
 	public function ipn_verify( $post_data ) {
-		if ( $post_data[ 'payment_status' ] != 'Completed' ) {
-			// order not completed
-			$this->out( "Message not marked as complete." );
-			return FALSE;
-		}
-
-		if ( $post_data[ 'mc_gross' ] <= 0 ) {
-			$this->out( "Message has 0 or less in the mc_gross field." );
-			return FALSE;
-		}			
-
 		// url to respond to paypal with verification response
 		$postback_url = 'https://www.paypal.com/cgi-bin/webscr'; // should this be configurable?
-		if (isset($post_data['test_ipn'])) {
+		if ( isset( $post_data[ 'test_ipn' ] )) {
 			$postback_url = 'https://www.sandbox.paypal.com/cgi-bin/webscr';
 		}
 
 		// respond with exact same data/structure + cmd=_notify-validate
 		$attr = $post_data;
-		$attr['cmd'] = '_notify-validate';
+		$attr[ 'cmd' ] = '_notify-validate';
 							    
 		// send the message back to PayPal for verification
 		$status = $this->curl_download( $postback_url, $attr );
 		if ($status != 'VERIFIED') {
-			$this->out( "The message could not be verified." );
+			$this->out( "The message could not be verified by PayPal." );
 			$this->out( "Returned with status: $status", LOG_LEVEL_DEBUG );
-			return FALSE;
+			
+			// send email to configured recipients notifying them of the PayPal verification failure
+			if ( $this->email_recipients && count( $this->email_recipients )) {
+				$to = implode( ", ", $this->email_recipients );
+				$subject = "IPN Listener verification failure for message " . $this->trxn_id;
+				$msg = "Greetings!\n\n";
+				$msg .= "You are receiving this message because a transaction that was psoted to the ";
+				$msg .= "PayPal IPN listener failed PayPal verification.  The contents of the original ";
+				$msg .= "payload are below:\n\n";
+				$msg .= print_r( $post_data, true );
+				$msg .= "\n\n";
+				$msg .= "The IPN listener-assigned trxn id for this transaction is: " . $this->trxn_id . "\n\n";
+				$msg .= "Good luck figuring out wtf happened!\n\n";
+				$msg .= "Love always,\n";
+				$msg .= "Your faithful IPN listener";
+				mail( $to, $subject, $msg );
+				$this->out( "Verification failure email sent to " . $to );
+			}
+			
+			return false;
 		}
 
-		return TRUE;
+		return true;
 	}
 
 	/**

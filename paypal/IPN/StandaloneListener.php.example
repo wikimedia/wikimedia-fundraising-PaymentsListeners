@@ -32,6 +32,7 @@ $config = array(
   'contrib_db_password' => 'password',
   'contrib_db_name' => 'drupal',
   'output_handle' => $output_handle, // filesystem pointer resource for logging output
+  'email_recipients' => array( 'test@example.com' ), // email address for recipients of notification emails
 );
 
 
