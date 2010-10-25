@@ -175,7 +175,7 @@ class PaypalIPNProcessor {
 		if ( !$this->msg_sanity_check( $data )) {
 			// remove the message from pending queue
 			$this->dequeue_message( $msg );
-			$this->out( "Message did not pass PayPal verification." );
+			$this->out( "Message did not pass sanity check." );
 			$this->out( "\$_POST contents: " . print_r( $data, TRUE ), LOG_LEVEL_DEBUG );
 			return;
 		}
