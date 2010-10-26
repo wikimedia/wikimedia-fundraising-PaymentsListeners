@@ -233,7 +233,7 @@ class PaypalIPNProcessor {
 			$pass = false;
 		}
 
-		if ( is_null( $data[ 'email' ] )) {
+		if ( is_null( $data[ 'payer_email' ] )) {
 			$this->out( 'Message has no email address.' );
 			$pass = false;
 		}
