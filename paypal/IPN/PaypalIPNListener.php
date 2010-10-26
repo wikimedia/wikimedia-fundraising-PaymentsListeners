@@ -221,17 +221,23 @@ class PaypalIPNProcessor {
 	 * @return bool
 	 */
 	public function msg_check_reqd_fields( $data ) {
+		$pass = true;
 		if ( $data[ 'payment_status' ] != 'Completed' ) {
 			// order not completed
 			$this->out( "Message not marked as complete." );
-			return false;
+			$pass = false;
 		}
 
 		if ( $data[ 'mc_gross' ] <= 0 ) {
 			$this->out( "Message has 0 or less in the mc_gross field." );
-			return false;
-		}		
-		return true;
+			$pass = false;
+		}
+
+		if ( is_null( $data[ 'email' ] )) {
+			$this->out( 'Message has no email address.' );
+			$pass = false;
+		}
+		return $pass;
 	}
 	
 	/**
