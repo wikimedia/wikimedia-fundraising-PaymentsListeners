@@ -7,7 +7,7 @@
  */
 
 // include the original IPN listner
-require_once( dirname(__FILE__) . 'PaypalIPNListener.php' );
+require_once( dirname(__FILE__) . '/PaypalIPNListener.php' );
 
 class PaypalRecurringIPNProcessor extends PaypalIPNProcessor {
 
