@@ -40,4 +40,18 @@ class PaypalRecurringIPNProcessor extends PaypalIPNProcessor {
 		
 		return $pass;
 	}
+	
+	/**
+	 * Parse the PayPal message/post data into the format we need for ActiveMQ
+	 *
+	 * Overload parent's ipn_parse method.  Just using this to pass the raw message 
+	 * from PayPal, for now.
+	 * 
+	 * @param $post_data array containing the $_POST data from PayPal
+	 * @return array containing the parsed/formatted message for stuffing into ActiveMQ
+	 */
+	public function ipn_parse( $post_data ) {
+		$this->out( "Attempting to parse: " . print_r( $post_data, TRUE ), LOG_LEVEL_DEBUG );
+		return $post_data;
+	}
 }
