@@ -300,24 +300,19 @@ class PaypalIPNProcessor {
 
 		$timestamp = strtotime($post_data['payment_date']);
 
-		// Detect if we're using the new-style (likely unique to Wikimedia) - this should be handled elsewhere
-		if (is_numeric($post_data['option_selection1'])) {
-			// get the database connection to the tracking table
-			$this->contribution_tracking_connection();
-			$tracking_data = $this->get_tracking_data( $post_data['option_selection1'] );
-			if ( !$tracking_data ) { //we have a problem! The received contribution tracking id does not match anything in the db...
-				$this->out( "There is no contribution ID associated with this transaction." );
-			}
-			$contribution['contribution_tracking_id'] = $post_data['option_selection1'];
-			$contribution['optout'] = $tracking_data['optout'];
-			$contribution['anonymous'] = $tracking_data['anonymous'];
-			$contribution['comment'] = $tracking_data['note'];
-		} else {
-			$split = explode(';', $post_data['option_selection1']);
-			$contribution['anonymous'] = ($split[0] != 'public' && $split[0] != 'Mention my name');
-			$contribution['comment'] = $post_data['option_selection2'];
+		// get the database connection to the tracking table
+		$this->contribution_tracking_connection();
+		$tracking_data = $this->get_tracking_data( $post_data['custom'] );
+		if ( !$tracking_data ) { //we have a problem! The received contribution tracking id does not match anything in the db...
+			$this->out( "There is no contribution ID associated with this transaction." );
 		}
+		$contribution['contribution_tracking_id'] = $post_data['custom'];
+		$contribution['optout'] = $tracking_data['optout'];
+		$contribution['anonymous'] = $tracking_data['anonymous'];
+		$contribution['comment'] = $tracking_data['note'];
 
+		$contribution['size'] = $post_data['option_selection0'];
+		$contribution['language'] = $post_data['option_selection1'];
 		$contribution['email'] = $post_data['payer_email'];
 		$contribution['first_name'] = $post_data['first_name'];
 		$contribution['last_name'] = $post_data['last_name'];
@@ -330,7 +325,7 @@ class PaypalIPNProcessor {
     	$contribution['state_province'] = $post_data['address_state'];
     	$contribution['country'] = $post_data['address_country_code'];
     	$contribution['postal_code'] = $post_data['address_zip'];
-		$contribution[ 'gateway' ] = ( strlen( $post_data[ 'gateway' ] )) ? $post_data[ 'gateway' ] : 'paypal';
+		$contribution['gateway'] = ( strlen( $post_data[ 'gateway' ] )) ? $post_data[ 'gateway' ] : 'paypal';
     	$contribution['gateway_txn_id'] = $post_data['txn_id'];
     	$contribution['original_currency'] = $post_data['mc_currency'];
 		$contribution['original_gross'] = $post_data['mc_gross'];
