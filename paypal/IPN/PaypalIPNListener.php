@@ -310,34 +310,44 @@ class PaypalIPNProcessor {
 		$contribution['optout'] = $tracking_data['optout'];
 		$contribution['anonymous'] = $tracking_data['anonymous'];
 		$contribution['comment'] = $tracking_data['note'];
-
+		$contribution['email'] = $post_data['payer_email'];
+		
+		// Premium info
 		$contribution['size'] = $post_data['option_selection1'];
 		$contribution['premium_language'] = $post_data['option_selection2'];
-		$contribution['email'] = $post_data['payer_email'];
+		
+		// Contact info
 		$contribution['first_name'] = $post_data['first_name'];
 		$contribution['last_name'] = $post_data['last_name'];
-		
-		$split = split(" ", $post_data['address_name']);
-		$contribution['last_name_2'] = array_pop($split);
-		$contribution['first_name_2'] = implode(" ", $split);
-		
 		$split = split("\n", str_replace("\r", '', $post_data['address_street']));
 		$contribution['street_address'] = $split[0];
 		$contribution['supplemental_address_1'] = $split[1];
+		$contribution['city'] = $post_data['address_city'];
+		$contribution['state_province'] = $post_data['address_state'];
+		$contribution['country'] = $post_data['address_country_code'];
+		$contribution['postal_code'] = $post_data['address_zip'];
 		
-    	$contribution['city'] = $post_data['address_city'];
-    	$contribution['state_province'] = $post_data['address_state'];
-    	$contribution['country'] = $post_data['address_country_code'];
-    	$contribution['postal_code'] = $post_data['address_zip'];
+		// Shipping info (address same as above since PayPal only passes 1 address)
+		$split = split(" ", $post_data['address_name']);
+		$contribution['last_name_2'] = array_pop($split);
+		$contribution['first_name_2'] = implode(" ", $split);
+		$split = split("\n", str_replace("\r", '', $post_data['address_street']));
+		$contribution['street_address_2'] = $split[0];
+		$contribution['supplemental_address_2'] = $split[1];
+		$contribution['city_2'] = $post_data['address_city'];
+		$contribution['state_province_2'] = $post_data['address_state'];
+		$contribution['country_2'] = $post_data['address_country_code'];
+		$contribution['postal_code_2'] = $post_data['address_zip'];
+		
 		$contribution['gateway'] = ( strlen( $post_data[ 'gateway' ] )) ? $post_data[ 'gateway' ] : 'paypal';
-    	$contribution['gateway_txn_id'] = $post_data['txn_id'];
-    	$contribution['original_currency'] = $post_data['mc_currency'];
+		$contribution['gateway_txn_id'] = $post_data['txn_id'];
+		$contribution['original_currency'] = $post_data['mc_currency'];
 		$contribution['original_gross'] = $post_data['mc_gross'];
 		$contribution['fee'] = $post_data['mc_fee'];  
 		$contribution['gross'] = $post_data['mc_gross']; 
 		$contribution['net'] = $contribution['gross'] - $contribution['fee'];
 		$contribution['date'] = $timestamp;
-
+		
 		return $contribution;
 	}
 
