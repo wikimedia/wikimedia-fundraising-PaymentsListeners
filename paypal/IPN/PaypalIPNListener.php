@@ -316,11 +316,14 @@ class PaypalIPNProcessor {
 		$contribution['email'] = $post_data['payer_email'];
 		$contribution['first_name'] = $post_data['first_name'];
 		$contribution['last_name'] = $post_data['last_name'];
-		$contribution['address_name'] = $post_data['address_name'];
+		
+		$split = split(" ", $post_data['address_name']);
+		$contribution['last_name2'] = array_pop($split);
+		$contribution['last_name1'] = $split;
 		
 		$split = split("\n", str_replace("\r", '', $post_data['address_street']));
-
 		$contribution['street_address'] = $split[0];
+		
 		$contribution['supplemental_address_1'] = $split[1];
     	$contribution['city'] = $post_data['address_city'];
     	$contribution['state_province'] = $post_data['address_state'];
