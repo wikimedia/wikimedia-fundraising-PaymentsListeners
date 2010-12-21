@@ -323,8 +323,8 @@ class PaypalIPNProcessor {
 		
 		$split = split("\n", str_replace("\r", '', $post_data['address_street']));
 		$contribution['street_address'] = $split[0];
-		
 		$contribution['supplemental_address_1'] = $split[1];
+		
     	$contribution['city'] = $post_data['address_city'];
     	$contribution['state_province'] = $post_data['address_state'];
     	$contribution['country'] = $post_data['address_country_code'];
