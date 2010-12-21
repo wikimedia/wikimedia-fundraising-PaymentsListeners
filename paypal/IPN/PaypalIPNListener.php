@@ -316,7 +316,8 @@ class PaypalIPNProcessor {
 		$contribution['email'] = $post_data['payer_email'];
 		$contribution['first_name'] = $post_data['first_name'];
 		$contribution['last_name'] = $post_data['last_name'];
-
+		$contribution['address_name'] = $post_data['address_name'];
+		
 		$split = split("\n", str_replace("\r", '', $post_data['address_street']));
 
 		$contribution['street_address'] = $split[0];
