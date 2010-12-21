@@ -311,7 +311,7 @@ class PaypalIPNProcessor {
 		$contribution['anonymous'] = $tracking_data['anonymous'];
 		$contribution['comment'] = $tracking_data['note'];
 
-		$contribution['shirt_size'] = $post_data['option_selection0'];
+		$contribution['size'] = $post_data['option_selection0'];
 		$contribution['premium_language'] = $post_data['option_selection1'];
 		$contribution['email'] = $post_data['payer_email'];
 		$contribution['first_name'] = $post_data['first_name'];
