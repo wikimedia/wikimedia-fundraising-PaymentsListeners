@@ -319,7 +319,7 @@ class PaypalIPNProcessor {
 		
 		$split = split(" ", $post_data['address_name']);
 		$contribution['last_name_2'] = array_pop($split);
-		$contribution['last_name_1'] = $split;
+		$contribution['first_name_2'] = $split;
 		
 		$split = split("\n", str_replace("\r", '', $post_data['address_street']));
 		$contribution['street_address'] = $split[0];
