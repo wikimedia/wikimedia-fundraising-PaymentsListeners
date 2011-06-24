@@ -1,0 +1,17 @@
+;enter your creds here!
+;Once you have these filled out, remove the "-dist" from the extension. 
+
+[payflow_pro]
+
+pfp_url = ''
+pfp_partner_id = ''
+pfp_vendor_id =''
+pfp_user_id = ''
+pfp_password = ''
+
+[stomp]
+
+activemq_stomp_uri = ''
+activemq_pending_queue = ''
+activemq_confirmed_queue = ''
+stomp_path = ''
