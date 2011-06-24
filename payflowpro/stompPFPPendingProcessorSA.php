@@ -113,13 +113,17 @@ class StompPFPPendingProcessorSA {
 			} else {
 				$this->log("No PFP Credentials!");
 				if (isset($this->test_mode)) {
-					$this->log("Test mode enabled. Returning PFP code 126.");
-					$result_code = 126;
+					if(isset($this->test_code)){
+						$result_code = $this->test_code;
+					} else {
+						$result_code = 126;
+					}
+					$this->log("Test mode enabled. Returning PFP code $result_code.");
 				}
 			}
 
 			// handle the pending transaction based on the payflow pro result code
-			if ($result_code) {
+			if ($result_code !== false) {
 				$this->handle_pending_transaction($result_code, json_encode($data['body']));
 				sleep(1);  //OMG^2. Yes, even in this position, this is necessary.
 				//TODO: better slight pause. I don't want to sleep for a whole second.
@@ -142,7 +146,9 @@ class StompPFPPendingProcessorSA {
 	protected function fetch_message($destination) {
 		$this->log("Attempting to connect to queue at: $destination", LOG_LEVEL_DEBUG);
 
-		$this->stomp->subscribe($destination, array('ack' => 'client'));
+		$returned = $this->stomp->subscribe($destination, array('ack' => 'client'));
+		$this->log(print_r($returned, true) . ": Returned by subscribe");
+		$this->log(print_r($this->stomp->_subscriptions, true) . ": Stomp subscription array");
 
 		$this->log("Attempting to pull queued item", LOG_LEVEL_DEBUG);
 		$message = $this->stomp->readFrame();
