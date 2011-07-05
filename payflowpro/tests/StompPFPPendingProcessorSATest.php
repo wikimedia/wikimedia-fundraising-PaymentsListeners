@@ -493,7 +493,7 @@ class StompPFPPendingProcessorSATest extends ActiveMQStompTest {
 		foreach ($this->config_base as $thing => $otherthing) {
 			if (trim($otherthing) != '') {
 				if ($thing == 'pfp_user_id' || $thing == 'pfp_password'){
-					$this->logCheckArrayAdd("$thing =  [set, but not logged]", "Setting $thing was not logged.", $checkLogItems);
+					$this->logCheckArrayAdd("$thing =  [set, but not logged]", "Setting $thing was logged! Please remove this sensitive information.", $checkLogItems);
 				} else {
 					$this->logCheckArrayAdd("$thing =  $otherthing", "Setting $thing was not logged.", $checkLogItems);
 				}

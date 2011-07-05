@@ -148,7 +148,6 @@ class StompPFPPendingProcessorSA {
 
 		$returned = $this->stomp->subscribe($destination, array('ack' => 'client'));
 		$this->log(print_r($returned, true) . ": Returned by subscribe");
-		$this->log(print_r($this->stomp->_subscriptions, true) . ": Stomp subscription array");
 
 		$this->log("Attempting to pull queued item", LOG_LEVEL_DEBUG);
 		$message = $this->stomp->readFrame();
@@ -370,8 +369,11 @@ class StompPFPPendingProcessorSA {
 
 			// set class property with the config option
 			$this->$option = $config[$option];
-
-			$this->log($option . " =  " . $this->$option, LOG_LEVEL_DEBUG);
+			if ($option == 'pfp_user_id' || $option == 'pfp_password'){
+				$this->log($option . " =  [set, but not logged]", LOG_LEVEL_DEBUG);
+			} else {
+				$this->log($option . " =  " . $this->$option, LOG_LEVEL_DEBUG);
+			}
 		}
 	}
 
