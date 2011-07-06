@@ -36,13 +36,16 @@ $config = array (
 // instantaite the processor with our config options
 $processor = new StompPFPPendingProcessorSA( $config );
 
-if ($processor->execute() === false){
-	exit(1); //Can't continue. The specific reason should already have been logged by the processor.
-}
+$success = $processor->execute();
 
 // shutdown the processor
 unset( $processor );
 
 // cleanly close the file pointer for output
 fclose( $output_handle );
+
+if ( $success === false){
+	exit(1); //Can't continue. The specific reason should already have been logged by the processor.
+}
+
 ?>
