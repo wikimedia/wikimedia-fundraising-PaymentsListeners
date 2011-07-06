@@ -139,6 +139,7 @@ class StompPFPPendingProcessorSA {
 		}
 
 		$this->log("Processed $i messages. (" . sizeof($this->message_cache) . " unique messages)");
+		return true;
 	}
 
 	/**

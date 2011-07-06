@@ -36,7 +36,9 @@ $config = array (
 // instantaite the processor with our config options
 $processor = new StompPFPPendingProcessorSA( $config );
 
-$processor->execute();
+if ($processor->execute() === false){
+	exit(1); //Can't continue. The specific reason should already have been logged by the processor.
+}
 
 // shutdown the processor
 unset( $processor );
