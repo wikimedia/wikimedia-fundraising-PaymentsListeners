@@ -206,6 +206,9 @@ class testPPPlogging extends StompPFPPendingProcessorSA {
 
 		// format the query string for PayflowPro
 		foreach ($queryArray as $name => $value) {
+			if ($name != 'PWD'){
+				$value = rawurlencode($value);
+			}
 			$query[] = $name . '[' . strlen($value) . ']=' . $value;
 		}
 		$payflow_query = implode('&', $query);
@@ -862,25 +865,8 @@ class StompPFPPendingProcessorSATest extends ActiveMQStompTest {
 	public function assertPendingTransactionLogs($transactions) {
 		global $logdata;
 		$ret = array();
-		$pendingLines = array();
-		foreach ($logdata as $line_no => $line_data) {
-			if (strpos($line_data, "Pending transaction:") > 0) {
-				$pendingLines[$line_no] = $line_data;
-			}
-		}
-
-		//at this point, the key and value of each $transactions is the same.
-		foreach ($transactions as $id => $transaction) {
-			foreach ($pendingLines as $line_no => $line_data) {
-				if (strpos($line_data, "[contribution_tracking_id] => $id") > 0) {
-					$transactions[$id] = $line_no;
-				}
-				break;
-			}
-			if (array_key_exists($transactions[$id], $pendingLines)) {
-				unset($pendingLines[$transactions[$id]]);
-			}
-		}
+		$pendingLines = $this->getLogLines("Pending transaction:");
+		$transactions = $this->mapTransactionsToLogLines($transactions, $pendingLines, "[contribution_tracking_id] => ");
 
 		//at this point, they are only still the same if a line was not found.
 		foreach ($transactions as $id => $logline) {
@@ -901,32 +887,14 @@ class StompPFPPendingProcessorSATest extends ActiveMQStompTest {
 	 * contain the entire stomp frame for the message with that ID.
 	 */
 	public function assertStompFrameLogs($transactions) {
-		//I realize I could abstract this out one further, but in the interests of getting this done in Ever...
-		//...copied from assertPendingTransactionLogs.
-		//test that it's in the log in complete message format, including json body
-		//  Line starts with "Stomp_Frame Object"
-		//  and contains "contribution_tracking_id":"$item_id"
 		global $logdata;
 		$ret = array();
-		$stompLines = array();
-		foreach ($logdata as $line_no => $line_data) {
-			if (strpos($line_data, "Stomp_Frame Object") > 0) {
-				$stompLines[$line_no] = $line_data;
-			}
-		}
+		$stompLines = $this->getLogLines("Stomp_Frame Object");
+		$transactions = $this->mapTransactionsToLogLines($transactions, $stompLines, '"contribution_tracking_id":"');
 
-		//at this point, the key and value of each $transactions is the same.
-		foreach ($transactions as $id => $transaction) {
-			foreach ($stompLines as $line_no => $line_data) {
-				if (strpos($line_data, '"contribution_tracking_id":"' . $id . '"') > 0) {
-					$transactions[$id] = $line_no;
-				}
-				break;
-			}
-			if (array_key_exists($transactions[$id], $stompLines)) {
-				unset($stompLines[$transactions[$id]]);
-			}
-		}
+		echo print_r($stompLines, true);
+		echo print_r($transactions, true);
+
 
 		//at this point, they are only still the same if a line was not found.
 		foreach ($transactions as $id => $logline) {
@@ -947,32 +915,10 @@ class StompPFPPendingProcessorSATest extends ActiveMQStompTest {
 	 * contain the message id and the result code.
 	 */
 	public function assertResultHandlingLogs($transactions) {
-		//::sigh::
-
-		//test for the next step line
-		//Handling transaction " . $msgarray['gateway_txn_id'] . " with code $result_code
-
 		global $logdata;
 		$ret = array();
-		$resultLines = array();
-		foreach ($logdata as $line_no => $line_data) {
-			if (strpos($line_data, "Handling transaction ") > 0) {
-				$resultLines[$line_no] = $line_data;
-			}
-		}
-
-		//at this point, the key and value of each $transactions is the same.
-		foreach ($transactions as $id => $transaction) {
-			foreach ($resultLines as $line_no => $line_data) {
-				if (strpos($line_data, $id) > 0) {
-					$transactions[$id] = $line_no;
-				}
-				break;
-			}
-			if (array_key_exists($transactions[$id], $resultLines)) {
-				unset($resultLines[$transactions[$id]]);
-			}
-		}
+		$resultLines = $this->getLogLines("Handling transaction ");
+		$transactions = $this->mapTransactionsToLogLines($transactions, $resultLines);
 
 		$forced_code = false;
 		if (isset($this->processor->test_code)){
@@ -1094,6 +1040,51 @@ class StompPFPPendingProcessorSATest extends ActiveMQStompTest {
 				unset($array[$whocares]);
 			}
 		}
+	}
+
+	/**
+	 * Pulls lines from the log that match a search parameter
+	 *
+	 * @param $match String The string we are scanning the log for.
+	 * @return array An array of [$line_no]=>$line_data for all log line matches
+	 */
+	public function getLogLines($match){
+		global $logdata;
+		$resultLines = array();
+		foreach ($logdata as $line_no => $line_data) {
+			if (strpos($line_data, $match) > 0) {
+				$resultLines[$line_no] = $line_data;
+			}
+		}
+		return $resultLines;
+	}
+
+	/**
+	 * Maps an array of transaction IDs to the log lines that contain them.
+	 * Assumes that the $loglines array was already pared down by some
+	 * parameter so both parameters would be roughly 1:1. If they are not, it
+	 * would just return the --last-- instance of the transaction in the log
+	 * (and be wildly inefficient).
+	 *
+	 * @param $transactions Array An array of transactions we are looking for.
+	 * @param $loglines Array An array of loglines which probably contain
+	 * mentions of $transactions
+	 * @return array An array of $transaction=>$line_no, or
+	 * $transaction=>$transaction if no match was found.
+	 */
+	public function mapTransactionsToLogLines($transactions, $loglines, $prefix = ''){
+		foreach ($transactions as $id => $transaction) {
+			foreach ($loglines as $line_no => $line_data) {
+				if (strpos($line_data, $prefix . $id) > 0) {
+					$transactions[$id] = $line_no;
+				}
+				break;
+			}
+			if (array_key_exists($transactions[$id], $loglines)) { //gofaster.
+				unset($loglines[$transactions[$id]]);
+			}
+		}
+		return $transactions;
 	}
 }
 ?>

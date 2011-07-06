@@ -109,7 +109,11 @@ class StompPFPPendingProcessorSA {
 				$status = $this->fetch_payflow_transaction_status($data['body']['gateway_txn_id']);
 
 				// determine the result code from the payflow pro status message
-				$result_code = $this->parse_payflow_transaction_status($status);
+				if ($status !== false){
+					$result_code = $this->parse_payflow_transaction_status($status);
+				} else {
+					$result_code = false;
+				}
 			} else {
 				$this->log("No PFP Credentials!");
 				if (isset($this->test_mode)) {
@@ -124,7 +128,7 @@ class StompPFPPendingProcessorSA {
 
 			// handle the pending transaction based on the payflow pro result code
 			if ($result_code !== false) {
-				$this->handle_pending_transaction($result_code, json_encode($data['body']));
+				$this->handle_pending_transaction($result_code, json_encode($data['body']), $data['body']['gateway_txn_id']);
 				sleep(1);  //OMG^2. Yes, even in this position, this is necessary.
 				//TODO: better slight pause. I don't want to sleep for a whole second.
 				//Certainly not if Paypal already ate that second. Dumb.
@@ -215,6 +219,9 @@ class StompPFPPendingProcessorSA {
 
 		// format the query string for PayflowPro		
 		foreach ($queryArray as $name => $value) {
+			if ($name != 'PWD'){
+				$value = rawurlencode($value);
+			}
 			$query[] = $name . '[' . strlen($value) . ']=' . $value;
 		}
 		$payflow_query = implode('&', $query);
@@ -225,7 +232,7 @@ class StompPFPPendingProcessorSA {
 		if(array_key_exists('HTTP_USER_AGENT', $_SERVER)){
 			$user_agent = $_SERVER['HTTP_USER_AGENT'];
 		} else {
-			$user_agent = "blargh?";
+			$user_agent = false;
 		}
 		$headers[] = 'Content-Type: text/namevalue';
 		$headers[] = 'Content-Length : ' . strlen($payflow_query);
@@ -235,7 +242,9 @@ class StompPFPPendingProcessorSA {
 
 		curl_setopt($ch, CURLOPT_URL, $this->pfp_url);
 		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-		curl_setopt($ch, CURLOPT_USERAGENT, $user_agent);
+		if ($user_agent !== false){
+			curl_setopt($ch, CURLOPT_USERAGENT, $user_agent);
+		}
 		curl_setopt($ch, CURLOPT_HEADER, 1);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 		curl_setopt($ch, CURLOPT_TIMEOUT, 90);
@@ -264,7 +273,7 @@ class StompPFPPendingProcessorSA {
 		if ($headers['http_code'] != 200) {
 			$this->log("No response from PayflowPro after $i attempts.");
 			curl_close($ch);
-			exit(1);
+			return false;
 		}
 
 		curl_close($ch);
@@ -315,10 +324,10 @@ class StompPFPPendingProcessorSA {
 	 *
 	 * @param int PayflowPro result code
 	 * @param string Formatted message to send to a queue
+	 * @param string Transaction ID (for logging)
 	 */
-	protected function handle_pending_transaction($result_code, $message) {
-		$msgarray = json_decode($message, true);
-		$this->log("Handling transaction " . $msgarray['gateway_txn_id'] . " with code $result_code");
+	protected function handle_pending_transaction($result_code, $message, $transaction) {
+		$this->log("Handling transaction " . $transaction . " with code $result_code");
 		switch ($result_code) {
 			case "0": // push to confirmed queue
 				$this->log("Attempting to push message to confirmed queue: " . print_r($message, TRUE), LOG_LEVEL_DEBUG);
