@@ -165,7 +165,7 @@ class PaypalIPNProcessor {
 		$this->out( "Attempting to pull mssage from pending queue with JMSCorrelationID = " . $this->tx_id, LOG_LEVEL_DEBUG );
 		$msg = $this->fetch_message( $this->pending_queue, $properties );
 		if ( $msg ) {
-			$this->out( "Pulled message from pending queue: " . print_r( json_decode( $msg ), TRUE ), LOG_LEVEL_DEBUG);
+			$this->out( "Pulled message from pending queue: " . $msg, LOG_LEVEL_DEBUG);
 		} else {
 			$this->out( "FAILED retrieving message from pending queue.", LOG_LEVEL_DEBUG );
 			return;
