@@ -16,7 +16,7 @@
  *
  *
  * @category	UnitTesting
- * @package		Fundraising_Miscellaneous
+ * @package		Fundraising_QueueHandling
  * @license		http://www.gnu.org/copyleft/gpl.html GNU GENERAL PUBLIC LICENSE
  * @since		r462
  * @author		Jeremy Postlethwaite <jpostlethwaite@wikimedia.org>
