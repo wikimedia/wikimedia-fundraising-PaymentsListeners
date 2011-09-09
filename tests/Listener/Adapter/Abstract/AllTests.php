@@ -31,6 +31,8 @@ if ( !defined( 'PHPUNIT_MAIN_METHOD' ) ) {
 // Debug::dump(__FILE__, eval(DUMP) . "__FILE__", false);
 
 require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'ConstructorTestCase.php';
+require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'GetAdapterTypeTestCase.php';
+require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'LogFileTestCase.php';
 require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'LogLevelTestCase.php';
 
 /**
@@ -63,6 +65,8 @@ class Listener_Adapter_Abstract_AllTests
 		$suite = new PHPUnit_Framework_TestSuite( 'Queue Handling - Listener - Adapter - Abstract Suite' );
 
 		$suite->addTestSuite( 'Listener_Adapter_Abstract_ConstructorTestCase' );
+		$suite->addTestSuite( 'Listener_Adapter_Abstract_GetAdapterTypeTestCase' );
+		$suite->addTestSuite( 'Listener_Adapter_Abstract_LogFileTestCase' );
 		$suite->addTestSuite( 'Listener_Adapter_Abstract_LogLevelTestCase' );
 
 		return $suite;

@@ -36,6 +36,13 @@ abstract class Listener_Adapter_Abstract
 {
 
 	/**
+	 * The log file
+	 *
+	 * @var string logFile
+	 */
+	protected $logFile = '';
+
+	/**
 	 * The log level
 	 *
 	 * @see Listener::LOG_LEVEL_QUIET
@@ -45,6 +52,15 @@ abstract class Listener_Adapter_Abstract
 	 * @var integer logLevel
 	 */
 	protected $logLevel = Listener::LOG_LEVEL_QUIET;
+
+	/**
+	 * outputHandle
+	 *
+	 * This is a resource created by fopen.
+	 *
+	 * @var resource outputHandle
+	 */
+	protected $outputHandle;
 	
 	/**
 	 * Constructor
@@ -61,6 +77,54 @@ abstract class Listener_Adapter_Abstract
 		if ( isset( $logLevel ) ) {
 			$this->setLogLevel( $logLevel );
 		}
+	}
+	
+	/**
+	 * getAdapterType
+	 */
+	public function getAdapterType()
+	{
+		$calledClass = get_called_class();
+		
+		return $calledClass::ADAPTER;
+	}
+	
+	/**
+	 * setLogFile
+	 *
+	 * @param string $file The log file
+	 */
+	public function setLogFile( $file = '' )
+	{
+	    if ( empty( $file ) ) {
+	        $file = BASE_PATH . '/logs/' . strtolower( $this->getAdapterType() ) . '/' . date( 'Ymd' ) . '.log';
+	    }
+
+	    $directory = dirname( $file );
+
+	    // Verify directory exists.
+	    if ( !is_dir( $directory ) ) {
+	        $message = 'The directory for the output log does not exist. Please create: ' . $directory;
+	        throw new Listener_Exception( $message );
+	    }
+
+	    // Verify directory is writable.
+	    if ( !is_writable( $directory ) ) {
+	        $message = 'The directory for the output log is not writable. Please chmod +rw: ' . $directory;
+	        throw new Listener_Exception( $message );
+	    }
+	    
+		$this->logFile = $file;
+	}
+	
+	/**
+	 * getLogFile
+	 *
+	 * @return Return the log file
+	 */
+	public function getLogFile()
+	{
+		return $this->logFile;
 	}
 	
 	/**
@@ -81,5 +145,35 @@ abstract class Listener_Adapter_Abstract
 	public function getLogLevel()
 	{
 		return $this->logLevel;
+	}
+	
+	/**
+	 * setOutputHandle
+	 *
+	 * Log files are always opened with the 'a' append flag for writing only.
+	 *
+	 * @param string $logFile    OPTIONAL    The path to a log file
+	 */
+	public function setOutputHandle( $logFile = '' )
+	{
+	    if ( empty( $logFile ) ) {
+	        
+	        // Create a default log file name
+	        $this->setLogFile();
+	        
+	        $logFile = $this->getLogFile();
+	    }
+	    
+		$this->outputHandle = fopen( $logFile, 'a' );
+	}
+	
+	/**
+	 * getOutputHandle
+	 *
+	 * @return Return the output handle to the log
+	 */
+	public function getOutputHandle()
+	{
+		return $this->outputHandle;
 	}
 }

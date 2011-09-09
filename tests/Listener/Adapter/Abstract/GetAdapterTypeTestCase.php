@@ -15,7 +15,7 @@
  * GNU General Public License for more details.
  *
  *
- * @category	Fundraising
+ * @category	UnitTesting
  * @package		Fundraising_QueueHandling
  * @license		http://www.gnu.org/copyleft/gpl.html GNU GENERAL PUBLIC LICENSE
  * @since		r462
@@ -23,23 +23,37 @@
  */
 
 /**
- * @see Listener_Exception
+ * Require
  */
-require_once 'Listener/Adapter/Abstract.php';
+require_once dirname( dirname( dirname( dirname( __FILE__ ) ) ) ) . DIRECTORY_SEPARATOR . 'QueueHandlingTestCase.php';
 
 /**
+ * @group		Fundraising
+ * @group		QueueHandling
+ * @group		ClassMethod
+ * @group		ListenerAdapter
  *
- * @todo
- * - Implement factory
- *
- * @category	Fundraising
+ * @category	UnitTesting
  * @package		Fundraising_QueueHandling
  */
-class Listener_Adapter_GlobalCollect extends Listener_Adapter_Abstract
+class Listener_Adapter_Abstract_GetAdapterTypeTestCase extends QueueHandlingTestCase
 {
 
 	/**
-	 * Adapter name
+	 * testGetAdapterTypeForGlobalCollect
+	 *
+	 * @covers Listener_Adapter_Abstract::getAdapterType
 	 */
-	 const ADAPTER = 'GlobalCollect';
+	public function testGetAdapterTypeForGlobalCollect() {
+
+		// The parameters to pass to the factory.
+		$parameters = array();
+
+		// The adapter to pass to the factory.
+		$adapter = 'GlobalCollect';
+
+		$adapterInstance = Listener::factory( $adapter, $parameters );
+
+		$this->assertSame( $adapter, $adapterInstance->getAdapterType() );
+	}
 }
