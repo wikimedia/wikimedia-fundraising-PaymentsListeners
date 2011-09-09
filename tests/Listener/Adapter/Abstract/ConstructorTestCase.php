@@ -57,4 +57,26 @@ class Listener_Adapter_Abstract_ConstructorTestCase extends QueueHandlingTestCas
 		$this->assertInstanceOf( 'Listener_Adapter_GlobalCollect', $adapterInstance );
 	}
 
+	/**
+	 * testConstructorParametersWithSetLogLevelToInfo
+	 *
+	 * @covers Listener_Adapter_Abstract::setLogLevel
+	 * @covers Listener_Adapter_Abstract::getLogLevel
+	 * @covers Listener_Adapter_Abstract::__construct
+	 */
+	public function testConstructorParametersWithSetLogLevelToInfo() {
+
+		// The parameters to pass to the factory.
+		$parameters = array(
+			'logLevel' => Listener::LOG_LEVEL_INFO,
+		);
+
+		// The adapter to pass to the factory.
+		$adapter = 'GlobalCollect';
+
+		$adapterInstance = Listener::factory( $adapter, $parameters );
+
+		$this->assertSame( Listener::LOG_LEVEL_INFO, $adapterInstance->getLogLevel() );
+	}
+
 }

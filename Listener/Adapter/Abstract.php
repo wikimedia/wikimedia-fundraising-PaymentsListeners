@@ -36,6 +36,17 @@ abstract class Listener_Adapter_Abstract
 {
 
 	/**
+	 * The log level
+	 *
+	 * @see Listener::LOG_LEVEL_QUIET
+	 * @see Listener::LOG_LEVEL_INFO
+	 * @see Listener::LOG_LEVEL_DEBUG
+	 *
+	 * @var integer logLevel
+	 */
+	protected $logLevel = Listener::LOG_LEVEL_QUIET;
+	
+	/**
 	 * Constructor
 	 *
 	 * @param array $parameters The adapter parameters
@@ -43,5 +54,32 @@ abstract class Listener_Adapter_Abstract
 	 */
 	public function __construct( $parameters )
 	{
+		// Extract parameters.
+		extract( $parameters );
+		
+		// Set log level if passed from parameters.
+		if ( isset( $logLevel ) ) {
+			$this->setLogLevel( $logLevel );
+		}
+	}
+	
+	/**
+	 * setLogLevel
+	 *
+	 * @param integer $level The log level
+	 */
+	public function setLogLevel( $level )
+	{
+		$this->logLevel = (integer) $level;
+	}
+	
+	/**
+	 * getLogLevel
+	 *
+	 * @return Return the log level
+	 */
+	public function getLogLevel()
+	{
+		return $this->logLevel;
 	}
 }

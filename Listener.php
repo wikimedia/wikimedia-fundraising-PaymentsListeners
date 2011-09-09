@@ -47,6 +47,21 @@ class Listener
 {
 
 	/**
+	 * Log level: quiet
+	 */
+	 const LOG_LEVEL_QUIET = 0;
+
+	/**
+	 * Log level: info
+	 */
+	 const LOG_LEVEL_INFO = 1;
+
+	/**
+	 * Log level: debug
+	 */
+	 const LOG_LEVEL_DEBUG = 2;
+
+	/**
 	 * Available Adapters to test.
 	 *
 	 * @var array adapters
