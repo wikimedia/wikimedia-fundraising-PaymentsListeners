@@ -58,7 +58,7 @@ class Listener_Adapter_Abstract_LogFileTestCase extends QueueHandlingTestCase
 	}
 
 	/**
-	 * testGetLogFileWhichShouldBeEmpty
+	 * testSetLogFileWithDefaultLogFile
 	 *
 	 * @covers Listener_Adapter_Abstract::getLogFile
 	 * @covers Listener_Adapter_Abstract::setLogFile
@@ -77,5 +77,84 @@ class Listener_Adapter_Abstract_LogFileTestCase extends QueueHandlingTestCase
 		$adapterInstance->setLogFile();
 
 		$this->assertSame( $file, $adapterInstance->getLogFile() );
+	}
+
+	/**
+	 * testSetLogFileWithNonExistentDirectory
+	 *
+	 * @covers Listener_Adapter_Abstract::getLogFile
+	 * @covers Listener_Adapter_Abstract::setLogFile
+	 */
+	public function testSetLogFileWithNonExistentDirectory() {
+
+		// The parameters to pass to the factory.
+		$parameters = array();
+
+		// The adapter to pass to the factory.
+		$adapter = 'GlobalCollect';
+
+		$adapterInstance = Listener::factory( $adapter, $parameters );
+
+		$file = BASE_PATH . '/tests/logs/i-do-not-exist/out.log';
+		$directory = dirname( $file );
+
+		$message = 'The directory for the output log does not exist. Please create: ' . $directory;
+		$this->setExpectedException( 'Listener_Exception', $message );
+
+		$adapterInstance->setLogFile( $file );
+	}
+
+	/**
+	 * testSetLogFileWithReadOnlyDirectory
+	 *
+	 * @covers Listener_Adapter_Abstract::getLogFile
+	 * @covers Listener_Adapter_Abstract::setLogFile
+	 */
+	public function testSetLogFileWithReadOnlyDirectory() {
+
+		// The parameters to pass to the factory.
+		$parameters = array();
+
+		// The adapter to pass to the factory.
+		$adapter = 'GlobalCollect';
+
+		$adapterInstance = Listener::factory( $adapter, $parameters );
+
+		$file = BASE_PATH . '/tests/resources/read-only-directory/out.log';
+		$directory = dirname( $file );
+
+		$message = 'The directory for the output log is not writable. Please chmod +rw: ' . $directory;
+		$this->setExpectedException( 'Listener_Exception', $message );
+
+		$adapterInstance->setLogFile( $file );
+	}
+
+	/**
+	 * testSetOutputHandleWithDefaultLogFile
+	 *
+	 * @covers Listener_Adapter_Abstract::getLogFile
+	 * @covers Listener_Adapter_Abstract::setLogFile
+	 * @covers Listener_Adapter_Abstract::setOutputHandle
+	 * @covers Listener_Adapter_Abstract::getOutputHandle
+	 */
+	public function testSetOutputHandleWithDefaultLogFile() {
+
+		// The parameters to pass to the factory.
+		$parameters = array();
+
+		// The adapter to pass to the factory.
+		$adapter = 'GlobalCollect';
+
+		$adapterInstance = Listener::factory( $adapter, $parameters );
+
+		$file = BASE_PATH . '/logs/' . strtolower( $adapterInstance->getAdapterType() ) . '/' . date( 'Ymd' ) . '.log';
+		$adapterInstance->setOutputHandle();
+
+		// Assert log file is the default
+		$this->assertSame( $file, $adapterInstance->getLogFile() );
+		
+		// Assert log file has a valid resource handle.
+		$this->assertInternalType( 'resource', $adapterInstance->getOutputHandle() );
+		//Debug::dump($adapterInstance->getOutputHandle(), eval(DUMP) . "\$adapterInstance->getOutputHandle()", false);
 	}
 }

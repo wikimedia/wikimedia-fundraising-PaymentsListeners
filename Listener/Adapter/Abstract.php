@@ -77,6 +77,11 @@ abstract class Listener_Adapter_Abstract
 		if ( isset( $logLevel ) ) {
 			$this->setLogLevel( $logLevel );
 		}
+		
+		// Set log file if passed from parameters.
+		if ( isset( $logFile ) ) {
+			$this->setLogFile( $logFile );
+		}
 	}
 	
 	/**

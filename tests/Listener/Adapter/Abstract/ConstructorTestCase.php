@@ -79,4 +79,30 @@ class Listener_Adapter_Abstract_ConstructorTestCase extends QueueHandlingTestCas
 		$this->assertSame( Listener::LOG_LEVEL_INFO, $adapterInstance->getLogLevel() );
 	}
 
+	/**
+	 * testConstructorParametersWithSetLogFileToATestDirectory
+	 *
+	 * @covers Listener_Adapter_Abstract::setLogLevel
+	 * @covers Listener_Adapter_Abstract::getLogLevel
+	 * @covers Listener_Adapter_Abstract::__construct
+	 */
+	public function testConstructorParametersWithSetLogFileToATestDirectory() {
+
+		$file = BASE_PATH . '/tests/resources/log-directory-for-adapter-testing/out.log';
+		$directory = dirname( $file );
+
+		// The parameters to pass to the factory.
+		$parameters = array(
+		    'logFile' => $file,
+        );
+
+		// The adapter to pass to the factory.
+		$adapter = 'GlobalCollect';
+
+		$adapterInstance = Listener::factory( $adapter, $parameters );
+
+		$adapterInstance->setLogFile( $file );
+
+		$this->assertSame( $file, $adapterInstance->getLogFile() );
+	}
 }
