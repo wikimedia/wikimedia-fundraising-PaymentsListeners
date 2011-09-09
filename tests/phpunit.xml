@@ -1,0 +1,17 @@
+<phpunit bootstrap="../Bootstrap.php">
+	<filter>
+		<blacklist>
+			<directory>../library</directory>
+			<directory>../tests</directory>
+		</blacklist>
+		<whitelist>
+			<directory>../</directory>
+			<exclude>
+				<directory>../library</directory>
+				<directory>../payflowpro</directory>
+				<directory>../paypal</directory>
+				<directory>../tests</directory>
+			</exclude>
+		</whitelist>
+	</filter>
+</phpunit>
