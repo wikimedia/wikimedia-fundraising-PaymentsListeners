@@ -51,8 +51,21 @@ if ( !defined( 'TIMER_START' ) ) {
  * @ignore
  */
 if ( !defined( 'BASE_PATH' ) ) {
-	define( 'BASE_PATH', realpath( dirname( dirname( __FILE__ ) ) ) );
+	define( 'BASE_PATH', realpath( dirname( __FILE__ ) ) );
 }
+
+/**
+ * Library path
+ *
+ * @ignore
+ */
+if ( !defined( 'LIBRARY_PATH' ) ) {
+	define( 'LIBRARY_PATH', BASE_PATH . '/library' );
+}
+
+// Add LIBRARY_PATH and BASE_PATH directory to the include path
+set_include_path( LIBRARY_PATH . PATH_SEPARATOR . get_include_path() );
+set_include_path( BASE_PATH . PATH_SEPARATOR . get_include_path() );
 
 /**
  * The application environment
@@ -70,4 +83,9 @@ $_SERVER['APPLICATION_ENVIRONMENT'] = 'unittesting';
 if ( !defined( 'APPLICATION_ENVIRONMENT' ) ) {
 	define( 'APPLICATION_ENVIRONMENT', $_SERVER['APPLICATION_ENVIRONMENT'] );
 }
+
+/**
+ * @see Debug
+ */
+require_once 'Debug.php';
 
