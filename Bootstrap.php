@@ -85,6 +85,11 @@ if ( !defined( 'APPLICATION_ENVIRONMENT' ) ) {
 }
 
 /**
+ * @see QueueHandling_Exception
+ */
+require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'Exception.php';
+
+/**
  * @see Debug
  */
 require_once 'Debug.php';
