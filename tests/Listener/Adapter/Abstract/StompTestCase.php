@@ -62,7 +62,7 @@ class Listener_Adapter_Abstract_StompTestCase extends QueueHandlingTestCase
 	 *
 	 * @covers Listener_Adapter_Abstract::setStompPath
 	 */
-	public function testSetLogFileWithNonExistentScript() {
+	public function testSetStompPathWithNonExistentScript() {
 
 		// The parameters to pass to the factory.
 		$parameters = array();
@@ -86,7 +86,7 @@ class Listener_Adapter_Abstract_StompTestCase extends QueueHandlingTestCase
 	 * @covers Listener_Adapter_Abstract::setStompPath
 	 * @covers Listener_Adapter_Abstract::getStompPath
 	 */
-	public function testSetLogFileWithATestStompFile() {
+	public function testSetStompPathWithATestStompFile() {
 
 		// The parameters to pass to the factory.
 		$parameters = array();
