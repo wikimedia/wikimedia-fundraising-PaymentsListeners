@@ -58,6 +58,30 @@ class Listener_Adapter_Abstract_ConstructorTestCase extends QueueHandlingTestCas
 	}
 
 	/**
+	 * testConstructorParametersWithSetStompPathToATestStompFile
+	 *
+	 * @covers Listener_Adapter_Abstract::getActiveMqStompUri
+	 * @covers Listener_Adapter_Abstract::setActiveMqStompUri
+	 * @covers Listener_Adapter_Abstract::__construct
+	 */
+	public function testConstructorParametersWithSetActiveMqStompUriWithLocalhostAndPort61614() {
+
+		$activeMqStompUri = 'tcp://localhost:61614';
+
+		// The parameters to pass to the factory.
+		$parameters = array(
+		    'activeMqStompUri' => $activeMqStompUri,
+        );
+
+		// The adapter to pass to the factory.
+		$adapter = 'GlobalCollect';
+
+		$adapterInstance = Listener::factory( $adapter, $parameters );
+
+		$this->assertSame( $activeMqStompUri, $adapterInstance->getActiveMqStompUri() );
+	}
+
+	/**
 	 * testConstructorParametersWithSetLogLevelToInfo
 	 *
 	 * @covers Listener_Adapter_Abstract::setLogLevel
@@ -89,7 +113,6 @@ class Listener_Adapter_Abstract_ConstructorTestCase extends QueueHandlingTestCas
 	public function testConstructorParametersWithSetLogFileToATestDirectory() {
 
 		$file = BASE_PATH . '/tests/resources/log-directory-for-adapter-testing/out.log';
-		$directory = dirname( $file );
 
 		// The parameters to pass to the factory.
 		$parameters = array(
@@ -104,5 +127,29 @@ class Listener_Adapter_Abstract_ConstructorTestCase extends QueueHandlingTestCas
 		$adapterInstance->setLogFile( $file );
 
 		$this->assertSame( $file, $adapterInstance->getLogFile() );
+	}
+
+	/**
+	 * testConstructorParametersWithSetStompPathToATestStompFile
+	 *
+	 * @covers Listener_Adapter_Abstract::getStompPath
+	 * @covers Listener_Adapter_Abstract::setStompPath
+	 * @covers Listener_Adapter_Abstract::__construct
+	 */
+	public function testConstructorParametersWithSetStompPathToATestStompFile() {
+
+		$path = BASE_PATH . '/tests/resources/activeMQ/Stomp.php';
+
+		// The parameters to pass to the factory.
+		$parameters = array(
+		    'stompPath' => $path,
+        );
+
+		// The adapter to pass to the factory.
+		$adapter = 'GlobalCollect';
+
+		$adapterInstance = Listener::factory( $adapter, $parameters );
+
+		$this->assertSame( $path, $adapterInstance->getStompPath() );
 	}
 }

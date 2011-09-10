@@ -82,7 +82,6 @@ class Listener_Adapter_Abstract_LogFileTestCase extends QueueHandlingTestCase
 	/**
 	 * testSetLogFileWithNonExistentDirectory
 	 *
-	 * @covers Listener_Adapter_Abstract::getLogFile
 	 * @covers Listener_Adapter_Abstract::setLogFile
 	 */
 	public function testSetLogFileWithNonExistentDirectory() {
@@ -107,7 +106,6 @@ class Listener_Adapter_Abstract_LogFileTestCase extends QueueHandlingTestCase
 	/**
 	 * testSetLogFileWithReadOnlyDirectory
 	 *
-	 * @covers Listener_Adapter_Abstract::getLogFile
 	 * @covers Listener_Adapter_Abstract::setLogFile
 	 */
 	public function testSetLogFileWithReadOnlyDirectory() {
