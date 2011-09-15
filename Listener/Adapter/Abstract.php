@@ -480,10 +480,10 @@ abstract class Listener_Adapter_Abstract
 		// persistent is a string. It becomes a header.
 		$properties['persistent'] = isset( $properties['persistent'] ) ? (string) $properties['persistent'] : 'true';
 
-		$message = 'Attempting to queue message to: ' . $destination;
+		$message = 'Attempting to queue message to: ' . $destination . ' with the txId: ' . $this->getTxId() ;
 		$this->log( $message, Listener::LOG_LEVEL_DEBUG );
 		$sent = $this->stomp->send( $destination, $messageDetails, $properties );
-		$message = 'Result of queuing message: ' . $destination;
+		$message = 'Result of queuing message: ' . $sent . ' with the txId: ' . $this->getTxId() ;
 		$this->log( $message, Listener::LOG_LEVEL_DEBUG );
 
 		return $sent;
@@ -493,7 +493,7 @@ abstract class Listener_Adapter_Abstract
 	 * Remove a message from the Stomp queue.
 	 * @param bool $msg
 	 */
-	public function stompDequeueMessage( $msg, $transactionId = null ) {
+	public function stompDequeueMessage( $msg ) {
 
 		$message = 'Attempting to remove message from pending.';
 		$this->log( $message, Listener::LOG_LEVEL_DEBUG );
@@ -577,9 +577,9 @@ abstract class Listener_Adapter_Abstract
 	/**
 	 * setTxId
 	 */
-	public function setTxId()
+	public function setTxId( $value = '' )
 	{
-		$this->txId = time() . '_' . mt_rand();
+		$this->txId = empty( $value ) ? time() . '_' . mt_rand() : (string) $value;
 	}
 
 	/**

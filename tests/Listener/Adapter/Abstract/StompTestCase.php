@@ -242,19 +242,61 @@ class Listener_Adapter_Abstract_StompTestCase extends QueueHandlingTestCase
 		// The parameters to pass to the factory.
 		$parameters = array(
 			'logLevel' => Listener::LOG_LEVEL_DEBUG,
-		    'activeMqStompUri' => 'tcp://localhost:61613666',
-        );
+			'activeMqStompUri' => 'tcp://localhost:61613666',
+		);
 
 		// The adapter to pass to the factory.
 		$adapter = 'GlobalCollect';
 
 		$adapterInstance = Listener::factory( $adapter, $parameters );
 
-		//$message = 'Stomp Error.  Check host connection.  Details suppressed for security.';
+		//$message = 'Stomp Error.	Check host connection.	Details suppressed for security.';
 
 		$this->assertFalse( $adapterInstance->connectStomp() );
 	}
 
+	/**
+	 * queueMessageToPending
+	 *
+	 * @param Listener_Adapter_Abstract				$adapterInstance
+	 * @param array						OPTIONAL	$options
+	 *
+	 * @return boolean	Returns result of send
+	 */
+	public function queueMessageToPending( &$adapterInstance, $options = array() ) {
+
+		extract( $options );
+		
+		$jsonEncode = isset( $jsonEncode ) ? (boolean) $jsonEncode : true ;
+		
+		if ( isset( $txId ) ) {
+			$adapterInstance->setTxId( $txId );
+		}
+		else {
+			$txId = $adapterInstance->getTxId();
+		}
+		
+		if ( !isset( $fakeData ) ) {
+			$fakeData = array(
+				'things'	=> 'stuff',
+				'this'		=> 'that',
+				'count'		=> 3,
+				'errors'	=> false,
+			);
+		}
+		
+		// Encode with json if necessary
+		$message = $jsonEncode ? json_encode( $fakeData ) : $fakeData ;
+		
+		// Set the transaction id.
+		$properties = array( 'JMSCorrelationID' => $txId );
+
+		// Set to pending queue
+		$queue = $adapterInstance->getQueuePending();
+		
+		return $adapterInstance->stompQueueMessage( $queue, $message, $properties );
+	}
+	
 	/**
 	 * testStompQueueMessageToPending
 	 *
@@ -279,21 +321,7 @@ class Listener_Adapter_Abstract_StompTestCase extends QueueHandlingTestCase
 
 		$this->assertTrue( $adapterInstance->getStomp()->isConnected() );
 
-		$queue = $adapterInstance->getQueuePending();
-
-		$fakeData = array(
-			'things'	=> 'stuff',
-			'this'		=> 'that',
-			'count'		=> 3,
-			'errors'	=> false,
-		);
-
-		$message = json_encode( $fakeData );
-		// $message = 'Testing a string message.';
-		$properties = array( 'JMSCorrelationID' => $adapterInstance->getTxId() );
-		$this->assertTrue( $adapterInstance->stompQueueMessage( $queue, $message, $properties ) );
-
-		return $adapterInstance->getTxId();
+		$this->assertTrue( $this->queueMessageToPending( $adapterInstance ) );
 	}
 
 	/**
@@ -403,14 +431,18 @@ class Listener_Adapter_Abstract_StompTestCase extends QueueHandlingTestCase
 	/**
 	 * testStompFetchMessageFromPending
 	 *
-	 * @param string	$txId
-	 * @depends testStompQueueMessageToPending
+	 * This test is a little complicated. Create a set of messages with a set 
+	 * id. Retrieve one of the messages and dequeue it. Verify the message is no
+	 * longer in the queue.
+	 *
+	 * @covers Listener_Adapter_Abstract::stompQueueMessage
 	 * @covers Listener_Adapter_Abstract::stompFetchMessage
 	 */
-	public function testStompFetchMessageFromPending( $txId ) {
-		$this->markTestIncomplete( TESTS_MESSAGE_NOT_IMPLEMENTED );
+	public function testStompFetchMessageFromPending() {
 		// The parameters to pass to the factory.
-		$parameters = array();
+		$parameters = array(
+			'logLevel' => Listener::LOG_LEVEL_DEBUG,
+		);
 
 		// The adapter to pass to the factory.
 		$adapter = 'GlobalCollect';
@@ -429,27 +461,68 @@ class Listener_Adapter_Abstract_StompTestCase extends QueueHandlingTestCase
 
 		$queue = $adapterInstance->getQueuePending();
 
+		$first = 5;
+		$stop = 10;
+		$find = 7;
+		for ( $txId = $first; $txId < $stop; $txId++ ) { 
+			
+			$message = 'Failed to send txId: ' . $txId;
+			$this->assertTrue( $this->queueMessageToPending( $adapterInstance, array( 'txId' => $txId, ) ), $message );
+		}
+		
+		
 		$properties = array();
-		// $properties['selector'] = "JMSCorrelationID = '" . $txId . "1'";
+		$properties['selector'] = "JMSCorrelationID = '" . $find . "'";
 
 		// $properties = array( 'JMSCorrelationID' => $adapterInstance->getTxId() );
-		$properties = array( 'JMSCorrelationID' => $txId );
-		Debug::dump( $properties, eval( DUMP ) . "\$properties", false );
-		Debug::dump( $txId, eval( DUMP ) . "\$txId", false );
+		//$properties = array( 'JMSCorrelationID' => $find );
+		//Debug::dump( $properties, eval( DUMP ) . "\$properties", false );
+		//Debug::dump( $txId, eval( DUMP ) . "\$txId", false );
 
 		$stompMessage = $adapterInstance->stompFetchMessage( $queue, $properties );
-		Debug::dump( $stompMessage, eval( DUMP ) . "\$stompMessage", false );
-
+		//Debug::dump( $stompMessage, eval( DUMP ) . "\$stompMessage", false );
+		
 		$this->assertInstanceOf( 'Stomp_Frame', $stompMessage );
+
+		$correlationId = isset( $stompMessage->headers['correlation-id'] ) ? $stompMessage->headers['correlation-id'] : false ;
+
+		$message = 'Verify the correlation-id [' . $correlationId . '] from the Stomp_Frame header is the same as the id  [' . $find . '] we are searching on.';
+		$this->assertSame( $correlationId, (string) $find, $message );
 	}
 
 	/**
-	 * testStompFetchMessage
+	 * testStompDequeueMessageShouldFailWhenAttemptingToRemoveMessagesThatDoNotExist
 	 *
-	 * @covers Listener_Adapter_Abstract::stompFetchMessage
+	 * This test is a little complicated. Create a set of messages with a set 
+	 * id. Retrieve one of the messages and dequeue it. Verify the message is no
+	 * longer in the queue.
+	 *
+	 * @covers Listener_Adapter_Abstract::stompDequeueMessage
 	 */
-	public function testStompFetchMessage() {
-		$this->markTestIncomplete( TESTS_MESSAGE_NOT_IMPLEMENTED );
+	public function testStompDequeueMessageShouldFailWhenAttemptingToRemoveMessagesThatDoNotExist() {
+		$this->markTestIncomplete(TESTS_MESSAGE_NOT_IMPLEMENTED);
+		// The parameters to pass to the factory.
+		$parameters = array(
+			'logLevel' => Listener::LOG_LEVEL_DEBUG,
+		);
+
+		// The adapter to pass to the factory.
+		$adapter = 'GlobalCollect';
+
+		$adapterInstance = Listener::factory( $adapter, $parameters );
+
+		// $message = 'The Stomp class does not exist in: ' . $stompPath;
+		// Debug::dump($message, eval(DUMP) . "\$message", false);
+
+		// $adapterInstance->setStompPath( $stompPath );
+
+		// $this->setExpectedException( 'Listener_Exception', $message );
+		$adapterInstance->connectStomp();
+
+		$this->assertTrue( $adapterInstance->getStomp()->isConnected() );
+
+		$message = 'Attempting to delete a message that does not exist.';
+		$this->assertFalse( $adapterInstance->stompDequeueMessage( null ) );
 	}
 
 }
