@@ -68,5 +68,5 @@ class AllTests
 }
 
 if ( PHPUNIT_MAIN_METHOD == 'AllTests::main' ) {
-	AllTests::main();
+	// AllTests::main();
 }

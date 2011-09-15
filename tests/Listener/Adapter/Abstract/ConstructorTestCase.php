@@ -70,8 +70,8 @@ class Listener_Adapter_Abstract_ConstructorTestCase extends QueueHandlingTestCas
 
 		// The parameters to pass to the factory.
 		$parameters = array(
-		    'activeMqStompUri' => $activeMqStompUri,
-        );
+			'activeMqStompUri' => $activeMqStompUri,
+		);
 
 		// The adapter to pass to the factory.
 		$adapter = 'GlobalCollect';
@@ -116,8 +116,8 @@ class Listener_Adapter_Abstract_ConstructorTestCase extends QueueHandlingTestCas
 
 		// The parameters to pass to the factory.
 		$parameters = array(
-		    'logFile' => $file,
-        );
+			'logFile' => $file,
+		);
 
 		// The adapter to pass to the factory.
 		$adapter = 'GlobalCollect';
@@ -142,8 +142,8 @@ class Listener_Adapter_Abstract_ConstructorTestCase extends QueueHandlingTestCas
 
 		// The parameters to pass to the factory.
 		$parameters = array(
-		    'stompPath' => $path,
-        );
+			'stompPath' => $path,
+		);
 
 		// The adapter to pass to the factory.
 		$adapter = 'GlobalCollect';

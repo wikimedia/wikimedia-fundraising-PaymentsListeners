@@ -23,11 +23,39 @@
  */
 
 /**
- * This is a fake Stomp class for testing.
+ * Require
+ */
+require_once dirname( dirname( dirname( dirname( __FILE__ ) ) ) ) . DIRECTORY_SEPARATOR . 'QueueHandlingTestCase.php';
+
+/**
+ * @group		Fundraising
+ * @group		QueueHandling
+ * @group		ClassMethod
+ * @group		ListenerAdapter
+ * @group		Paypal
  *
  * @category	UnitTesting
  * @package		Fundraising_QueueHandling
  */
-class Stomp_I_Am_Not_Really_Stomp
+class Listener_Adapter_Paypal_ConstructorTestCase extends QueueHandlingTestCase
 {
+
+	/**
+	 * testConstructorIsInstanceOfPaypal
+	 *
+	 * @covers Listener_Adapter_Abstract::__construct
+	 */
+	public function testConstructorIsInstanceOfPaypal() {
+
+		// The parameters to pass to the factory.
+		$parameters = array();
+
+		// The adapter to pass to the factory.
+		$adapter = 'Paypal';
+
+		$adapterInstance = Listener::factory( $adapter, $parameters );
+
+		$this->assertInstanceOf( 'Listener_Adapter_Paypal', $adapterInstance );
+	}
+
 }

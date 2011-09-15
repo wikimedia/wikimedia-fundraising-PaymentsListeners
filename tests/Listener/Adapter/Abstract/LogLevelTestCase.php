@@ -32,6 +32,8 @@ require_once dirname( dirname( dirname( dirname( __FILE__ ) ) ) ) . DIRECTORY_SE
  * @group		QueueHandling
  * @group		ClassMethod
  * @group		ListenerAdapter
+ * @group		Log
+ * @group		LogLevel
  *
  * @category	UnitTesting
  * @package		Fundraising_QueueHandling
@@ -40,11 +42,11 @@ class Listener_Adapter_Abstract_LogLevelTestCase extends QueueHandlingTestCase
 {
 
 	/**
-	 * testGetLogLevelWhichShouldBeQuietByDefault
+	 * testGetLogLevelWhichShouldBeErrByDefault
 	 *
 	 * @covers Listener_Adapter_Abstract::getLogLevel
 	 */
-	public function testGetLogLevelWhichShouldBeQuietByDefault() {
+	public function testGetLogLevelWhichShouldBeErrByDefault() {
 
 		// The parameters to pass to the factory.
 		$parameters = array();
@@ -54,7 +56,7 @@ class Listener_Adapter_Abstract_LogLevelTestCase extends QueueHandlingTestCase
 
 		$adapterInstance = Listener::factory( $adapter, $parameters );
 
-		$this->assertSame( Listener::LOG_LEVEL_QUIET, $adapterInstance->getLogLevel() );
+		$this->assertSame( Listener::LOG_LEVEL_ERR, $adapterInstance->getLogLevel() );
 	}
 
 	/**
@@ -100,12 +102,12 @@ class Listener_Adapter_Abstract_LogLevelTestCase extends QueueHandlingTestCase
 	}
 
 	/**
-	 * testSetLogLevelWithQuietThenInfoThenQuietAgain
+	 * testSetLogLevelWithInfoThenDebugThenInfoAgain
 	 *
 	 * @covers Listener_Adapter_Abstract::setLogLevel
 	 * @covers Listener_Adapter_Abstract::getLogLevel
 	 */
-	public function testSetLogLevelWithQuietThenInfoThenQuietAgain() {
+	public function testSetLogLevelWithInfoThenDebugThenInfoAgain() {
 
 		// The parameters to pass to the factory.
 		$parameters = array();
@@ -115,17 +117,17 @@ class Listener_Adapter_Abstract_LogLevelTestCase extends QueueHandlingTestCase
 
 		$adapterInstance = Listener::factory( $adapter, $parameters );
 
-		// Set to quiet, which is the default. There should be no change in the log level.
-		$adapterInstance->setLogLevel( Listener::LOG_LEVEL_QUIET );
-		$this->assertSame( Listener::LOG_LEVEL_QUIET, $adapterInstance->getLogLevel() );
-
-		// Set to info.
+		// Set to info, which is the default. There should be no change in the log level.
 		$adapterInstance->setLogLevel( Listener::LOG_LEVEL_INFO );
 		$this->assertSame( Listener::LOG_LEVEL_INFO, $adapterInstance->getLogLevel() );
 
-		// Set to quiet again.
-		$adapterInstance->setLogLevel( Listener::LOG_LEVEL_QUIET );
-		$this->assertSame( Listener::LOG_LEVEL_QUIET, $adapterInstance->getLogLevel() );
+		// Set to debug.
+		$adapterInstance->setLogLevel( Listener::LOG_LEVEL_DEBUG );
+		$this->assertSame( Listener::LOG_LEVEL_DEBUG, $adapterInstance->getLogLevel() );
+
+		// Set to info again.
+		$adapterInstance->setLogLevel( Listener::LOG_LEVEL_INFO );
+		$this->assertSame( Listener::LOG_LEVEL_INFO, $adapterInstance->getLogLevel() );
 	}
 
 }

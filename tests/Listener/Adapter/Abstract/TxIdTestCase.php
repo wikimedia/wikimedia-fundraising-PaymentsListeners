@@ -40,31 +40,12 @@ class Listener_Adapter_Abstract_TxIdTestCase extends QueueHandlingTestCase
 {
 
 	/**
-	 * testGetTxIdIsEmptyByDefault
-	 *
-	 * @covers Listener_Adapter_Abstract::getTxId
-	 */
-	public function testGetTxIdIsEmptyByDefault() {
-
-		// The parameters to pass to the factory.
-		$parameters = array();
-
-		// The adapter to pass to the factory.
-		$adapter = 'GlobalCollect';
-
-		$adapterInstance = Listener::factory( $adapter, $parameters );
-
-		$this->assertEmpty( $adapterInstance->getTxId() );
-	}
-
-
-	/**
-	 * testSetTxIdIsNotEmpty
+	 * testGetTxIdIsNotEmptyByDefault
 	 *
 	 * @covers Listener_Adapter_Abstract::getTxId
 	 * @covers Listener_Adapter_Abstract::setTxId
 	 */
-	public function testSetTxIdIsNotEmpty() {
+	public function testGetTxIdIsNotEmptyByDefault() {
 
 		// The parameters to pass to the factory.
 		$parameters = array();
@@ -74,9 +55,6 @@ class Listener_Adapter_Abstract_TxIdTestCase extends QueueHandlingTestCase
 
 		$adapterInstance = Listener::factory( $adapter, $parameters );
 
-		$adapterInstance->setTxId();
-
 		$this->assertNotEmpty( $adapterInstance->getTxId() );
 	}
-
 }

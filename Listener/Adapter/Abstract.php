@@ -40,6 +40,8 @@ abstract class Listener_Adapter_Abstract
 	 *
 	 * This is tunneled instance of activeMQ
 	 *
+	 * Port 61613 is the default install for ActiveMQ 5.4.2
+	 *
 	 * @var string activeMqStompUri
 	 */
 	protected $activeMqStompUri = 'tcp://localhost:61613';
@@ -54,13 +56,18 @@ abstract class Listener_Adapter_Abstract
 	/**
 	 * The log level
 	 *
-	 * @see Listener::LOG_LEVEL_QUIET
+	 * @see Listener::LOG_LEVEL_EMERG
+	 * @see Listener::LOG_LEVEL_ALERT
+	 * @see Listener::LOG_LEVEL_CRIT
+	 * @see Listener::LOG_LEVEL_ERR
+	 * @see Listener::LOG_LEVEL_WARN
+	 * @see Listener::LOG_LEVEL_NOTICE
 	 * @see Listener::LOG_LEVEL_INFO
 	 * @see Listener::LOG_LEVEL_DEBUG
 	 *
 	 * @var integer logLevel
 	 */
-	protected $logLevel = Listener::LOG_LEVEL_QUIET;
+	protected $logLevel = Listener::LOG_LEVEL_ERR;
 
 	/**
 	 * outputHandle
@@ -90,13 +97,26 @@ abstract class Listener_Adapter_Abstract
 	protected $queueVerified = '';
 
 	/**
+	 * stomp
+	 *
+	 * The instance of Stomp
+	 *
+	 * @var Stomp $stomp
+	 */
+	protected $stomp;
+
+	/**
 	 * stompPath
 	 *
 	 * This is path to Stomp
 	 *
+	 * Stomp can be placed in the library folder.
+	 *
 	 * @var string stompPath
 	 */
-	protected $stompPath = '';
+	protected $stompPath = 'Stomp.php';
+	// protected $stompPath = '/www/sites/localhost/fundraising-civicrm.localhost.wikimedia.org/sites/all/modules/queue2civicrm/Stomp.php';
+
 
 	/**
 	 * txId
@@ -106,39 +126,56 @@ abstract class Listener_Adapter_Abstract
 	 * @var string txId
 	 */
 	protected $txId = '';
-	
+
 	/**
 	 * Constructor
 	 *
 	 * @param array $parameters The adapter parameters
-	 * @return boolean
 	 */
 	public function __construct( $parameters )
 	{
 		// Extract parameters.
 		extract( $parameters );
-		
+
 		// Set the stomp path if passed from parameters.
 		if ( isset( $activeMqStompUri ) ) {
 			$this->setActiveMqStompUri( $activeMqStompUri );
 		}
-		
+
 		// Set log level if passed from parameters.
 		if ( isset( $logLevel ) ) {
 			$this->setLogLevel( $logLevel );
 		}
-		
+
 		// Set log file if passed from parameters.
 		if ( isset( $logFile ) ) {
 			$this->setLogFile( $logFile );
 		}
-		
+
+		$message = 'Loading ' . $this->getAdapterType() . ' processor with log level: ' . $this->getLogLevel();
+		$this->log( $message );
+
 		// Set the stomp path if passed from parameters.
 		if ( isset( $stompPath ) ) {
 			$this->setStompPath( $stompPath );
 		}
+
+		// Create transaction id
+		$this->setTxId();
 	}
-	
+
+	/**
+	 * Destructor
+	 *
+	 * Performs
+	 * - closes logs
+	 */
+	public function __destruct()
+	{
+		// Close log if it was opened.
+		$this->closeOutputHandle();
+	}
+
 	/**
 	 * setActiveMqStompUri
 	 *
@@ -148,7 +185,7 @@ abstract class Listener_Adapter_Abstract
 	{
 		$this->activeMqStompUri = $uri;
 	}
-	
+
 	/**
 	 * getActiveMqStompUri
 	 *
@@ -158,17 +195,17 @@ abstract class Listener_Adapter_Abstract
 	{
 		return $this->activeMqStompUri;
 	}
-	
+
 	/**
 	 * getAdapterType
 	 */
 	public function getAdapterType()
 	{
 		$calledClass = get_called_class();
-		
+
 		return $calledClass::ADAPTER;
 	}
-	
+
 	/**
 	 * setLogFile
 	 *
@@ -176,27 +213,27 @@ abstract class Listener_Adapter_Abstract
 	 */
 	public function setLogFile( $file = '' )
 	{
-	    if ( empty( $file ) ) {
-	        $file = BASE_PATH . '/logs/' . strtolower( $this->getAdapterType() ) . '/' . date( 'Ymd' ) . '.log';
-	    }
+		if ( empty( $file ) ) {
+			$file = BASE_PATH . '/logs/' . strtolower( $this->getAdapterType() ) . '/' . date( 'Ymd' ) . '.log';
+		}
 
-	    $directory = dirname( $file );
+		$directory = dirname( $file );
 
-	    // Verify directory exists.
-	    if ( !is_dir( $directory ) ) {
-	        $message = 'The directory for the output log does not exist. Please create: ' . $directory;
-	        throw new Listener_Exception( $message );
-	    }
+		// Verify directory exists.
+		if ( !is_dir( $directory ) ) {
+			$message = 'The directory for the output log does not exist. Please create: ' . $directory;
+			throw new Listener_Exception( $message );
+		}
 
-	    // Verify directory is writable.
-	    if ( !is_writable( $directory ) ) {
-	        $message = 'The directory for the output log is not writable. Please chmod +rw: ' . $directory;
-	        throw new Listener_Exception( $message );
-	    }
-	    
+		// Verify directory is writable.
+		if ( !is_writable( $directory ) ) {
+			$message = 'The directory for the output log is not writable. Please chmod +rw: ' . $directory;
+			throw new Listener_Exception( $message );
+		}
+
 		$this->logFile = $file;
 	}
-	
+
 	/**
 	 * getLogFile
 	 *
@@ -206,7 +243,7 @@ abstract class Listener_Adapter_Abstract
 	{
 		return $this->logFile;
 	}
-	
+
 	/**
 	 * setLogLevel
 	 *
@@ -216,7 +253,7 @@ abstract class Listener_Adapter_Abstract
 	{
 		$this->logLevel = (integer) $level;
 	}
-	
+
 	/**
 	 * getLogLevel
 	 *
@@ -226,27 +263,27 @@ abstract class Listener_Adapter_Abstract
 	{
 		return $this->logLevel;
 	}
-	
+
 	/**
-	 * setOutputHandle
+	 * openOutputHandle
 	 *
 	 * Log files are always opened with the 'a' append flag for writing only.
 	 *
-	 * @param string $logFile    OPTIONAL    The path to a log file
+	 * @param string $logFile	 OPTIONAL	 The path to a log file
 	 */
-	public function setOutputHandle( $logFile = '' )
+	public function openOutputHandle( $logFile = '' )
 	{
-	    if ( empty( $logFile ) ) {
-	        
-	        // Create a default log file name
-	        $this->setLogFile();
-	        
-	        $logFile = $this->getLogFile();
-	    }
-	    
+		if ( empty( $logFile ) ) {
+
+			// Create a default log file name
+			$this->setLogFile();
+
+			$logFile = $this->getLogFile();
+		}
+
 		$this->outputHandle = fopen( $logFile, 'a' );
 	}
-	
+
 	/**
 	 * getOutputHandle
 	 *
@@ -256,7 +293,152 @@ abstract class Listener_Adapter_Abstract
 	{
 		return $this->outputHandle;
 	}
-	
+
+	/**
+	 * closeOutputHandle
+	 *
+	 */
+	public function closeOutputHandle()
+	{
+		if ( $this->hasOutputHandle() ) {
+			fclose( $this->getOutputHandle() );
+		}
+	}
+
+	/**
+	 * hasOutputHandle
+	 *
+	 * @return Return true if @see $this->outputHandle is a resource to a file.
+	 */
+	public function hasOutputHandle()
+	{
+		return is_resource( $this->outputHandle );
+	}
+
+	/**
+	 * Log a message to stdout
+	 *
+	 * @param $message	The message to log
+	 * @param $level	OPTIONAL	The log level. If blank, defaults to @see Listener::LOG_LEVEL_INFO
+	 */
+	public function log( $message, $level = null )
+	{
+		// Debug::dump($message, eval(DUMP) . "\$message", false);
+		$level = ( is_null( $level ) || $level === false ) ? Listener::LOG_LEVEL_INFO : (integer) $level;
+
+		$return = null;
+
+		// Format message for logging.
+		if ( $this->getLogLevel() >= $level ) {
+			$return = date( 'c' ) . "\t" . $this->getTxId() . "\t" . $message . "\n";
+		}
+		// Debug::dump($level, eval(DUMP) . "\$level", false);
+		// Debug::dump($return, eval(DUMP) . "\$return", false);
+		// Debug::dump($this->hasOutputHandle(), eval(DUMP) . "\$this->hasOutputHandle()", false);
+
+		// If there is a log file set up, write to file, otherwise, send to stdout
+		if ( $this->hasOutputHandle() ) {
+			fwrite( $this->getOutputHandle(), $return );
+		}
+		else {
+			if ( $this->getLogLevel() >= $level ) {
+				echo "\n" . $message . "\n";
+			}
+		}
+
+	}
+
+	/**
+	 * Erase the log file for the day.
+	 */
+	public function logTruncate()
+	{
+		if ( $this->hasOutputHandle() ) {
+			ftruncate( $this->getOutputHandle(), 0 );
+		}
+	}
+
+	/**
+	 * Get the contents of a file if it has less than $kilobytes
+	 *
+	 * @param integer $bytes	 The maximum size of the file in bytes. Default is 1024 bytes.
+	 * @return string			 Returns the contents of the file if it is less $bytes. Otherwise, it returns an empty string.
+	 */
+	public function getLogContents( $bytes = 1024 )
+	{
+		$bytes = (integer) $bytes;
+
+		$return = '';
+
+		if ( filesize( $this->getLogFile() ) < $bytes ) {
+			$return = file_get_contents( $this->getLogFile() );
+		}
+
+		return $return;
+	}
+
+	/**
+	 * connectStomp
+	 *
+	 */
+	public function connectStomp()
+	{
+		$this->getStomp();
+
+		try {
+
+			// Debug::dump($this->stomp, eval(DUMP) . "\$this->stomp", true);
+
+			$this->stomp->connect();
+			$message = 'Successfully connected to Stomp listener: ' . $this->getActiveMqStompUri();
+			$this->log( $message, Listener::LOG_LEVEL_DEBUG );
+
+		} catch ( Stomp_Exception $e ) {
+
+			$message = 'Terminating script. Stomp connection failed: ' . $e->getMessage();
+			$this->log( $message, Listener::LOG_LEVEL_EMERG );
+			// exit(1);
+
+		}
+
+		return $this->stomp;
+	}
+
+	/**
+	 * getStomp
+	 *
+	 */
+	public function getStomp()
+	{
+		// If Stomp is not instatiated, set it up.
+		if ( !( $this->stomp instanceof Stomp ) ) {
+
+				$this->setStomp();
+		}
+
+		return $this->stomp;
+	}
+
+	/**
+	 * setStomp
+	 *
+	 */
+	public function setStomp()
+	{
+		// Require Stomp
+		require_once( $this->getStompPath() );
+
+		if ( !class_exists( 'Stomp', false ) ) {
+			$message = 'The Stomp class does not exist in: ' . $this->getStompPath();
+			throw new Listener_Exception( $message );
+		}
+
+		$message = 'Attempting to connect to Stomp listener: ' . $this->getActiveMqStompUri();
+		$this->log( $message, Listener::LOG_LEVEL_DEBUG );
+
+		$this->stomp = new Stomp( $this->getActiveMqStompUri() );
+	}
+
 	/**
 	 * setStompPath
 	 *
@@ -264,14 +446,15 @@ abstract class Listener_Adapter_Abstract
 	 */
 	public function setStompPath( $path )
 	{
-	    if ( !is_file( $path ) ) {
-	        $message = 'The stomp script does not exist: ' . $path;
-	        throw new Listener_Exception( $message );
-	    }
-	    
+		// Debug::dump($path, eval(DUMP) . "\$path", false);
+		if ( !is_file( $path ) ) {
+			$message = 'The stomp script does not exist: ' . $path;
+			throw new Listener_Exception( $message );
+		}
+
 		$this->stompPath = $path;
 	}
-	
+
 	/**
 	 * getStompPath
 	 *
@@ -281,7 +464,114 @@ abstract class Listener_Adapter_Abstract
 	{
 		return $this->stompPath;
 	}
-	
+
+	/**
+	 * Send a message to the Stomp queue.
+	 *
+	 * @param $destination string of the destination path for where to send a message
+	 * @param $messageDetails string the (formatted) message to send to the queue
+	 * @param $properties array of additional Stomp properties
+	 * @return bool result from send, FALSE on failure
+	 */
+	public function stompQueueMessage( $destination, $messageDetails, $properties = array( 'persistent' => 'true' ) ) {
+
+		// persistent is a string. It becomes a header.
+		$properties['persistent'] = isset( $properties['persistent'] ) ? (string) $properties['persistent'] : 'true';
+
+		$message = 'Attempting to queue message to: ' . $destination;
+		$this->log( $message, Listener::LOG_LEVEL_DEBUG );
+		$sent = $this->stomp->send( $destination, $messageDetails, $properties );
+		$message = 'Result of queuing message: ' . $destination;
+		$this->log( $message, Listener::LOG_LEVEL_DEBUG );
+
+		return $sent;
+	}
+
+	/**
+	 * Remove a message from the Stomp queue.
+	 * @param bool $msg
+	 */
+	public function stompDequeueMessage( $msg, $transactionId = null ) {
+
+		$message = 'Attempting to remove message from pending.';
+		$this->log( $message, Listener::LOG_LEVEL_DEBUG );
+
+		if ( $this->stomp->ack( $msg ) ) {
+
+			$message = 'The verified message was removed from the pending queue: ' .  print_r( json_decode( $msg, true ) );
+			$this->log( $message, Listener::LOG_LEVEL_DEBUG );
+			return true;
+		}
+		else {
+
+			$message = 'There was a problem removing the verified message from the pending queue: ' .  print_r( json_decode( $msg, true ) );
+			$this->log( $message, Listener::LOG_LEVEL_DEBUG );
+			return false;
+		}
+	}
+
+	/**
+	 * Fetch latest raw message from a queue
+	 *
+	 * @param $destination string of the destination path from where to fetch a message
+	 * @return mixed raw message (Stomp_Frame object) from Stomp client or False if no msg present
+	 */
+	public function stompFetchMessage( $destination, $properties = array() ) {
+		$message = 'Attempting to connect to queue at: ' . $destination;
+		$this->log( $message, Listener::LOG_LEVEL_DEBUG );
+
+		if ( count( $properties ) ) {
+			$message = 'With the following properties: ' . print_r( $properties, true );
+			$this->log( $message, Listener::LOG_LEVEL_DEBUG );
+		}
+
+		$this->stomp->subscribe( $destination, $properties );
+		$message = 'Attempting to pull queued item.';
+		$this->log( $message, Listener::LOG_LEVEL_DEBUG );
+
+		return $this->stomp->readFrame();
+	}
+
+	/**
+	 * getQueuePending
+	 *
+	 * @return Return the queue pending path for ActiveMQ
+	 */
+	public function getQueuePending()
+	{
+		return $this->queuePending;
+	}
+
+	/**
+	 * setQueuePending
+	 *
+	 * @param string $path The queue pending path for ActiveMQ
+	 */
+	public function setQueuePending( $path )
+	{
+		$this->queuePending = $path;
+	}
+
+	/**
+	 * getQueueVerified
+	 *
+	 * @return Return the queue pending path for ActiveMQ
+	 */
+	public function getQueueVerified()
+	{
+		return $this->queueVerified;
+	}
+
+	/**
+	 * setQueueVerified
+	 *
+	 * @param string $path The queue verified path for ActiveMQ
+	 */
+	public function setQueueVerified( $path )
+	{
+		$this->queueVerified = $path;
+	}
+
 	/**
 	 * setTxId
 	 */
@@ -289,7 +579,7 @@ abstract class Listener_Adapter_Abstract
 	{
 		$this->txId = time() . '_' . mt_rand();
 	}
-	
+
 	/**
 	 * getTxId
 	 *

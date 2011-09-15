@@ -72,5 +72,5 @@ class Listener_AllTests
 }
 
 if ( PHPUNIT_MAIN_METHOD == 'Listener_AllTests::main' ) {
-	Listener_AllTests::main();
+	// Listener_AllTests::main();
 }

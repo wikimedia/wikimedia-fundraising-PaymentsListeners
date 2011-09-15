@@ -15,7 +15,7 @@
  * GNU General Public License for more details.
  *
  *
- * @category	UnitTesting
+ * @category	Fundraising
  * @package		Fundraising_QueueHandling
  * @license		http://www.gnu.org/copyleft/gpl.html GNU GENERAL PUBLIC LICENSE
  * @since		r462
@@ -23,11 +23,41 @@
  */
 
 /**
- * This is a fake Stomp class for testing.
+ * @see Listener_Exception
+ */
+require_once 'Listener/Adapter/Abstract.php';
+
+/**
  *
- * @category	UnitTesting
+ * @todo
+ * - Implement factory
+ *
+ * @category	Fundraising
  * @package		Fundraising_QueueHandling
  */
-class Stomp_I_Am_Not_Really_Stomp
+class Listener_Adapter_Paypal extends Listener_Adapter_Abstract
 {
+
+	/**
+	 * Adapter name
+	 */
+	 const ADAPTER = 'Paypal';
+
+	/**
+	 * queuePending
+	 *
+	 * This is path to pending queue
+	 *
+	 * @var string queuePending
+	 */
+	protected $queuePending = '/queue/pending_paypal';
+
+	/**
+	 * queueVerified
+	 *
+	 * This is path to verified queue
+	 *
+	 * @var string queueVerified
+	 */
+	protected $queueVerified = '/queue/verified_paypal';
 }

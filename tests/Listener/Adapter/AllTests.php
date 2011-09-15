@@ -30,6 +30,7 @@ if ( !defined( 'PHPUNIT_MAIN_METHOD' ) ) {
 
 require_once dirname( dirname( __FILE__ ) ) . DIRECTORY_SEPARATOR . 'Adapter' . DIRECTORY_SEPARATOR . 'Abstract' . DIRECTORY_SEPARATOR . 'AllTests.php';
 require_once dirname( dirname( __FILE__ ) ) . DIRECTORY_SEPARATOR . 'Adapter' . DIRECTORY_SEPARATOR . 'GlobalCollect' . DIRECTORY_SEPARATOR . 'AllTests.php';
+require_once dirname( dirname( __FILE__ ) ) . DIRECTORY_SEPARATOR . 'Adapter' . DIRECTORY_SEPARATOR . 'Paypal' . DIRECTORY_SEPARATOR . 'AllTests.php';
 
 /**
  * @category	UnitTesting
@@ -62,11 +63,12 @@ class Listener_Adapter_AllTests
 
 		$suite->addTestSuite( 'Listener_Adapter_Abstract_AllTests' );
 		$suite->addTestSuite( 'Listener_Adapter_GlobalCollect_AllTests' );
+		$suite->addTestSuite( 'Listener_Adapter_Paypal_AllTests' );
 
 		return $suite;
 	}
 }
 
 if ( PHPUNIT_MAIN_METHOD == 'Listener_Adapter_AllTests::main' ) {
-	Listener_Adapter_AllTests::main();
+	// Listener_Adapter_AllTests::main();
 }

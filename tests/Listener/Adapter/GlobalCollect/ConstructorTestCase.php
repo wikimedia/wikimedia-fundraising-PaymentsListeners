@@ -32,6 +32,7 @@ require_once dirname( dirname( dirname( dirname( __FILE__ ) ) ) ) . DIRECTORY_SE
  * @group		QueueHandling
  * @group		ClassMethod
  * @group		ListenerAdapter
+ * @group		GlobalCollect
  *
  * @category	UnitTesting
  * @package		Fundraising_QueueHandling

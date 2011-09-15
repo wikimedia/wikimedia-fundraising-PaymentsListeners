@@ -64,18 +64,6 @@ class Listener_IsAdapterTestCase extends QueueHandlingTestCase
 	}
 
 	/**
-	 * testIsAdapterDoesNotHavePaypal
-	 *
-	 * @covers Listener::isAdapter
-	 */
-	public function testIsAdapterDoesNotHavePaypal() {
-
-		$adapter = 'Paypal';
-
-		$this->assertFalse( Listener::isAdapter( $adapter ) );
-	}
-
-	/**
 	 * testIsAdapterDoesNotHavePayflowpro
 	 *
 	 * @covers Listener::isAdapter

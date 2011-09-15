@@ -68,5 +68,5 @@ class Listener_Adapter_GlobalCollect_AllTests
 }
 
 if ( PHPUNIT_MAIN_METHOD == 'Listener_Adapter_GlobalCollect_AllTests::main' ) {
-	Listener_Adapter_GlobalCollect_AllTests::main();
+	// Listener_Adapter_GlobalCollect_AllTests::main();
 }

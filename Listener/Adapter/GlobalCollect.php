@@ -42,4 +42,22 @@ class Listener_Adapter_GlobalCollect extends Listener_Adapter_Abstract
 	 * Adapter name
 	 */
 	 const ADAPTER = 'GlobalCollect';
+
+	/**
+	 * queuePending
+	 *
+	 * This is path to pending queue
+	 *
+	 * @var string queuePending
+	 */
+	protected $queuePending = '/queue/pending_globalcollect';
+
+	/**
+	 * queueVerified
+	 *
+	 * This is path to verified queue
+	 *
+	 * @var string queueVerified
+	 */
+	protected $queueVerified = '/queue/verified_globalcollect';
 }

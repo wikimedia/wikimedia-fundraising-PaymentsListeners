@@ -25,23 +25,18 @@
 require_once dirname( dirname( dirname( dirname( __FILE__ ) ) ) ) . DIRECTORY_SEPARATOR . 'TestHelper.php';
 
 if ( !defined( 'PHPUNIT_MAIN_METHOD' ) ) {
-	define( 'PHPUNIT_MAIN_METHOD', 'Listener_Adapter_Abstract_AllTests::main' );
+	define( 'PHPUNIT_MAIN_METHOD', 'Listener_Adapter_Paypal_AllTests::main' );
 }
 
 // Debug::dump(__FILE__, eval(DUMP) . "__FILE__", false);
 
 require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'ConstructorTestCase.php';
-require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'GetAdapterTypeTestCase.php';
-require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'LogFileTestCase.php';
-require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'LogLevelTestCase.php';
-require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'StompTestCase.php';
-require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'TxIdTestCase.php';
 
 /**
  * @category	UnitTesting
  * @package		Fundraising_QueueHandling
  */
-class Listener_Adapter_Abstract_AllTests
+class Listener_Adapter_Paypal_AllTests
 {
 
 	/**
@@ -64,19 +59,14 @@ class Listener_Adapter_Abstract_AllTests
 	 */
 	public static function suite()
 	{
-		$suite = new PHPUnit_Framework_TestSuite( 'Queue Handling - Listener - Adapter - Abstract Suite' );
+		$suite = new PHPUnit_Framework_TestSuite( 'Queue Handling - Listener - Adapter - Paypal Suite' );
 
-		$suite->addTestSuite( 'Listener_Adapter_Abstract_ConstructorTestCase' );
-		$suite->addTestSuite( 'Listener_Adapter_Abstract_GetAdapterTypeTestCase' );
-		$suite->addTestSuite( 'Listener_Adapter_Abstract_LogFileTestCase' );
-		$suite->addTestSuite( 'Listener_Adapter_Abstract_LogLevelTestCase' );
-		$suite->addTestSuite( 'Listener_Adapter_Abstract_StompTestCase' );
-		$suite->addTestSuite( 'Listener_Adapter_Abstract_TxIdTestCase' );
+		$suite->addTestSuite( 'Listener_Adapter_Paypal_ConstructorTestCase' );
 
 		return $suite;
 	}
 }
 
-if ( PHPUNIT_MAIN_METHOD == 'Listener_Adapter_Abstract_AllTests::main' ) {
-	// Listener_Adapter_Abstract_AllTests::main();
+if ( PHPUNIT_MAIN_METHOD == 'Listener_Adapter_Paypal_AllTests::main' ) {
+	// Listener_Adapter_Paypal_AllTests::main();
 }

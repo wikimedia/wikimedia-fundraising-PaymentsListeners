@@ -25,3 +25,6 @@
 /*
  * This file contains custom options and constants for test configuration.
  */
+
+
+define( 'TESTS_NOT_IMPLEMENTED_MESSAGE', 'Not implemented yet!' );

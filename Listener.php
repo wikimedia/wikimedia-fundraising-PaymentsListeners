@@ -47,19 +47,44 @@ class Listener
 {
 
 	/**
-	 * Log level: quiet
+	 * Log level - Emergency: system is unusable
 	 */
-	 const LOG_LEVEL_QUIET = 0;
+	const LOG_LEVEL_EMERG	= 0;
 
 	/**
-	 * Log level: info
+	 * Log level - Alert: action must be taken immediately
 	 */
-	 const LOG_LEVEL_INFO = 1;
+	const LOG_LEVEL_ALERT	= 1;
 
 	/**
-	 * Log level: debug
+	 * Log level - Critical: critical conditions
 	 */
-	 const LOG_LEVEL_DEBUG = 2;
+	const LOG_LEVEL_CRIT	= 2;
+
+	/**
+	 * Log level - Error: error conditions
+	 */
+	const LOG_LEVEL_ERR		= 3;
+
+	/**
+	 * Log level - Warning: warning conditions
+	 */
+	const LOG_LEVEL_WARN	= 4;
+
+	/**
+	 * Log level - Notice: normal but significant condition
+	 */
+	const LOG_LEVEL_NOTICE	= 5;
+
+	/**
+	 * Log level - Informational: informational messages
+	 */
+	const LOG_LEVEL_INFO	= 6;
+
+	/**
+	 * Log level - Debug: debug messages
+	 */
+	const LOG_LEVEL_DEBUG	= 7;
 
 	/**
 	 * Available Adapters to test.
@@ -68,6 +93,7 @@ class Listener
 	 */
 	protected static $adapters = array(
 		'GlobalCollect',
+		'Paypal',
 	);
 
 	/**
