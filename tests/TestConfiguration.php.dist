@@ -26,5 +26,19 @@
  * This file contains custom options and constants for test configuration.
  */
 
-
+/**
+ * TESTS_MESSAGE_NOT_IMPLEMENTED
+ *
+ * Message for code that has not been implemented.
+ */
 define( 'TESTS_NOT_IMPLEMENTED_MESSAGE', 'Not implemented yet!' );
+define( 'TESTS_MESSAGE_NOT_IMPLEMENTED', 'Not implemented yet!' );
+
+
+/**
+ * TESTS_LISTENER_ADAPTER_DEFAULT
+ *
+ * The default Listener adapter for test cases.
+ */
+define( 'TESTS_LISTENER_ADAPTER_DEFAULT', 'GlobalCollect' );
+

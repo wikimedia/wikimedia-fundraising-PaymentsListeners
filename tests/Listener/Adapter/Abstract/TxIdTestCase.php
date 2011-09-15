@@ -51,7 +51,7 @@ class Listener_Adapter_Abstract_TxIdTestCase extends QueueHandlingTestCase
 		$parameters = array();
 
 		// The adapter to pass to the factory.
-		$adapter = 'GlobalCollect';
+		$adapter = TESTS_LISTENER_ADAPTER_DEFAULT;
 
 		$adapterInstance = Listener::factory( $adapter, $parameters );
 

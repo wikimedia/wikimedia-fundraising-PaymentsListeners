@@ -340,7 +340,7 @@ class Listener_Adapter_Abstract_LogFileTestCase extends QueueHandlingTestCase
 	 * @covers Listener_Adapter_Abstract::log
 	 */
 	public function testLogSendMessageToStdOut() {
-		// $this->markTestIncomplete(TESTS_NOT_IMPLEMENTED_MESSAGE);
+		// $this->markTestIncomplete(TESTS_MESSAGE_NOT_IMPLEMENTED);
 		// The parameters to pass to the factory.
 		$parameters = array();
 

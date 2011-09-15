@@ -232,6 +232,30 @@ class Listener_Adapter_Abstract_StompTestCase extends QueueHandlingTestCase
 	}
 
 	/**
+	 * testSetStompConnection
+	 *
+	 * @covers Listener_Adapter_Abstract::getStomp
+	 * @covers Listener_Adapter_Abstract::setStomp
+	 * @covers Listener_Adapter_Abstract::connectStomp
+	 */
+	public function testSetStompConnectionWithBadActiveMqUrl() {
+		// The parameters to pass to the factory.
+		$parameters = array(
+			'logLevel' => Listener::LOG_LEVEL_DEBUG,
+		    'activeMqStompUri' => 'tcp://localhost:61613666',
+        );
+
+		// The adapter to pass to the factory.
+		$adapter = 'GlobalCollect';
+
+		$adapterInstance = Listener::factory( $adapter, $parameters );
+
+		//$message = 'Stomp Error.  Check host connection.  Details suppressed for security.';
+
+		$this->assertFalse( $adapterInstance->connectStomp() );
+	}
+
+	/**
 	 * testStompQueueMessageToPending
 	 *
 	 * @covers Listener_Adapter_Abstract::stompQueueMessage
@@ -285,6 +309,7 @@ class Listener_Adapter_Abstract_StompTestCase extends QueueHandlingTestCase
 	 * WARNING: This method is for a test environment only.
 	 *
 	 * @covers Listener_Adapter_Abstract::stompFetchMessage
+	 * @covers Listener_Adapter_Abstract::stompDequeueMessage
 	 */
 	public function testStompEmptyQueueIfEmptyAddSomeAndRemoveThem() {
 		// The parameters to pass to the factory.
@@ -383,7 +408,7 @@ class Listener_Adapter_Abstract_StompTestCase extends QueueHandlingTestCase
 	 * @covers Listener_Adapter_Abstract::stompFetchMessage
 	 */
 	public function testStompFetchMessageFromPending( $txId ) {
-		$this->markTestIncomplete( TESTS_NOT_IMPLEMENTED_MESSAGE );
+		$this->markTestIncomplete( TESTS_MESSAGE_NOT_IMPLEMENTED );
 		// The parameters to pass to the factory.
 		$parameters = array();
 
@@ -424,7 +449,7 @@ class Listener_Adapter_Abstract_StompTestCase extends QueueHandlingTestCase
 	 * @covers Listener_Adapter_Abstract::stompFetchMessage
 	 */
 	public function testStompFetchMessage() {
-		$this->markTestIncomplete( TESTS_NOT_IMPLEMENTED_MESSAGE );
+		$this->markTestIncomplete( TESTS_MESSAGE_NOT_IMPLEMENTED );
 	}
 
 }

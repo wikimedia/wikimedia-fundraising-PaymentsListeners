@@ -380,28 +380,30 @@ abstract class Listener_Adapter_Abstract
 	/**
 	 * connectStomp
 	 *
+	 * @return boolean Returns true if connected
 	 */
-	public function connectStomp()
+	public function connectStomp( $username = '', $password = '' )
 	{
-		$this->getStomp();
 
 		try {
 
+		    $this->getStomp();
+
 			// Debug::dump($this->stomp, eval(DUMP) . "\$this->stomp", true);
 
-			$this->stomp->connect();
+			$this->stomp->connect( $username, $password );
 			$message = 'Successfully connected to Stomp listener: ' . $this->getActiveMqStompUri();
 			$this->log( $message, Listener::LOG_LEVEL_DEBUG );
+			
+			return true;
 
 		} catch ( Stomp_Exception $e ) {
 
-			$message = 'Terminating script. Stomp connection failed: ' . $e->getMessage();
+			$message = 'Unable to connect with Stomp: ' . $e->getMessage();
 			$this->log( $message, Listener::LOG_LEVEL_EMERG );
-			// exit(1);
-
+			
+			return false;
 		}
-
-		return $this->stomp;
 	}
 
 	/**

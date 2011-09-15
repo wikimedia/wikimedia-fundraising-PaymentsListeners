@@ -34,6 +34,7 @@ require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'ConstructorTestCase.ph
 require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'GetAdapterTypeTestCase.php';
 require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'LogFileTestCase.php';
 require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'LogLevelTestCase.php';
+require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'QueueTestCase.php';
 require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'StompTestCase.php';
 require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'TxIdTestCase.php';
 
@@ -70,6 +71,7 @@ class Listener_Adapter_Abstract_AllTests
 		$suite->addTestSuite( 'Listener_Adapter_Abstract_GetAdapterTypeTestCase' );
 		$suite->addTestSuite( 'Listener_Adapter_Abstract_LogFileTestCase' );
 		$suite->addTestSuite( 'Listener_Adapter_Abstract_LogLevelTestCase' );
+		$suite->addTestSuite( 'Listener_Adapter_Abstract_QueueTestCase' );
 		$suite->addTestSuite( 'Listener_Adapter_Abstract_StompTestCase' );
 		$suite->addTestSuite( 'Listener_Adapter_Abstract_TxIdTestCase' );
 
