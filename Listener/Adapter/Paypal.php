@@ -60,4 +60,13 @@ class Listener_Adapter_Paypal extends Listener_Adapter_Abstract
 	 * @var string queueVerified
 	 */
 	protected $queueVerified = '/queue/verified_paypal';
+
+	/**
+	 * Execute the listener
+	 *
+	 * @param	array	$data		The data to be saved as a message.
+	 * @param	array	$options	OPTIONAL	Options
+	 */
+	 public function execute( $data, $options = array() ) {
+	 }
 }

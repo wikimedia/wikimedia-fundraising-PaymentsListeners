@@ -182,7 +182,7 @@ abstract class Listener_Adapter_Abstract
 	 * @param	array	$data		The data to be saved as a message.
 	 * @param	array	$options	OPTIONAL	Options
 	 */
-	public function excecute( $data, $options = array() );
+	abstract public function execute( $data, $options = array() );
 
 	/**
 	 * setActiveMqStompUri
