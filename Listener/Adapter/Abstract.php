@@ -498,18 +498,12 @@ abstract class Listener_Adapter_Abstract
 		$message = 'Attempting to remove message from pending.';
 		$this->log( $message, Listener::LOG_LEVEL_DEBUG );
 
-		if ( $this->stomp->ack( $msg ) ) {
+		$this->stomp->ack( $msg );
 
-			$message = 'The verified message was removed from the pending queue: ' .  print_r( json_decode( $msg, true ) );
-			$this->log( $message, Listener::LOG_LEVEL_DEBUG );
-			return true;
-		}
-		else {
-
-			$message = 'There was a problem removing the verified message from the pending queue: ' .  print_r( json_decode( $msg, true ) );
-			$this->log( $message, Listener::LOG_LEVEL_DEBUG );
-			return false;
-		}
+		$message = 'The verified message was removed from the pending queue: ' .  print_r( json_decode( $msg, true ) );
+		$this->log( $message, Listener::LOG_LEVEL_DEBUG );
+		
+		return true;
 	}
 
 	/**
