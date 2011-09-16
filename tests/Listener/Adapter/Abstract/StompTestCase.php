@@ -493,10 +493,6 @@ class Listener_Adapter_Abstract_StompTestCase extends QueueHandlingTestCase
 	/**
 	 * testStompDequeueMessageShouldFailWhenAttemptingToRemoveMessagesThatDoNotExist
 	 *
-	 * This test is a little complicated. Create a set of messages with a set 
-	 * id. Retrieve one of the messages and dequeue it. Verify the message is no
-	 * longer in the queue.
-	 *
 	 * @covers Listener_Adapter_Abstract::stompDequeueMessage
 	 */
 	public function testStompDequeueMessageShouldFailWhenAttemptingToRemoveMessagesThatDoNotExist() {
