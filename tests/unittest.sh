@@ -122,7 +122,7 @@ HELP
 ################################################################################
 load_configuration()
 {
-	CONFIGURATION_FILE="${UNITTEST_DIRECTORY}unittest.conf"
+	CONFIGURATION_FILE="unittest.conf"
 	
 	# Load the custom configuration file if it exists
 	if [ -f "${CONFIGURATION_FILE}" ]; then
@@ -135,7 +135,7 @@ load_configuration()
 		if [ -f "${CONFIGURATION_FILE}" ]; then
 			source ${CONFIGURATION_FILE};
 		else
-			echo "The default configuration file (${CONFIGURATION_FILE}) is missing from: `pwd`/${UNITTEST_DIRECTORY}"
+			echo "The default configuration file (${CONFIGURATION_FILE}) is missing from: `pwd`"
 			exit 1;
 		fi
 	fi
@@ -154,6 +154,9 @@ load_configuration()
 # @var string $UNITTEST_DIRECTORY	This is the relative path to the 
 # configuration file.
 UNITTEST_DIRECTORY="`dirname $0`/"
+
+# Change to script directory to keep path variables consistent.
+cd ${UNITTEST_DIRECTORY}
 
 load_configuration
 ################################################################################
@@ -187,7 +190,7 @@ while [ -n "$1" ] ; do
 		
 		# coverage-html
 		-ch)
-			PHPUNIT_COVERAGE="${PHPUNIT_COVERAGE} --coverage-html ${UNITTEST_DIRECTORY}${PHPUNIT_COVERAGE_HTML}" 
+			PHPUNIT_COVERAGE="${PHPUNIT_COVERAGE} --coverage-html ${PHPUNIT_COVERAGE_HTML}" 
 			PHPUNIT_COVERAGE_HTML_LINK="${PHPUNIT_COVERAGE_HTML_LINK}${PHPUNIT_COVERAGE_HTML}" 
 			shift 1 ;;
 		
@@ -198,7 +201,7 @@ while [ -n "$1" ] ; do
 		
 		# coverage-clover
 		-cc)
-			PHPUNIT_COVERAGE="${PHPUNIT_COVERAGE} --coverage-clover ${UNITTEST_DIRECTORY}${PHPUNIT_COVERAGE_CLOVER}" 
+			PHPUNIT_COVERAGE="${PHPUNIT_COVERAGE} --coverage-clover ${PHPUNIT_COVERAGE_CLOVER}" 
 			PHPUNIT_COVERAGE_CLOVER_LINK="${PHPUNIT_COVERAGE_CLOVER_LINK}${PHPUNIT_COVERAGE_CLOVER}" 
 			shift 1 ;;
 		
@@ -214,7 +217,7 @@ while [ -n "$1" ] ; do
 		
 		# testdox-html
 		-tdh)
-			PHPUNIT_COVERAGE="${PHPUNIT_COVERAGE} --testdox-html ${UNITTEST_DIRECTORY}${PHPUNIT_TESTDOX_HTML}" 
+			PHPUNIT_COVERAGE="${PHPUNIT_COVERAGE} --testdox-html ${PHPUNIT_TESTDOX_HTML}" 
 			PHPUNIT_COVERAGE_TESTDOX_LINK="${PHPUNIT_COVERAGE_TESTDOX_LINK}${PHPUNIT_TESTDOX_HTML}" 
 			shift 1 ;;
 		
@@ -258,7 +261,7 @@ echo "PWD:\n\n`pwd`"
 
 echo ""
 
-COMMAND_OPTIONS="${PHPUNIT_OPTS} ${PHPUNIT_LIST_GROUPS} ${PHPUNIT_COVERAGE} ${PHPUNIT_GROUPS:+--group $PHPUNIT_GROUPS} ${UNITTEST_DIRECTORY}${PHPUNIT_FILE}"
+COMMAND_OPTIONS="${PHPUNIT_OPTS} ${PHPUNIT_LIST_GROUPS} ${PHPUNIT_COVERAGE} ${PHPUNIT_GROUPS:+--group $PHPUNIT_GROUPS} ${PHPUNIT_FILE}"
 echo "COMMAND:\n\n${PHPUNIT} ${COMMAND_OPTIONS}"
 
 echo ""
