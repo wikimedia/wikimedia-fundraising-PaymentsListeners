@@ -62,11 +62,47 @@ class Listener_Adapter_Paypal extends Listener_Adapter_Abstract
 	protected $queueVerified = '/queue/verified_paypal';
 
 	/**
-	 * Execute the listener
+	 * Parse the data and format for Contribution Tracking
 	 *
-	 * @param	array	$data		The data to be saved as a message.
-	 * @param	array	$options	OPTIONAL	Options
+	 * @return array	Return the formatted data
 	 */
-	 public function execute( $data, $options = array() ) {
-	 }
+	public function parse() {
+	
+		return $this->getData();
+	}
+
+	/**
+	 * Generate a response for the merchant provider
+	 *
+	 * @param array $status The status for the message
+	 *
+	 * @return boolean Returns true on success
+	 */
+	public function receiveReturn( $status ) {
+	
+		return (boolean) $status;
+	}
+
+	/**
+	 * Verify the data has the required fields
+	 *
+	 * @todo
+	 * - implement
+	 *
+	 * @return boolean Returns true on success
+	 */
+	public function checkRequiredFields() {
+	
+		return false;
+	}
+
+	/**
+	 * Verify the payment was made
+	 *
+	 * @return boolean Returns true on success
+	 */
+	public function verifyPaymentNotification() {
+	
+		return false;
+	}
 }

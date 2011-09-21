@@ -47,6 +47,20 @@ abstract class Listener_Adapter_Abstract
 	protected $activeMqStompUri = 'tcp://localhost:61613';
 
 	/**
+	 * The contribution
+	 *
+	 * @var array contribution
+	 */
+	protected $contribution = array();
+
+	/**
+	 * The contribution
+	 *
+	 * @var array contribution
+	 */
+	protected $data = array();
+
+	/**
 	 * The log file
 	 *
 	 * @var string logFile
@@ -68,6 +82,15 @@ abstract class Listener_Adapter_Abstract
 	 * @var integer logLevel
 	 */
 	protected $logLevel = Listener::LOG_LEVEL_ERR;
+
+	/**
+	 * messageFromPendingQueue
+	 *
+	 * This is message fetched from the pending queue
+	 *
+	 * @var StompFrame $messageFromPendingQueue
+	 */
+	protected $messageFromPendingQueue;
 
 	/**
 	 * outputHandle
@@ -115,8 +138,6 @@ abstract class Listener_Adapter_Abstract
 	 * @var string stompPath
 	 */
 	protected $stompPath = 'Stomp.php';
-	// protected $stompPath = '/www/sites/localhost/fundraising-civicrm.localhost.wikimedia.org/sites/all/modules/queue2civicrm/Stomp.php';
-
 
 	/**
 	 * txId
@@ -177,12 +198,258 @@ abstract class Listener_Adapter_Abstract
 	}
 
 	/**
-	 * Execute the listener
+	 * Parse the data and format for Contribution Tracking
 	 *
-	 * @param	array	$data		The data to be saved as a message.
-	 * @param	array	$options	OPTIONAL	Options
+	 * @return array	Return the formatted data
 	 */
-	abstract public function execute( $data, $options = array() );
+	abstract public function parse();
+
+	/**
+	 * Verify the data is valid
+	 *
+	 * @uses self::checkRequiredFields()
+	 * @uses self::verifyPaymentNotification()
+	 *
+	 * @return boolean Returns true on success
+	 */
+	public function messageSanityCheck()
+	{
+		$return = false;
+		
+		if ( $this->checkRequiredFields() ) {
+		
+			if ( $this->verifyPaymentNotification() ) {
+	
+				$return = true;
+			}
+		}
+		//Debug::dump($return, eval(DUMP) . "\$return", false);
+		
+		return $return;
+	}
+
+	/**
+	 * Verify the data has the required fields
+	 *
+	 * @return boolean Returns true on success
+	 */
+	abstract public function checkRequiredFields();
+
+	/**
+	 * Verify the payment was made
+	 *
+	 * @return boolean Returns true on success
+	 */
+	abstract public function verifyPaymentNotification();
+
+	/**
+	 * Generate a response for the merchant provider
+	 *
+	 * @param array $status The status for the message
+	 *
+	 * @return mixed Returns a message for the merchant provider
+	 */
+	abstract public function receiveReturn( $status );
+
+	/**
+	 * Push the message to a queue.
+	 *
+	 * If a queue is not specified, the message will be sent to: unknown_<lower_case_class_name>
+	 *
+	 * @param string	$queue The queue to send the message
+	 */
+	public function pushToQueue( $queue = '' )
+	{
+		$return = true;
+		
+		$queue = empty( $queue ) ? '/queue/unknown_' . strtolower( get_class( $this ) ) : $queue;
+
+		if ( empty( $this->messageFromPendingQueue ) ) {
+			$message = 'There was no message to push to the queue: ' . $queue;
+			$this->log( $message, Listener::LOG_LEVEL_DEBUG );
+			
+			return false;
+		}
+	
+		// do the queueing - perhaps move out the tracking checking to its own func?
+		if ( !$this->stompQueueMessage( $queue, $this->messageFromPendingQueue->body )) {
+
+			$message = 'There was a problem queueing the message to the queue: ' . $queue;
+			$this->log( $message, Listener::LOG_LEVEL_DEBUG );
+
+			$message = 'Message: ' . print_r( $this->contribution, true );
+			$this->log( $message, Listener::LOG_LEVEL_DEBUG );
+			
+			$return = false;
+		}
+
+		//Debug::dump($return, eval(DUMP) . "\$return", false);
+		return $return;
+	}
+
+	/**
+	 * Push the message to the pending queue
+	 */
+	public function pushToPending()
+	{
+
+		$return = false;
+
+		//push message to pending queue
+		$this->contribution = $this->parse();
+		
+		if ( $this->messageSanityCheck() ) {
+		
+			// connect to stomp
+			$this->connectStomp();
+
+			$headers = array( 'persistent' => 'true', 'JMSCorrelationID' => $this->getTxId() );
+			$message = 'Setting JMSCorrelationID: ' . $this->getTxId();
+			$this->log( $message, Listener::LOG_LEVEL_DEBUG );
+	
+			// do the queueing - perhaps move out the tracking checking to its own func?
+			if ( !$this->stompQueueMessage( $this->getQueuePending(), json_encode( $this->contribution ), $headers )) {
+				$message = 'There was a problem queueing the message to the queue: ' . $this->getQueuePending();
+				$this->log( $message, Listener::LOG_LEVEL_DEBUG );
+	
+				$message = 'Message: ' . print_r( $this->contribution, true );
+				$this->log( $message, Listener::LOG_LEVEL_DEBUG );
+			}
+			else {
+
+				$return = true;
+			}
+		}
+
+		//Debug::dump($return, eval(DUMP) . "\$return", false);
+		return $return;
+
+	}
+
+	/**
+	 * Fetch the message from the pending queue
+	 *
+	 * @return boolean Return true on success.
+	 */
+	public function fetchFromPending() {
+		// define a selector property for pulling a particular msg off the queue
+		$properties = array();
+		$properties['selector'] = "JMSCorrelationID = '" . $this->getTxId() . "'";
+
+		// pull the message object from the pending queue without completely removing it 
+		$message = 'Attempting to pull message from pending queue with JMSCorrelationID: ' . $this->getTxId();
+		$this->log( $message, Listener::LOG_LEVEL_DEBUG );
+
+		$this->messageFromPendingQueue = $this->stompFetchMessage( $this->getQueuePending(), $properties );
+		
+		if ( $this->messageFromPendingQueue ) {
+
+			$message = 'Pulled message from pending queue: ' . $this->messageFromPendingQueue;
+			$this->log( $message, Listener::LOG_LEVEL_DEBUG );
+			
+			$return = true;
+		}
+		else {
+
+			$message = 'FAILED retrieving message from pending queue.';
+			$this->log( $message, Listener::LOG_LEVEL_WARN );
+			$return = false;
+		}
+		
+		//Debug::dump($return, eval(DUMP) . "\$return", false);
+		return $return;
+	}
+
+	/**
+	 * Push the message to the verified queue
+	 *
+	 * @return boolean Return true on success.
+	 */
+	public function pushToVerified() {
+		
+		$return = true;
+		
+		// push to verified queue
+		if ( !$this->stompQueueMessage( $this->getQueueVerified(), $this->messageFromPendingQueue->body )) {
+		
+			$message = 'There was a problem queueing the message to the queue: ' . $this->getQueueVerified();
+			$this->log( $message, Listener::LOG_LEVEL_DEBUG );
+			
+			$message = 'Message: ' . print_r( $this->contribution, true );
+			$this->log( $message, Listener::LOG_LEVEL_DEBUG );
+			
+			$return = false;
+		}
+		
+		//Debug::dump($return, eval(DUMP) . "\$return", false);
+		return $return;
+	}
+	
+	/**
+	 * Receive data for processing.
+	 * - Send the message to the pending queue
+	 * - Fetch from pending (do not remove)
+	 * - Verify from pending
+	 * - 
+	 *
+	 * Take the data sent from a PayPal IPN request, verify it against the IPN,
+	 * then push the transaction to the queue.  Before verifying the transaction
+	 * against the IPN, this will place the transaction originally received in
+	 * the pending queue.  If the transaction is verified, it will be removed
+	 * from the pending queue and placed in an accepted queue.  If it is not
+	 * verified, it will be left in the pending queue for dealing with in some
+	 * other fashion.
+	 *
+	 * @todo
+	 * - make this usable by GlobalCollect
+	 * - check STATUSID
+	 *
+	 * @param	array	$data		The data to be saved in a queue.
+	 * @param	array	$options	OPTIONAL	Options
+	 *
+	 * @return	boolean|null	Returns boolean on receipt of data, false if data is empty. 
+	 */
+	public function receive( $data, $options = array() ) {
+		
+		$status = false;
+		$empty = false;
+	 	 
+	 	// Make sure we are actually getting something posted to the page.
+		if ( empty( $data ) ) {
+			
+			$message = 'Received an empty message, nothing to verify.';
+			$this->log( $message, Listener::LOG_LEVEL_DEBUG );
+			
+			return $this->receiveReturn( $status );
+		}
+
+		$this->setData( $data );
+		
+		// Push the message to pending
+		if ( $this->pushToPending( $this->getData() ) ) {
+			
+			// Fetch from pending
+			if ($this->fetchFromPending() ) {
+				
+				// Verify the message we pulled from the pending queue.
+				if ( $this->pushToVerified() ) {
+			
+					// remove from pending
+					$this->stompDequeueMessage( $this->messageFromPendingQueue );
+					$this->messageFromPendingQueue = null;
+					
+					$status = true;
+				}
+			}
+		}
+
+		if ( !empty( $this->messageFromPendingQueue )) {
+			$this->pushToQueue();
+			$this->stompDequeueMessage( $this->messageFromPendingQueue );
+		}
+		
+		return $this->receiveReturn( $status );
+	 }
 
 	/**
 	 * setActiveMqStompUri
@@ -212,6 +479,43 @@ abstract class Listener_Adapter_Abstract
 		$calledClass = get_called_class();
 
 		return $calledClass::ADAPTER;
+	}
+
+	/**
+	 * setData
+	 */
+	public function setData( $data = array() )
+	{
+		$this->data = empty( $data ) ? array() : (array) $data;
+	}
+
+	/**
+	 * getData
+	 *
+	 * @param string $key The key to fetch in the data array
+	 * @param boolean $require Require the key to exist, otherwise throw an Exception.
+	 *
+	 * @return mixed|null Return the data sent to @see $this->receive()
+	 */
+	public function getData( $key = '', $require = false )
+	{
+		if ( empty( $key ) ) {
+
+			return $this->data;
+		}
+		
+		if ( !isset( $this->data[ $key ] ) ) {
+			
+			if ( $require ) {
+				$message = 'The required key is not set in data: ' . $key;
+				throw new Listener_Exception( $message );
+			}
+			
+			return null;
+		}
+
+		return $this->data[ $key ];
+		
 	}
 
 	/**
@@ -481,7 +785,7 @@ abstract class Listener_Adapter_Abstract
 	 * @param $destination string of the destination path for where to send a message
 	 * @param $messageDetails string the (formatted) message to send to the queue
 	 * @param $properties array of additional Stomp properties
-	 * @return bool result from send, FALSE on failure
+	 * @return bool result from send, false on failure
 	 */
 	public function stompQueueMessage( $destination, $messageDetails, $properties = array( 'persistent' => 'true' ) ) {
 
