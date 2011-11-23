@@ -654,7 +654,7 @@ abstract class Listener_Adapter_Abstract
 		}
 		else {
 			if ( $this->getLogLevel() >= $level ) {
-				echo "\n" . $message . "\n";
+				//echo "\n" . $message . "\n";
 			}
 		}
 
