@@ -61,7 +61,7 @@ $title = 'Test form for GlobalCollect PSC Listener';
 
 		<div>
 			
-			<form action="/queue_handling/Listener.GlobalCollect.php" method="post">
+			<form action="Listener.GlobalCollect.php" method="post">
 				
 				<fieldset>
 					
