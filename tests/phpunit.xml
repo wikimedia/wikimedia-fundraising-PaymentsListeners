@@ -11,6 +11,8 @@
 				<directory>../payflowpro</directory>
 				<directory>../paypal</directory>
 				<directory>../tests</directory>
+				<file>../Listener.GlobalCollect.php</file>
+				<file>../Listener.GlobalCollect.form.php</file>
 			</exclude>
 		</whitelist>
 	</filter>
