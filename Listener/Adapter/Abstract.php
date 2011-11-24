@@ -152,12 +152,25 @@ abstract class Listener_Adapter_Abstract
 	 * Constructor
 	 *
 	 * @param array $parameters The adapter parameters
+	 *
+	 * $parameters
+	 * - activeMqStompUri:	Change the URI for ActiveMQ		DEFAULT => tcp://localhost:61613
+	 * - log:				Enable logging 					DEFAULT => tc
+	 * - logLevel:			Set the log level				DEFAULT => Listener::LOG_LEVEL_ERR - Setting this enables logging
+	 * - logFile:			Set the log file path 			DEFAULT => BASE_PATH . '/logs/' . strtolower( $this->getAdapterType() ) . '/' . date( 'Ymd' ) . '.log' - Setting this enables logging
+	 * - stompPath:			Set the path to Stomp 			DEFAULT => Stomp.php - This should be in queue_handling/library/
+	 *
 	 */
 	public function __construct( $parameters )
 	{
 		// Extract parameters.
 		extract( $parameters );
 
+		// Create transaction id
+		$this->setTxId();
+
+		$log = isset( $log ) ? (boolean) $log : false;
+		
 		// Set the stomp path if passed from parameters.
 		if ( isset( $activeMqStompUri ) ) {
 			$this->setActiveMqStompUri( $activeMqStompUri );
@@ -166,13 +179,19 @@ abstract class Listener_Adapter_Abstract
 		// Set log level if passed from parameters.
 		if ( isset( $logLevel ) ) {
 			$this->setLogLevel( $logLevel );
+			$log = true;
 		}
 
 		// Set log file if passed from parameters.
 		if ( isset( $logFile ) ) {
 			$this->setLogFile( $logFile );
+			$log = true;
 		}
 
+		if ( $log ) {
+			$this->openOutputHandle();
+		}
+		
 		$message = 'Loading ' . $this->getAdapterType() . ' processor with log level: ' . $this->getLogLevel();
 		$this->log( $message );
 
@@ -180,9 +199,6 @@ abstract class Listener_Adapter_Abstract
 		if ( isset( $stompPath ) ) {
 			$this->setStompPath( $stompPath );
 		}
-
-		// Create transaction id
-		$this->setTxId();
 	}
 
 	/**
@@ -635,7 +651,6 @@ abstract class Listener_Adapter_Abstract
 	 */
 	public function log( $message, $level = null )
 	{
-		// Debug::dump($message, eval(DUMP) . "\$message", false);
 		$level = ( is_null( $level ) || $level === false ) ? Listener::LOG_LEVEL_INFO : (integer) $level;
 
 		$return = null;
@@ -644,20 +659,11 @@ abstract class Listener_Adapter_Abstract
 		if ( $this->getLogLevel() >= $level ) {
 			$return = date( 'c' ) . "\t" . $this->getTxId() . "\t" . $message . "\n";
 		}
-		// Debug::dump($level, eval(DUMP) . "\$level", false);
-		// Debug::dump($return, eval(DUMP) . "\$return", false);
-		// Debug::dump($this->hasOutputHandle(), eval(DUMP) . "\$this->hasOutputHandle()", false);
 
 		// If there is a log file set up, write to file, otherwise, send to stdout
 		if ( $this->hasOutputHandle() ) {
 			fwrite( $this->getOutputHandle(), $return );
 		}
-		else {
-			if ( $this->getLogLevel() >= $level ) {
-				//echo "\n" . $message . "\n";
-			}
-		}
-
 	}
 
 	/**
@@ -700,8 +706,6 @@ abstract class Listener_Adapter_Abstract
 		try {
 
 		    $this->getStomp();
-
-			// Debug::dump($this->stomp, eval(DUMP) . "\$this->stomp", true);
 
 			$this->stomp->connect( $username, $password );
 			$message = 'Successfully connected to Stomp listener: ' . $this->getActiveMqStompUri();
@@ -760,7 +764,6 @@ abstract class Listener_Adapter_Abstract
 	 */
 	public function setStompPath( $path )
 	{
-		// Debug::dump($path, eval(DUMP) . "\$path", false);
 		if ( !is_file( $path ) ) {
 			$message = 'The stomp script does not exist: ' . $path;
 			throw new Listener_Exception( $message );
