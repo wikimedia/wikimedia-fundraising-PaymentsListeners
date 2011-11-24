@@ -41,9 +41,6 @@ $adapter = 'GlobalCollect';
 
 $adapterInstance = Listener::factory( $adapter, $parameters );
 
-// Create a log at logs/globalcollect/YYYYMMDD.log
-$adapterInstance->openOutputHandle();
-
 $_POST = isset( $_POST ) ? $_POST : array();
 
 echo $adapterInstance->receive( $_POST );
