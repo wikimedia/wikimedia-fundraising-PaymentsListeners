@@ -31,6 +31,7 @@ if ( !defined( 'PHPUNIT_MAIN_METHOD' ) ) {
 // Debug::dump(__FILE__, eval(DUMP) . "__FILE__", false);
 
 require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'ConstructorTestCase.php';
+require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'LimboTestCase.php';
 require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'ReceiveTestCase.php';
 
 /**
@@ -63,6 +64,7 @@ class Listener_Adapter_GlobalCollect_AllTests
 		$suite = new PHPUnit_Framework_TestSuite( 'Queue Handling - Listener - Adapter - GlobalCollect Suite' );
 
 		$suite->addTestSuite( 'Listener_Adapter_GlobalCollect_ConstructorTestCase' );
+		$suite->addTestSuite( 'Listener_Adapter_GlobalCollect_LimboTestCase' );
 		$suite->addTestSuite( 'Listener_Adapter_GlobalCollect_ReceiveTestCase' );
 
 		return $suite;
