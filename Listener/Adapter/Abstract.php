@@ -93,6 +93,15 @@ abstract class Listener_Adapter_Abstract
 	protected $messageFromPendingQueue;
 
 	/**
+	 * messageFromLimboQueue
+	 *
+	 * This is message fetched from the limbo queue
+	 *
+	 * @var StompFrame $messageFromLimboQueue
+	 */
+	protected $messageFromLimboQueue;
+
+	/**
 	 * outputHandle
 	 *
 	 * This is a resource created by fopen.
@@ -102,22 +111,36 @@ abstract class Listener_Adapter_Abstract
 	protected $outputHandle;
 
 	/**
+	 * queueLimbo
+	 *
+	 * This is path to limbo queue.
+	 *
+	 * Messages get sent to the limbo queue when they are created by the form.
+	 * They will be removed from the limbo queue when a listener post has 
+	 * identified the a message by order id.
+	 *
+	 *
+	 * @var string $queueLimbo
+	 */
+	protected $queueLimbo = '/queue/limbo';
+
+	/**
 	 * queuePending
 	 *
 	 * This is path to pending queue
 	 *
-	 * @var string queuePending
+	 * @var string $queuePending
 	 */
-	protected $queuePending = '';
+	protected $queuePending = '/queue/pending';
 
 	/**
 	 * queueVerified
 	 *
 	 * This is path to verified queue
 	 *
-	 * @var string queueVerified
+	 * @var string $queueVerified
 	 */
-	protected $queueVerified = '';
+	protected $queueVerified = '/queue/verified';
 
 	/**
 	 * stomp
@@ -268,6 +291,53 @@ abstract class Listener_Adapter_Abstract
 	abstract public function receiveReturn( $status );
 
 	/**
+	 * Push the message to the pending queue
+	 *
+	 * @param mixed		$activeMqMessage	The message to be sent to the queue 
+	 * @param string	$queue				The destination queue for the message 
+	 * @param string	$id					This will set JMSCorrelationID. If an empty value is passed, $this->getTxId() will be used instead.
+	 * @param array		$options			Optional settings
+	 * - $json:	(boolean)	 By default, messages will be encoded with json.
+	 *
+	 * @return boolean	Returns true on success
+	 */
+	public function pushToQueueWithJmsCorrelationId( $activeMqMessage, $queue, $id, $options = array() )
+	{
+
+		// Make sure the id is not empty
+		$id = empty( $id ) ? $this->getTxId() : $id;
+		
+		// Encode messages with json by default
+		$json = isset( $options['json'] ) ? (boolean) $options['json'] : true;
+		$activeMqMessage = $json ? json_encode( $activeMqMessage ) : $activeMqMessage;
+		
+		// The return value
+		$return = false;
+
+		// connect to stomp
+		$this->connectStomp();
+
+		$headers = array( 'persistent' => 'true', 'JMSCorrelationID' => $id );
+		$message = 'Setting JMSCorrelationID: ' . $id;
+		$this->log( $message, Listener::LOG_LEVEL_DEBUG );
+
+		// Queue the message
+		if ( !$this->stompQueueMessage( $queue, $activeMqMessage, $headers )) {
+			$message = 'There was a problem queueing the message to the queue: ' . $queue;
+			$this->log( $message, Listener::LOG_LEVEL_DEBUG );
+
+			$message = 'Message: ' . print_r( $activeMqMessage, true );
+			$this->log( $message, Listener::LOG_LEVEL_DEBUG );
+		}
+		else {
+
+			$return = true;
+		}
+		
+		return $return;
+	}
+
+	/**
 	 * Push the message to a queue.
 	 *
 	 * If a queue is not specified, the message will be sent to: unknown_<lower_case_class_name>
@@ -342,6 +412,73 @@ abstract class Listener_Adapter_Abstract
 
 	}
 
+	/**
+	 * Fetch the message from the limbo queue
+	 *
+	 * @return boolean Return true on success.
+	 */
+	public function fetchFromLimbo( $orderId, $options = array() ) {
+
+		$dequeue = empty( $options['dequeue'] ) ? false : (boolean) $options['dequeue'];
+		$return = false;
+		
+		if ( empty( $orderId ) ) {
+			
+			$message = 'You must specify an order id when you are fetching from the limbo queue';
+			$this->log( $message, Listener::LOG_LEVEL_DEBUG );
+
+			return $return;
+			
+		}
+
+		// connect to stomp
+		$this->connectStomp();
+		
+		// define a selector property for pulling a particular msg off the queue
+		$properties = array();
+		$properties['selector'] = "JMSCorrelationID = '" . $orderId . "'";
+
+		// pull the message object from the pending queue without completely removing it 
+		$message = 'Attempting to pull message from pending queue with JMSCorrelationID: ' . $orderId;
+		$this->log( $message, Listener::LOG_LEVEL_DEBUG );
+
+		$this->messageFromLimboQueue = $this->stompFetchMessage( $this->getQueueLimbo(), $properties );
+		
+		if ( $this->messageFromLimboQueue ) {
+
+			$message = 'Pulled message from pending queue: ' . $this->messageFromLimboQueue;
+			$this->log( $message, Listener::LOG_LEVEL_DEBUG );
+
+			if ( $dequeue ) {
+				// remove from limbo
+				$this->stompDequeueMessage( $this->messageFromLimboQueue );
+				$this->messageFromPendingQueue = null;
+			}
+
+			$return = true;
+		}
+		else {
+
+			$message = 'FAILED retrieving message from pending queue.';
+			$this->log( $message, Listener::LOG_LEVEL_WARN );
+			$return = false;
+		}
+		
+		return $return;
+	}
+
+	/**
+	 * Fetch the message from the limbo queue and remove it
+	 *
+	 * @return boolean Return true on success.
+	 */
+	public function fetchFromLimboAndDequeue( $orderId, $options = array() ) {
+		
+		$options['dequeue'] = true;
+		
+		return $this->fetchFromLimbo( $orderId, $options );
+	}
+	
 	/**
 	 * Fetch the message from the pending queue
 	 *
@@ -841,6 +978,26 @@ abstract class Listener_Adapter_Abstract
 		$this->log( $message, Listener::LOG_LEVEL_DEBUG );
 
 		return $this->stomp->readFrame();
+	}
+
+	/**
+	 * getQueueLimbo
+	 *
+	 * @return Return the queue limbo path for ActiveMQ
+	 */
+	public function getQueueLimbo()
+	{
+		return $this->queueLimbo;
+	}
+
+	/**
+	 * setQueueLimbo
+	 *
+	 * @param string $path The queue limbo path for ActiveMQ
+	 */
+	public function setQueueLimbo( $path )
+	{
+		$this->queueLimbo = $path;
 	}
 
 	/**
