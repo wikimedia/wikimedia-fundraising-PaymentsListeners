@@ -15,19 +15,14 @@
  * GNU General Public License for more details.
  *
  *
- * @category	UnitTesting
- * @package		Fundraising_QueueHandling
  * @license		http://www.gnu.org/copyleft/gpl.html GNU GENERAL PUBLIC LICENSE
- * @since		r462
  * @author		Jeremy Postlethwaite <jpostlethwaite@wikimedia.org>
  */
 
 require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'TestHelper.php';
 
 /**
- *
- * @category	UnitTesting
- * @package		Fundraising_QueueHandling
+ * QueueHandlingTestCase
  */
 abstract class QueueHandlingTestCase extends PHPUnit_Framework_TestCase
 {
