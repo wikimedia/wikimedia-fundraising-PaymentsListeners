@@ -33,6 +33,7 @@ if ( !defined( 'PHPUNIT_MAIN_METHOD' ) ) {
 require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'ConstructorTestCase.php';
 require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'DataTestCase.php';
 require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'GetAdapterTypeTestCase.php';
+require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'LimboTestCase.php';
 require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'LogFileTestCase.php';
 require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'LogLevelTestCase.php';
 require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'QueueTestCase.php';
@@ -71,6 +72,7 @@ class Listener_Adapter_Abstract_AllTests
 		$suite->addTestSuite( 'Listener_Adapter_Abstract_ConstructorTestCase' );
 		$suite->addTestSuite( 'Listener_Adapter_Abstract_DataTestCase' );
 		$suite->addTestSuite( 'Listener_Adapter_Abstract_GetAdapterTypeTestCase' );
+		$suite->addTestSuite( 'Listener_Adapter_Abstract_LimboTestCase' );
 		$suite->addTestSuite( 'Listener_Adapter_Abstract_LogFileTestCase' );
 		$suite->addTestSuite( 'Listener_Adapter_Abstract_LogLevelTestCase' );
 		$suite->addTestSuite( 'Listener_Adapter_Abstract_QueueTestCase' );
