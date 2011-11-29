@@ -42,6 +42,20 @@ class Listener_Adapter_GlobalCollect extends Listener_Adapter_Abstract
 	 * Adapter name
 	 */
 	 const ADAPTER = 'GlobalCollect';
+	 
+	/**
+	 * Initialize the class
+	 *
+	 * init() is called at the end of the constructor to allow automatic settings for adapters.
+	 */
+	protected function init() {
+		
+		// Global Collect needs to pull from the limbo queue.
+		$this->setPullFromLimbo( true );
+		
+		// ORDERID maps to JMSCorrelationID in the limbo queue.
+		$this->setLimboIdName( 'ORDERID' );
+	}
 
 	/**
 	 * Parse the data and format for Contribution Tracking
