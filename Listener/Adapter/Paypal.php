@@ -60,6 +60,14 @@ class Listener_Adapter_Paypal extends Listener_Adapter_Abstract
 	 * @var string queueVerified
 	 */
 	protected $queueVerified = '/queue/verified_paypal';
+	 
+	/**
+	 * Initialize the class
+	 *
+	 * init() is called at the end of the constructor to allow automatic settings for adapters.
+	 */
+	protected function init() {
+	}
 
 	/**
 	 * Parse the data and format for Contribution Tracking
