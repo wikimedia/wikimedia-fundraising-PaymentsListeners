@@ -496,7 +496,7 @@ class Listener_Adapter_Abstract_StompTestCase extends QueueHandlingTestCase
 	 * @covers Listener_Adapter_Abstract::stompDequeueMessage
 	 */
 	public function testStompDequeueMessageShouldFailWhenAttemptingToRemoveMessagesThatDoNotExist() {
-		$this->markTestIncomplete(TESTS_MESSAGE_NOT_IMPLEMENTED);
+		$this->markTestIncomplete(TESTS_MESSAGE_NOT_IMPLEMENTED . ' It may not be possible to make Stomp fail if a message does not exist.');
 		// The parameters to pass to the factory.
 		$parameters = array(
 			'logLevel' => Listener::LOG_LEVEL_DEBUG,
