@@ -42,28 +42,42 @@ abstract class Listener_Adapter_Abstract
 	 *
 	 * Port 61613 is the default install for ActiveMQ 5.4.2
 	 *
-	 * @var string activeMqStompUri
+	 * @var string $activeMqStompUri
 	 */
 	protected $activeMqStompUri = 'tcp://localhost:61613';
 
 	/**
 	 * The contribution
 	 *
-	 * @var array contribution
+	 * @var array $contribution
 	 */
 	protected $contribution = array();
 
 	/**
-	 * The contribution
+	 * The data
 	 *
-	 * @var array contribution
+	 * @var array $data
 	 */
 	protected $data = array();
 
 	/**
+	 * The limbo ID
+	 *
+	 * @var string $limboId
+	 */
+	protected $limboId = '';
+
+	/**
+	 * The limbo ID Name
+	 *
+	 * @var string $limboIdName
+	 */
+	protected $limboIdName = '';
+
+	/**
 	 * The log file
 	 *
-	 * @var string logFile
+	 * @var string $logFile
 	 */
 	protected $logFile = '';
 
@@ -79,7 +93,7 @@ abstract class Listener_Adapter_Abstract
 	 * @see Listener::LOG_LEVEL_INFO
 	 * @see Listener::LOG_LEVEL_DEBUG
 	 *
-	 * @var integer logLevel
+	 * @var integer $logLevel
 	 */
 	protected $logLevel = Listener::LOG_LEVEL_ERR;
 
@@ -106,9 +120,18 @@ abstract class Listener_Adapter_Abstract
 	 *
 	 * This is a resource created by fopen.
 	 *
-	 * @var resource outputHandle
+	 * @var resource $outputHandle
 	 */
 	protected $outputHandle;
+
+	/**
+	 * pullFromLimbo
+	 *
+	 * Pull from the limbo queue
+	 *
+	 * @var boolean $pullFromLimbo
+	 */
+	protected $pullFromLimbo = false;
 
 	/**
 	 * queueLimbo
@@ -158,7 +181,7 @@ abstract class Listener_Adapter_Abstract
 	 *
 	 * Stomp can be placed in the library folder.
 	 *
-	 * @var string stompPath
+	 * @var string $stompPath
 	 */
 	protected $stompPath = 'Stomp.php';
 
@@ -167,7 +190,7 @@ abstract class Listener_Adapter_Abstract
 	 *
 	 * This is the transaction id
 	 *
-	 * @var string txId
+	 * @var string $txId
 	 */
 	protected $txId = '';
 
@@ -222,6 +245,8 @@ abstract class Listener_Adapter_Abstract
 		if ( isset( $stompPath ) ) {
 			$this->setStompPath( $stompPath );
 		}
+
+		$this->init();
 	}
 
 	/**
@@ -235,6 +260,13 @@ abstract class Listener_Adapter_Abstract
 		// Close log if it was opened.
 		$this->closeOutputHandle();
 	}
+
+	/**
+	 * Initialize the class
+	 *
+	 * init() is called at the end of the constructor to allow automatic settings for adapters.
+	 */
+	abstract protected function init();
 
 	/**
 	 * Parse the data and format for Contribution Tracking
@@ -415,19 +447,21 @@ abstract class Listener_Adapter_Abstract
 	/**
 	 * Fetch the message from the limbo queue
 	 *
+	 * @param string	$limboId 	The JMSCorrelationID of the message in the limbo queue
+	 * @param array		$options	Optional settings
+	 * - $dequeue:	(boolean)	 By default, messages will not be dequeued.
+	 *
 	 * @return boolean Return true on success.
 	 */
-	public function fetchFromLimbo( $orderId, $options = array() ) {
+	public function fetchFromLimbo( $limboId = '', $options = array() ) {
 
 		$dequeue = empty( $options['dequeue'] ) ? false : (boolean) $options['dequeue'];
 		$return = false;
 		
-		if ( empty( $orderId ) ) {
-			
-			$message = 'You must specify an order id when you are fetching from the limbo queue';
+		if ( empty( $limboId ) ) {
+			$limboId = $this->getData( $this->getLimboIdName(), true);
+			$message = 'Fetching limbo Id from data.';
 			$this->log( $message, Listener::LOG_LEVEL_DEBUG );
-
-			return $return;
 			
 		}
 
@@ -436,10 +470,10 @@ abstract class Listener_Adapter_Abstract
 		
 		// define a selector property for pulling a particular msg off the queue
 		$properties = array();
-		$properties['selector'] = "JMSCorrelationID = '" . $orderId . "'";
+		$properties['selector'] = "JMSCorrelationID = '" . $limboId . "'";
 
 		// pull the message object from the pending queue without completely removing it 
-		$message = 'Attempting to pull message from pending queue with JMSCorrelationID: ' . $orderId;
+		$message = 'Attempting to pull message from pending queue with JMSCorrelationID: ' . $limboId;
 		$this->log( $message, Listener::LOG_LEVEL_DEBUG );
 
 		$this->messageFromLimboQueue = $this->stompFetchMessage( $this->getQueueLimbo(), $properties );
@@ -470,9 +504,12 @@ abstract class Listener_Adapter_Abstract
 	/**
 	 * Fetch the message from the limbo queue and remove it
 	 *
+	 * @param string	$limboId 	The JMSCorrelationID of the message in the limbo queue
+	 * @param array		$options	@see Listener_Adapter_Abstract::fetchFromLimbo
+	 *
 	 * @return boolean Return true on success.
 	 */
-	public function fetchFromLimboAndDequeue( $orderId, $options = array() ) {
+	public function fetchFromLimboAndDequeue( $orderId = '', $options = array() ) {
 		
 		$options['dequeue'] = true;
 		
@@ -578,6 +615,11 @@ abstract class Listener_Adapter_Abstract
 
 		$this->setData( $data );
 		
+		if ( $this->getPullFromLimbo() ) {
+
+			$this->fetchFromLimboAndDequeue();
+		}
+		
 		// Push the message to pending
 		if ( $this->pushToPending( $this->getData() ) ) {
 			
@@ -669,6 +711,46 @@ abstract class Listener_Adapter_Abstract
 
 		return $this->data[ $key ];
 		
+	}
+
+	/**
+	 * getLimboId
+	 *
+	 * @return string Returns the limbo ID
+	 */
+	public function getLimboId()
+	{
+		return $this->limboId;
+	}
+
+	/**
+	 * setLimboId
+	 *
+	 * @param string $value The value of the id.
+	 */
+	public function setLimboId( $value )
+	{
+		$this->limboId = $value;
+	}
+
+	/**
+	 * getLimboIdName
+	 *
+	 * @return string Returns the name of the limbo ID
+	 */
+	public function getLimboIdName()
+	{
+		return $this->limboIdName;
+	}
+
+	/**
+	 * setLimboIdName
+	 *
+	 * @param string $limboIdName The limbo ID name
+	 */
+	public function setLimboIdName( $limboIdName )
+	{
+		$this->limboIdName = $limboIdName;
 	}
 
 	/**
@@ -978,6 +1060,26 @@ abstract class Listener_Adapter_Abstract
 		$this->log( $message, Listener::LOG_LEVEL_DEBUG );
 
 		return $this->stomp->readFrame();
+	}
+
+	/**
+	 * getPullFromLimbo
+	 *
+	 * @return boolean Returns true if the script needs to pull from the limbo queue.
+	 */
+	public function getPullFromLimbo()
+	{
+		return $this->pullFromLimbo;
+	}
+
+	/**
+	 * setPullFromLimbo
+	 *
+	 * @param boolean $pull Setting $pull to true will enable pulling from the limbo queue.
+	 */
+	public function setPullFromLimbo( $pull )
+	{
+		$this->pullFromLimbo = (boolean) $pull;
 	}
 
 	/**
