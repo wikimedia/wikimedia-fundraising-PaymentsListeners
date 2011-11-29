@@ -330,40 +330,4 @@ class Listener_Adapter_Abstract_LogFileTestCase extends QueueHandlingTestCase
 		// Get the contents of the log. This should be empty
 		$this->assertEmpty( $adapterInstance->getLogContents() );
 	}
-
-	/**
-	 * testLogSendMessageToStdOut
-	 *
-	 * @todo
-	 * - implement buffer control for test
-	 *
-	 * @covers Listener_Adapter_Abstract::log
-	 */
-	public function testLogSendMessageToStdOut() {
-		// $this->markTestIncomplete(TESTS_MESSAGE_NOT_IMPLEMENTED);
-		// The parameters to pass to the factory.
-		$parameters = array();
-
-		// The adapter to pass to the factory.
-		$adapter = 'GlobalCollect';
-
-		$adapterInstance = Listener::factory( $adapter, $parameters );
-		// Debug::dump($adapterInstance->getLogLevel(), eval(DUMP) . "\$adapterInstance->getLogLevel()", false);
-
-		// Debug::dump($adapterInstance->hasOutputHandle(), eval(DUMP) . "\$adapterInstance->hasOutputHandle()", false);
-		$adapterInstance->closeOutputHandle();
-		// Debug::dump($adapterInstance->hasOutputHandle(), eval(DUMP) . "\$adapterInstance->hasOutputHandle()", false);
-
-		$message = 'Oh no, there is spaghetti everywhere!';
-		// Debug::dump($message, eval(DUMP) . "\$message", false);
-
-		// Log at the emergency level so it goes through.
-		ob_start();
-		$adapterInstance->log( $message, Listener::LOG_LEVEL_EMERG );
-		$output = ob_get_contents();
-		ob_end_clean();
-		// Debug::dump($output, eval(DUMP) . "\$output", false);
-		$this->assertContains( $message, $output );
-
-	}
 }
