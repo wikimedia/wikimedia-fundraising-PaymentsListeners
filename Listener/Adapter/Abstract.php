@@ -668,12 +668,43 @@ abstract class Listener_Adapter_Abstract
 
 	/**
 	 * getAdapterType
+	 *
+	 * @return	string	Return the adapter type
 	 */
 	public function getAdapterType()
 	{
 		$calledClass = get_called_class();
 
 		return $calledClass::ADAPTER;
+	}
+
+	/**
+	 * getAdapterTypeLowerCase
+	 *
+	 * @return	string	Return the adapter type in lowercase.
+	 */
+	public function getAdapterTypeLowerCase()
+	{
+		return strtolower( $this->getAdapterType() );
+	}
+
+	/**
+	 * setQueuesForAdapterType
+	 *
+	 * This will automatically prefix queues by adapter type.
+	 *
+	 * This can be called in init().
+	 */
+	public function setQueuesForAdapterType()
+	{
+		// queue prefix
+		$prefix = $this->getAdapterTypeLowerCase();
+		
+		// Set the queues
+		$this->setQueueLimbo( '/queue/' . $prefix . '-limbo' );
+		$this->setQueuePending( '/queue/' . $prefix . '-pending' );
+		$this->setQueueVerified( '/queue/' . $prefix . '-verified' );
+		
 	}
 
 	/**
