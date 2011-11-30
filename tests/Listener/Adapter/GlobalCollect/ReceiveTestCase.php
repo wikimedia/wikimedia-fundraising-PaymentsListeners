@@ -41,7 +41,7 @@ class Listener_Adapter_GlobalCollect_ReceiveTestCase extends QueueHandlingTestCa
 {
 
 	/**
-	 * testReceiveValidPost
+	 * testReceiveEmptyShouldReturnNok
 	 *
 	 * @covers Listener_Adapter_Abstract::receive
 	 * @covers Listener_Adapter_Abstract::receiveReturn
@@ -64,16 +64,17 @@ class Listener_Adapter_GlobalCollect_ReceiveTestCase extends QueueHandlingTestCa
 		$this->assertEquals( 'NOK', $adapterInstance->receive( $_POST ) );
 	}
 	
-	
 	/**
-	 * testReceiveValidPost
+	 * testReceiveValidPostWithPaymentStatusCode1000Paid
 	 *
+	 * @covers Listener_Adapter_GlobalCollect::init
 	 * @covers Listener_Adapter_Abstract::receive
-	 * @covers Listener_Adapter_Abstract::receiveReturn
+	 * @covers Listener_Adapter_GlobalCollect::receiveReturn
+	 * @covers Listener_Adapter_GlobalCollect::parse
 	 * @covers Listener_Adapter_Abstract::pushToPending
 	 * @covers Listener_Adapter_Abstract::messageSanityCheck
-	 * @covers Listener_Adapter_Abstract::checkRequiredFields
-	 * @covers Listener_Adapter_Abstract::verifyPaymentNotification
+	 * @covers Listener_Adapter_GlobalCollect::checkRequiredFields
+	 * @covers Listener_Adapter_GlobalCollect::verifyPaymentNotification
 	 * @covers Listener_Adapter_Abstract::fetchFromPending
 	 * @covers Listener_Adapter_Abstract::pushToVerified
 	 * @covers Listener_Adapter_Abstract::stompDequeueMessage
@@ -112,5 +113,155 @@ class Listener_Adapter_GlobalCollect_ReceiveTestCase extends QueueHandlingTestCa
 		$this->assertEquals( 'OK', $adapterInstance->receive( $_POST ) );
 		
 	}
+	
+	/**
+	 * testReceiveInvalidPostWithEmptyOrderId
+	 *
+	 * @covers Listener_Adapter_GlobalCollect::init
+	 * @covers Listener_Adapter_Abstract::receive
+	 * @covers Listener_Adapter_GlobalCollect::receiveReturn
+	 * @covers Listener_Adapter_GlobalCollect::parse
+	 * @covers Listener_Adapter_Abstract::pushToPending
+	 * @covers Listener_Adapter_Abstract::messageSanityCheck
+	 * @covers Listener_Adapter_GlobalCollect::checkRequiredFields
+	 * @covers Listener_Adapter_GlobalCollect::verifyPaymentNotification
+	 * @covers Listener_Adapter_Abstract::fetchFromPending
+	 * @covers Listener_Adapter_Abstract::pushToVerified
+	 * @covers Listener_Adapter_Abstract::stompDequeueMessage
+	 * @covers Listener_Adapter_Abstract::pushToQueue
+	 */
+	public function testReceiveInvalidPostWithEmptyOrderId() {
 
+		// The parameters to pass to the factory.
+		$parameters = array(
+			'logLevel' => Listener::LOG_LEVEL_INFO,
+		);
+
+		// The adapter to pass to the factory.
+		$adapter = 'GlobalCollect';
+
+		$adapterInstance = Listener::factory( $adapter, $parameters );
+
+		$this->assertInstanceOf( 'Listener_Adapter_GlobalCollect', $adapterInstance );
+
+		$_POST = array(
+			'MERCHANTID'		=> "9990",
+			'ORDERID'			=> "",
+			'EFFORTID'			=> "1",
+			'ATTEMPTID'			=> "1",
+			'AMOUNT'			=> "100",
+			'CURRENCYCODE'		=> "EUR",
+			'REFERENCE'			=> "20070406GC19",
+			'PAYMENTREFERENCE'	=> "",
+			'PAYMENTPRODUCTID'	=> "1",
+			'PAYMENTMETHODID'	=> "1",
+			'STATUSID'			=> "800",
+			'STATUSDATE'		=> "20070406170059",
+			'RECEIVEDDATE'		=> "20070406170057",
+		);
+		
+		$this->assertEquals( 'NOK', $adapterInstance->receive( $_POST ) );
+	}
+	
+	/**
+	 * testReceiveInvalidPostWithoutOrderIdWhileLimboIsEnabled
+	 *
+	 * @covers Listener_Adapter_GlobalCollect::init
+	 * @covers Listener_Adapter_Abstract::receive
+	 * @covers Listener_Adapter_GlobalCollect::receiveReturn
+	 * @covers Listener_Adapter_GlobalCollect::parse
+	 * @covers Listener_Adapter_Abstract::pushToPending
+	 * @covers Listener_Adapter_Abstract::messageSanityCheck
+	 * @covers Listener_Adapter_GlobalCollect::checkRequiredFields
+	 * @covers Listener_Adapter_GlobalCollect::verifyPaymentNotification
+	 * @covers Listener_Adapter_Abstract::fetchFromPending
+	 * @covers Listener_Adapter_Abstract::pushToVerified
+	 * @covers Listener_Adapter_Abstract::stompDequeueMessage
+	 * @covers Listener_Adapter_Abstract::pushToQueue
+	 */
+	public function testReceiveInvalidPostWithoutOrderIdWhileLimboIsEnabled() {
+
+		// The parameters to pass to the factory.
+		$parameters = array(
+			'logLevel' => Listener::LOG_LEVEL_INFO,
+		);
+
+		// The adapter to pass to the factory.
+		$adapter = 'GlobalCollect';
+
+		$adapterInstance = Listener::factory( $adapter, $parameters );
+		
+		$this->setExpectedException( 'Listener_Exception', 'The required key is not set in data: ORDERID');
+		
+		$this->assertInstanceOf( 'Listener_Adapter_GlobalCollect', $adapterInstance );
+
+		$_POST = array(
+			'MERCHANTID'		=> "9990",
+			'EFFORTID'			=> "1",
+			'ATTEMPTID'			=> "1",
+			'AMOUNT'			=> "100",
+			'CURRENCYCODE'		=> "EUR",
+			'REFERENCE'			=> "20070406GC19",
+			'PAYMENTREFERENCE'	=> "",
+			'PAYMENTPRODUCTID'	=> "1",
+			'PAYMENTMETHODID'	=> "1",
+			'STATUSID'			=> "800",
+			'STATUSDATE'		=> "20070406170059",
+			'RECEIVEDDATE'		=> "20070406170057",
+		);
+		
+		$this->assertEquals( 'NOK', $adapterInstance->receive( $_POST ) );
+	}
+	
+	/**
+	 * testReceiveInvalidPostWithoutOrderIdWhileLimboIsDisabled
+	 *
+	 * @covers Listener_Adapter_GlobalCollect::init
+	 * @covers Listener_Adapter_Abstract::receive
+	 * @covers Listener_Adapter_GlobalCollect::receiveReturn
+	 * @covers Listener_Adapter_GlobalCollect::parse
+	 * @covers Listener_Adapter_Abstract::pushToPending
+	 * @covers Listener_Adapter_Abstract::messageSanityCheck
+	 * @covers Listener_Adapter_GlobalCollect::checkRequiredFields
+	 * @covers Listener_Adapter_GlobalCollect::verifyPaymentNotification
+	 * @covers Listener_Adapter_Abstract::fetchFromPending
+	 * @covers Listener_Adapter_Abstract::pushToVerified
+	 * @covers Listener_Adapter_Abstract::stompDequeueMessage
+	 * @covers Listener_Adapter_Abstract::pushToQueue
+	 */
+	public function testReceiveInvalidPostWithoutOrderIdWhileLimboIsDisabled() {
+
+		// The parameters to pass to the factory.
+		$parameters = array(
+			'logLevel' => Listener::LOG_LEVEL_INFO,
+		);
+
+		// The adapter to pass to the factory.
+		$adapter = 'GlobalCollect';
+
+		$adapterInstance = Listener::factory( $adapter, $parameters );
+
+		// Disable pulling from limbo so we can generate a Listener_Exception in Listener_Adapter_GlobalCollect::checkRequiredFields()
+		$adapterInstance->setPullFromLimbo( false );
+		
+		
+		$this->assertInstanceOf( 'Listener_Adapter_GlobalCollect', $adapterInstance );
+
+		$_POST = array(
+			'MERCHANTID'		=> "9990",
+			'EFFORTID'			=> "1",
+			'ATTEMPTID'			=> "1",
+			'AMOUNT'			=> "100",
+			'CURRENCYCODE'		=> "EUR",
+			'REFERENCE'			=> "20070406GC19",
+			'PAYMENTREFERENCE'	=> "",
+			'PAYMENTPRODUCTID'	=> "1",
+			'PAYMENTMETHODID'	=> "1",
+			'STATUSID'			=> "800",
+			'STATUSDATE'		=> "20070406170059",
+			'RECEIVEDDATE'		=> "20070406170057",
+		);
+		
+		$this->assertEquals( 'NOK', $adapterInstance->receive( $_POST ) );
+	}
 }
