@@ -104,7 +104,7 @@ class Listener_Adapter_GlobalCollect_ReceiveTestCase extends QueueHandlingTestCa
 			'PAYMENTREFERENCE'	=> "",
 			'PAYMENTPRODUCTID'	=> "1",
 			'PAYMENTMETHODID'	=> "1",
-			'STATUSID'			=> "525",
+			'STATUSID'			=> "800",
 			'STATUSDATE'		=> "20070406170059",
 			'RECEIVEDDATE'		=> "20070406170057",
 		);
