@@ -55,6 +55,9 @@ class Listener_Adapter_GlobalCollect extends Listener_Adapter_Abstract
 		
 		// ORDERID maps to JMSCorrelationID in the limbo queue.
 		$this->setLimboIdName( 'ORDERID' );
+		
+		// Set the queues
+		$this->setQueuesForAdapterType();
 	}
 
 	/**
@@ -137,12 +140,12 @@ class Listener_Adapter_GlobalCollect extends Listener_Adapter_Abstract
 	/**
 	 * Verify the payment was made.
 	 *
-	 * Currently, we are only verifying the STATUSID >= 500 
+	 * Currently, we are only verifying the STATUSID >= 800 
 	 *
 	 * @return boolean Returns true on success
 	 */
 	public function verifyPaymentNotification() {
 	 
-		return ( $this->getData('STATUSID') >= 500 );
+		return ( $this->getData('STATUSID') >= 800 );
 	}
 }
