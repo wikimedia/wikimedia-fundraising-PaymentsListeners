@@ -689,25 +689,6 @@ abstract class Listener_Adapter_Abstract
 	}
 
 	/**
-	 * setQueuesForAdapterType
-	 *
-	 * This will automatically prefix queues by adapter type.
-	 *
-	 * This can be called in init().
-	 */
-	public function setQueuesForAdapterType()
-	{
-		// queue prefix
-		$prefix = $this->getAdapterTypeLowerCase();
-		
-		// Set the queues
-		$this->setQueueLimbo( '/queue/' . $prefix . '-limbo' );
-		$this->setQueuePending( '/queue/' . $prefix . '-pending' );
-		$this->setQueueVerified( '/queue/' . $prefix . '-verified' );
-		
-	}
-
-	/**
 	 * setData
 	 */
 	public function setData( $data = array() )

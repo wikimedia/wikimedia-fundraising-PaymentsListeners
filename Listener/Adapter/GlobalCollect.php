@@ -55,9 +55,6 @@ class Listener_Adapter_GlobalCollect extends Listener_Adapter_Abstract
 		
 		// ORDERID maps to JMSCorrelationID in the limbo queue.
 		$this->setLimboIdName( 'ORDERID' );
-		
-		// Set the queues
-		$this->setQueuesForAdapterType();
 	}
 
 	/**
@@ -122,6 +119,14 @@ class Listener_Adapter_GlobalCollect extends Listener_Adapter_Abstract
 				'STATUSDATE'		=> (integer)	$this->getData('STATUSDATE', true),
 				'RECEIVEDDATE'		=> (integer)	$this->getData('RECEIVEDDATE', true),
 			);
+			
+			if ( empty( $sanitized['ORDERID'] ) ) {
+				$message = 'ORDERID cannot be empty.';
+				throw new Listener_Exception( $message );
+			}
+
+			
+			
 		} catch ( Listener_Exception $e ) {
 
 			$message = 'Unable to check required fields: ' . $e->getMessage();

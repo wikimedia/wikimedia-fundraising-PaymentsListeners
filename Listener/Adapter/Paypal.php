@@ -49,9 +49,6 @@ class Listener_Adapter_Paypal extends Listener_Adapter_Abstract
 	 * init() is called at the end of the constructor to allow automatic settings for adapters.
 	 */
 	protected function init() {
-		
-		// Set the queues
-		$this->setQueuesForAdapterType();
 	}
 
 	/**
