@@ -18,43 +18,43 @@
  * @author		Jeremy Postlethwaite <jpostlethwaite@wikimedia.org>
  */
 
-require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'TestHelper.php';
-
-require_once 'Listener/AllTests.php';
-require_once 'Db/AllTests.php';
+/**
+ * Require
+ */
+require_once dirname( dirname( __FILE__ ) ) . DIRECTORY_SEPARATOR . 'QueueHandlingTestCase.php';
 
 /**
- * AllTests
+ * @group		Fundraising
+ * @group		QueueHandling
+ * @group		ClassMethod
+ * @group		Db
+ *
+ * Db_IsAdapterTestCase
  */
-class AllTests
+class Db_IsAdapterTestCase extends QueueHandlingTestCase
 {
 
 	/**
-	 * Run the main test and load any parameters if needed.
+	 * testIsAdapterHasMysqli
 	 *
+	 * @covers Db::isAdapter
 	 */
-	public static function main()
-	{
-		$parameters = array();
+	public function testIsAdapterHasMysqli() {
 
-		PHPUnit_TextUI_TestRunner::run( self::suite(), $parameters );
+		$adapter = 'Mysqli';
+
+		$this->assertTrue( Db::isAdapter( $adapter ) );
 	}
 
 	/**
-	 * Regular suite
+	 * testIsAdapterDoesNotHaveSomePhonyAdapter
 	 *
-	 * All tests except those that require output buffering.
-	 *
-	 * @return PHPUnit_Framework_TestSuite
+	 * @covers Db::isAdapter
 	 */
-	public static function suite()
-	{
-		$suite = new PHPUnit_Framework_TestSuite( 'Queue Handling Suite' );
+	public function testIsAdapterDoesNotHaveSomePhonyAdapter() {
 
-		$suite->addTestSuite( 'Listener_AllTests' );
-		$suite->addTestSuite( 'Db_AllTests' );
-		// $suite->addTest(QueueHandling::suite());
+		$adapter = 'SomePhonyAdapter';
 
-		return $suite;
+		$this->assertFalse( Db::isAdapter( $adapter ) );
 	}
 }

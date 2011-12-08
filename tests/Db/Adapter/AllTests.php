@@ -18,15 +18,15 @@
  * @author		Jeremy Postlethwaite <jpostlethwaite@wikimedia.org>
  */
 
-require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'TestHelper.php';
+require_once dirname( dirname( dirname( __FILE__ ) ) ) . DIRECTORY_SEPARATOR . 'TestHelper.php';
 
-require_once 'Listener/AllTests.php';
-require_once 'Db/AllTests.php';
+require_once dirname( dirname( __FILE__ ) ) . DIRECTORY_SEPARATOR . 'Adapter' . DIRECTORY_SEPARATOR . 'Abstract' . DIRECTORY_SEPARATOR . 'AllTests.php';
+require_once dirname( dirname( __FILE__ ) ) . DIRECTORY_SEPARATOR . 'Adapter' . DIRECTORY_SEPARATOR . 'Mysqli' . DIRECTORY_SEPARATOR . 'AllTests.php';
 
 /**
- * AllTests
+ * Db_Adapter_AllTests
  */
-class AllTests
+class Db_Adapter_AllTests
 {
 
 	/**
@@ -49,12 +49,12 @@ class AllTests
 	 */
 	public static function suite()
 	{
-		$suite = new PHPUnit_Framework_TestSuite( 'Queue Handling Suite' );
+		$suite = new PHPUnit_Framework_TestSuite( 'Queue Handling - Db - Adapter Suite' );
 
-		$suite->addTestSuite( 'Listener_AllTests' );
-		$suite->addTestSuite( 'Db_AllTests' );
-		// $suite->addTest(QueueHandling::suite());
+		$suite->addTestSuite( 'Db_Adapter_Abstract_AllTests' );
+		$suite->addTestSuite( 'Db_Adapter_Mysqli_AllTests' );
 
 		return $suite;
 	}
 }
+

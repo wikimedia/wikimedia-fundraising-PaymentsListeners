@@ -62,6 +62,19 @@ class Listener_Adapter_Paypal extends Listener_Adapter_Abstract
 	}
 
 	/**
+	 * Get the decision on whether or not the message will undergo further
+	 * processing.
+	 *
+	 * This method provides the adapter with the ability handle messages.
+	 *
+	 * @return boolean	Returns true if the message can be handled by @see Listener_Adapter_Abstract::receive
+	 */
+	public function getProcessDecision() {
+	
+		return true;
+	}
+	
+	/**
 	 * Generate a response for the merchant provider
 	 *
 	 * @param array $status The status for the message

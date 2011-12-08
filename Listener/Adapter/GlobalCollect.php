@@ -23,9 +23,14 @@
  */
 
 /**
- * @see Listener_Exception
+ * @see Listener_Adapter_Abstract
  */
 require_once 'Listener/Adapter/Abstract.php';
+
+/**
+ * @see Listener_Adapter_GlobalCollectPaymentMethods
+ */
+require_once 'Listener/Adapter/GlobalCollectPaymentMethods.php';
 
 /**
  *
@@ -42,6 +47,31 @@ class Listener_Adapter_GlobalCollect extends Listener_Adapter_Abstract
 	 * Adapter name
 	 */
 	 const ADAPTER = 'GlobalCollect';
+
+	/**
+	 * Get the decision on whether or not the message will undergo further
+	 * processing.
+	 *
+	 * This method provides the adapter with the ability handle messages.
+	 *
+	 * @return boolean	Returns true if the message can be handled by @see Listener_Adapter_Abstract::receive
+	 */
+	public function getProcessDecision() {
+
+		$paymentMethods = new Listener_Adapter_GlobalCollectPaymentMethods();
+		
+		$method = $paymentMethods->getPaymentMethods( $this->getData('PAYMENTMETHODID') );
+
+		if ( isset( $method['queue'] ) ) {
+			$path = '/queue/' . $method['queue'];
+			$this->setQueueLimbo( $path );
+		}
+		
+		$message = 'Making decision on whether or not to process a payment with PAYMENTMETHODID:' . $this->getData('PAYMENTMETHODID');
+		$this->log( $message, Listener::LOG_LEVEL_DEBUG );
+	
+		return $paymentMethods->getProcessDecision( $this->getData('PAYMENTMETHODID') );
+	}
 	 
 	/**
 	 * Initialize the class

@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head profile="http://selenium-ide.openqa.org/profiles/test-case">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<link rel="selenium.base" href="http://wikimedia-fundraising-1.17.localhost.wikimedia.org/" />
+<title>form.twostepamount.banktransfer</title>
+</head>
+<body>
+<table cellpadding="1" cellspacing="1" border="1">
+<thead>
+<tr><td rowspan="1" colspan="3">form.twostepamount.banktransfer</td></tr>
+</thead><tbody>
+<tr>
+	<td>open</td>
+	<td>http://localhost:8161/admin/queues.jsp</td>
+	<td></td>
+</tr>
+<tr>
+	<td>open</td>
+	<td>/index.php/Special:GlobalCollectGateway?form_name=TwoStepAmount&amp;payment_method=bt&amp;payment_submethod=bt</td>
+	<td></td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>id=fname</td>
+	<td>Testy</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>id=lname</td>
+	<td>Testerton</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>id=zip</td>
+	<td>123</td>
+</tr>
+<tr>
+	<td>select</td>
+	<td>id=country</td>
+	<td>label=Netherlands</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>id=street</td>
+	<td>123 Happy Street</td>
+</tr>
+<tr>
+	<td>select</td>
+	<td>id=state</td>
+	<td>label=Outside the U.S.</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>id=city</td>
+	<td>Madrid</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>id=emailAdd</td>
+	<td>no-reply@wikimedia.org</td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=input_amount_other</td>
+	<td></td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>id=other-amount</td>
+	<td>1001.95</td>
+</tr>
+<tr>
+	<td>storeValue</td>
+	<td>id=other-amount</td>
+	<td>paymentAmount</td>
+</tr>
+<tr>
+	<td>select</td>
+	<td>id=input_currency_code</td>
+	<td>label=Japanese yen</td>
+</tr>
+<tr>
+	<td>select</td>
+	<td>id=input_currency_code</td>
+	<td>label=Euro</td>
+</tr>
+<tr>
+	<td>clickAndWait</td>
+	<td>css=input.button-plain</td>
+	<td></td>
+</tr>
+<tr>
+	<td>verifyTextPresent</td>
+	<td>Bank transfer information</td>
+	<td></td>
+</tr>
+<tr>
+	<td>verifyTextPresent</td>
+	<td>Account holder</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertValue</td>
+	<td>name=MyButton</td>
+	<td>Finished</td>
+</tr>
+<tr>
+	<td>verifyTextPresent</td>
+	<td>NL09ABNA0440339464</td>
+	<td></td>
+</tr>
+<tr>
+	<td>verifyTextPresent</td>
+	<td>440339464</td>
+	<td></td>
+</tr>
+<tr>
+	<td>open</td>
+	<td>http://localhost:8161/admin/queues.jsp</td>
+	<td></td>
+</tr>
+<tr>
+	<td>clickAndWait</td>
+	<td>link=limbo</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertXpathCount</td>
+	<td>//table[@id='messages']//tr</td>
+	<td>2</td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>//table[@id='messages']/tbody/tr/td[1]/a[1]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>storeText</td>
+	<td>//table[@id='header']/tbody/tr/td[2]</td>
+	<td>JMSCorrellationID</td>
+</tr>
+<tr>
+	<td>storeTextPresent</td>
+	<td>{&quot;contribution_tracking_id&quot;:&quot;1995&quot;,&quot;optout&quot;:&quot;1&quot;,&quot;anonymous&quot;:&quot;1&quot;,&quot;comment&quot;:&quot;&quot;,&quot;size&quot;:&quot;&quot;,&quot;premium_language&quot;:&quot;en&quot;,&quot;utm_source&quot;:&quot;..bt&quot;,&quot;utm_medium&quot;:&quot;&quot;,&quot;utm_campaign&quot;:&quot;&quot;,&quot;language&quot;:&quot;en&quot;,&quot;referrer&quot;:&quot;http:\/\/localhost:8161\/admin\/queues.jsp&quot;,&quot;email&quot;:&quot;no-reply@wikimedia.org&quot;,&quot;first_name&quot;:&quot;Testy&quot;,&quot;middle_name&quot;:&quot;&quot;,&quot;last_name&quot;:&quot;Testerton&quot;,&quot;street_address&quot;:&quot;123 Happy Street&quot;,&quot;supplemental_address_1&quot;:&quot;&quot;,&quot;city&quot;:&quot;Madrid&quot;,&quot;state_province&quot;:&quot;XX&quot;,&quot;country&quot;:&quot;NL&quot;,&quot;postal_code&quot;:&quot;123&quot;,&quot;first_name_2&quot;:&quot;Testy&quot;,&quot;last_name_2&quot;:&quot;Testerton&quot;,&quot;street_address_2&quot;:&quot;123 Happy Street&quot;,&quot;supplemental_address_2&quot;:&quot;&quot;,&quot;city_2&quot;:&quot;Madrid&quot;,&quot;state_province_2&quot;:&quot;XX&quot;,&quot;country_2&quot;:&quot;NL&quot;,&quot;postal_code_2&quot;:&quot;123&quot;,&quot;gateway&quot;:&quot;globalcollect&quot;,&quot;gateway_txn_id&quot;:&quot;8482731149&quot;,&quot;payment_method&quot;:&quot;bt&quot;,&quot;payment_submethod&quot;:&quot;bt&quot;,&quot;response&quot;:&quot;Response Status: 800&quot;,&quot;currency&quot;:&quot;EUR&quot;,&quot;original_currency&quot;:&quot;EUR&quot;,&quot;original_gross&quot;:&quot;1001.95&quot;,&quot;fee&quot;:&quot;0&quot;,&quot;gross&quot;:&quot;1001.95&quot;,&quot;net&quot;:&quot;1001.95&quot;,&quot;date&quot;:1322773013}</td>
+	<td>limboMessage</td>
+</tr>
+<tr>
+	<td>open</td>
+	<td>http://fundraising-misc.localhost.wikimedia.org/queue_handling/Listener.GlobalCollect.form.php</td>
+	<td></td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>id=MERCHANTID</td>
+	<td>6570</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>id=ORDERID</td>
+	<td>${JMSCorrelationID}</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>id=AMOUNT</td>
+	<td>javascript{ ( storedVars.paymentAmount * 100 ) }</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>id=EFFORTID</td>
+	<td>1</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>id=ATTEMPTID</td>
+	<td>1</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>id=CURRENCYCODE</td>
+	<td>EUR</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>id=REFERENCE</td>
+	<td>1</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>id=PAYMENTREFERENCE</td>
+	<td>1</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>id=PAYMENTPRODUCTID</td>
+	<td>1</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>id=PAYMENTMETHODID</td>
+	<td>8</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>id=STATUSID</td>
+	<td>800</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>id=STATUSDATE</td>
+	<td>javascript{ new Date }</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>id=RECEIVEDDATE</td>
+	<td>javascript{ new Date }</td>
+</tr>
+<tr>
+	<td>clickAndWait</td>
+	<td>css=input[type=&quot;submit&quot;]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>verifyText</td>
+	<td>css=body</td>
+	<td>OK</td>
+</tr>
+</tbody></table>
+</body>
+</html>

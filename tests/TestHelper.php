@@ -37,12 +37,15 @@ require_once 'PHPUnit/Util/Filter.php';
  */
 error_reporting( E_ALL | E_STRICT );
 
+/**
+ * @see Db
+ */
+require_once 'Db.php';
 
 /**
  * @see Listener
  */
 require_once 'Listener.php';
-
 
 /*
  * Load the user-defined test configuration file, if it exists; otherwise, load

@@ -47,6 +47,11 @@ class Listener
 {
 
 	/**
+	 * The default configuration file
+	 */
+	const DEFAULT_CONFIGURATION_FILE = 'settings.ini';
+
+	/**
 	 * Log level - Emergency: system is unusable
 	 */
 	const LOG_LEVEL_EMERG	= 0;
@@ -89,12 +94,19 @@ class Listener
 	/**
 	 * Available Adapters to test.
 	 *
-	 * @var array adapters
+	 * @var array $adapters
 	 */
 	protected static $adapters = array(
 		'GlobalCollect',
 		'Paypal',
 	);
+
+	/**
+	 * The path to the configuration file.
+	 *
+	 * @var string $configurationFile
+	 */
+	protected static $configurationFile = '';
 
 	/**
 	 * Check to see if the adapter is available to load.
@@ -112,11 +124,42 @@ class Listener
 	/**
 	 * Get the available adapters
 	 *
-	 * @return boolean
+	 * @return array
 	 */
 	public static function getAdapters()
 	{
 		return self::$adapters;
+	}
+
+	/**
+	 * Get the configuration file
+	 *
+	 * @return string
+	 */
+	public static function getConfigurationFile()
+	{
+		return self::$configurationFile;
+	}
+
+	/**
+	 * Get the configuration file
+	 *
+	 * @return string
+	 */
+	public static function setConfigurationFile( $path = '' )
+	{
+		$path = empty( $path ) ? '' : $path;
+		
+		$absolute = ( substr( $path, 0, 1 ) == '/' ) ? true : false;
+		
+		$path = $absolute ? $path : dirname( __FILE__ ) . '/' . Listener::DEFAULT_CONFIGURATION_FILE;
+		
+		if ( !is_file( $path ) ) {
+			$message = 'The configuration file must be a valid path.';
+			throw new Listener_Exception( $message );
+		}
+		
+		self::$configurationFile = $path;
 	}
 
 	/**
@@ -159,6 +202,12 @@ class Listener
 
 		$adapterName = 'Listener_Adapter_' . $adapter;
 
+		$settings = isset( $parameters['settings'] ) ? $parameters['settings'] : '';
+		
+		Listener::setConfigurationFile( $settings );
+
+		$parameters['settings'] = Listener::getConfigurationFile();
+		
 		/*
 		 * Create an instance of the adapter class.
 		 * Pass the config to the adapter class constructor.

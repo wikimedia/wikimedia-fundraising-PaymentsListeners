@@ -42,3 +42,67 @@ define( 'TESTS_MESSAGE_NOT_IMPLEMENTED', 'Not implemented yet!' );
  */
 define( 'TESTS_LISTENER_ADAPTER_DEFAULT', 'GlobalCollect' );
 
+
+/**
+ * TESTS_HOSTNAME
+ *
+ * The hostname for the system
+ */
+define( 'TESTS_HOSTNAME', 'localhost' );
+
+/**
+ * TESTS_EMAIL
+ *
+ * An email address to use in case test send mail
+ */
+define( 'TESTS_EMAIL', 'no-reply@wikimedia.org' );
+
+/**
+ * TESTS_ADAPTER_DEFAULT
+ *
+ * This is the default database adapter that will be used to implement unit tests.
+ */
+define( 'TESTS_DB_ADAPTER_DEFAULT', 'Mysqli' );
+
+/**
+ * TESTS_DB_ADAPTER_HOST
+ *
+ * This is the database host.
+ */
+define( 'TESTS_DB_ADAPTER_HOST', TESTS_HOSTNAME );
+
+/**
+ * TESTS_DB_ADAPTER_PORT
+ *
+ * This is the database port.
+ */
+define( 'TESTS_DB_ADAPTER_PORT', 3306 );
+
+/**
+ * TESTS_DB_ADAPTER_USERNAME
+ *
+ * This is the database username.
+ */
+define( 'TESTS_DB_ADAPTER_USERNAME', 'mediawiki' );
+
+/**
+ * TESTS_DB_ADAPTER_USER
+ *
+ * This is the database password.
+ */
+define( 'TESTS_DB_ADAPTER_PASSWORD', 'mediawiki' );
+
+/**
+ * TESTS_DB_ADAPTER_SOCKET
+ *
+ * This is the database socket.
+ */
+define( 'TESTS_DB_ADAPTER_SOCKET', '' );
+
+/**
+ * TESTS_DB_ADAPTER_DATABASE_FOR_TESTING
+ *
+ * This is the database for testing the adapter.
+ */
+define( 'TESTS_DB_ADAPTER_DATABASE_FOR_TESTING', 'civicrm' );
+

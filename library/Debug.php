@@ -35,12 +35,12 @@ class Debug
 	 * @param boolean	$die	If true, script will terminate.
 	 * @return void
 	 */
-	public static function dump( $var, $label, $die )
+	public static function dump( $var, $label, $die = false )
 	{
 		global $wgCommandLineMode;
 
 		$wgCommandLineMode = (boolean) $wgCommandLineMode;
-
+$wgCommandLineMode = false;
 		$pre = ( $wgCommandLineMode ) ? '<-----------' . $label . PHP_EOL : '<div style="clear: both">' . HR . PHP_EOL . $label . PHP_EOL . HR . PREo . PHP_EOL;
 		$post = ( $wgCommandLineMode ) ? PHP_EOL . '----------->' . PHP_EOL : PHP_EOL . PREc . _ . HR . '</div>' . PHP_EOL;
 		echo $pre;

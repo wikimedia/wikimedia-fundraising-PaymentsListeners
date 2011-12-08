@@ -61,6 +61,35 @@ abstract class Listener_Adapter_Abstract
 	protected $data = array();
 
 	/**
+	 * The adapter to the database
+	 *
+	 * @var Db_Adapter_Abstract $db
+	 */
+	protected $db;
+
+	/**
+	 * If the message is found in the database it will be set to true.
+	 *
+	 * If the message is not found in the database it will be set to false.
+	 *
+	 * The value will be null if it has not been checked 
+	 *
+	 * @var null|boolean $inDatabase
+	 */
+	protected $inDatabase = null;
+
+	/**
+	 * If the message is found in the limbo queue it will be set to true.
+	 *
+	 * If the message is not found in the limbo queue it will be set to false.
+	 *
+	 * The value will be null if it has not been checked 
+	 *
+	 * @var null|boolean $inLimbo
+	 */
+	protected $inLimbo = null;
+
+	/**
 	 * The limbo ID
 	 *
 	 * @var string $limboId
@@ -125,6 +154,15 @@ abstract class Listener_Adapter_Abstract
 	protected $outputHandle;
 
 	/**
+	 * pullFromDatabase
+	 *
+	 * Pull from the database.
+	 *
+	 * @var boolean $pullFromDatabase
+	 */
+	protected $pullFromDatabase = false;
+
+	/**
 	 * pullFromLimbo
 	 *
 	 * Pull from the limbo queue
@@ -164,6 +202,15 @@ abstract class Listener_Adapter_Abstract
 	 * @var string $queueVerified
 	 */
 	protected $queueVerified = '/queue/verified';
+
+	/**
+	 * row
+	 *
+	 * A row from the database. This should have a limboId.
+	 *
+	 * @var array $row
+	 */
+	protected $row = array();
 
 	/**
 	 * stomp
@@ -246,6 +293,19 @@ abstract class Listener_Adapter_Abstract
 			$this->setStompPath( $stompPath );
 		}
 
+		$settings = isset( $settings ) ? $settings : '';
+		
+		if ( $settings ) {
+			$this->setSettings( $settings );
+		}
+		else {
+			$message = 'Settings are not being loaded.';
+			$this->log( $message, Listener::LOG_LEVEL_DEBUG );
+
+			$message = 'No connections will be made to the database.';
+			$this->log( $message );
+		}
+		
 		$this->init();
 	}
 
@@ -274,6 +334,16 @@ abstract class Listener_Adapter_Abstract
 	 * @return array	Return the formatted data
 	 */
 	abstract public function parse();
+
+	/**
+	 * Get the decision on whether or not the message will undergo further
+	 * processing.
+	 *
+	 * This method provides the adapter with the ability handle messages.
+	 *
+	 * @return boolean	Returns true if the message can be handled by @see Listener_Adapter_Abstract::receive
+	 */
+	abstract public function getProcessDecision();
 
 	/**
 	 * Verify the data is valid
@@ -445,6 +515,53 @@ abstract class Listener_Adapter_Abstract
 	}
 
 	/**
+	 * Fetch the message from the database queue
+	 *
+	 * @param string	$orderId 	The order_id in the table `queue2civicrm_limbo`
+	 * @param array		$options	Optional settings
+	 * - $dequeue:	(boolean)	 By default, messages will not be dequeued.
+	 *
+	 * @return boolean Return true on success.
+	 */
+	public function fetchFromDatabaseByOrderId( $orderId = '', $options = array() ) {
+
+		$return = false;
+		
+		$orderId = empty( $orderId ) ? $this->getData( $this->getLimboIdName(), true) : $orderId;
+		
+		// An $orderId must be set to search.
+		if ( empty( $orderId ) ) {
+			$message = 'An order_id must not be empty.';
+			$this->log( $message, Listener::LOG_LEVEL_EMERG );
+			throw new Listener_Exception( $message );
+		}
+		
+		$this->getDb();
+		$message = 'Fetching by order_id from the database.';
+		$this->log( $message, Listener::LOG_LEVEL_DEBUG );
+
+		$query = "SELECT * FROM `queue2civicrm_limbo` where `order_id` = '?'";
+		$this->log( $query . ' -> ' . $orderId, Listener::LOG_LEVEL_DEBUG );
+		$this->db->query( $this->db->quoteInto( $query, $orderId ) );
+		
+		$row = $this->db->fetch();
+		$this->log( 'Query result: ' . print_r( $row, true ), Listener::LOG_LEVEL_DEBUG );
+		
+		if ( is_array( $row ) && isset( $row['order_id'] ) ) {
+		
+			// Return true if the order_id matches $orderId
+			$return = ( $row['order_id'] == $orderId );
+		}
+
+		$message = 'The order_id ' . $orderId . ' was';
+		$message .= $return ? '' : ' not';
+		$message .= ' found in `queue2civicrm_limbo`.';
+		$this->log( $message, Listener::LOG_LEVEL_DEBUG );
+		
+		return $return;
+	}
+
+	/**
 	 * Fetch the message from the limbo queue
 	 *
 	 * @param string	$limboId 	The JMSCorrelationID of the message in the limbo queue
@@ -459,7 +576,7 @@ abstract class Listener_Adapter_Abstract
 		$return = false;
 		
 		if ( empty( $limboId ) ) {
-			$limboId = $this->getData( $this->getLimboIdName(), true);
+			$limboId = $this->getAdapterTypeLowerCase() . '-' . $this->getData( $this->getLimboIdName(), true);
 			$message = 'Fetching limbo Id from data.';
 			$this->log( $message, Listener::LOG_LEVEL_DEBUG );
 			
@@ -493,8 +610,8 @@ abstract class Listener_Adapter_Abstract
 		}
 		else {
 
-			$message = 'FAILED retrieving message from pending queue.';
-			$this->log( $message, Listener::LOG_LEVEL_WARN );
+			$message = 'Message does not exist in limbo queue.';
+			$this->log( $message, Listener::LOG_LEVEL_DEBUG );
 			$return = false;
 		}
 		
@@ -531,6 +648,7 @@ abstract class Listener_Adapter_Abstract
 		$this->log( $message, Listener::LOG_LEVEL_DEBUG );
 
 		$this->messageFromPendingQueue = $this->stompFetchMessage( $this->getQueuePending(), $properties );
+		//Debug::dump($this->messageFromPendingQueue, eval(DUMP) . "\$this->messageFromPendingQueue", true);
 		
 		if ( $this->messageFromPendingQueue ) {
 
@@ -600,10 +718,10 @@ abstract class Listener_Adapter_Abstract
 	 * @return	boolean|null	Returns boolean on receipt of data, false if data is empty. 
 	 */
 	public function receive( $data, $options = array() ) {
+		//Debug::dump($data, eval(DUMP) . "\$data", false);
 		
 		$status = false;
 		$empty = false;
-	 	 
 	 	// Make sure we are actually getting something posted to the page.
 		if ( empty( $data ) ) {
 			
@@ -614,12 +732,42 @@ abstract class Listener_Adapter_Abstract
 		}
 
 		$this->setData( $data );
+
+		// Log the message
+		$message = 'Received a message: ' . print_r( $this->getData(), true );
+		$this->log( $message, Listener::LOG_LEVEL_DEBUG );
+
+		$proceedWithProcessing = $this->getProcessDecision();
+		
+		if ( !$proceedWithProcessing ) {
+
+			// Tell the provider we received the message with a status of true
+			$status = true;
+			$message = 'Message with [' . $this->getLimboIdName() . ' = ' . $this->getData( $this->getLimboIdName() ) . '] will not be processed.';
+			$this->log( $message, Listener::LOG_LEVEL_DEBUG );
+
+			return $this->receiveReturn( $status );
+		}
+		
+		$inLimbo = null;
+		$inDatabase = null;
 		
 		if ( $this->getPullFromLimbo() ) {
 
-			$this->fetchFromLimboAndDequeue();
+			$inLimbo = $this->fetchFromLimbo();
 		}
 		
+		if ( $this->getPullFromDatabase() ) {
+
+			if ( !$inLimbo ) {
+				$inDatabase = $this->fetchFromDatabaseByOrderId();
+			}
+		}
+		
+		$exists = ( $inLimbo || $inDatabase ) ? true : false;
+		//Debug::dump($this->getData(), eval(DUMP) . "\this->getData()");
+		
+		// We will only push to verified
 		// Push the message to pending
 		if ( $this->pushToPending( $this->getData() ) ) {
 			
@@ -699,8 +847,8 @@ abstract class Listener_Adapter_Abstract
 	/**
 	 * getData
 	 *
-	 * @param string $key The key to fetch in the data array
-	 * @param boolean $require Require the key to exist, otherwise throw an Exception.
+	 * @param string	$key		The key to fetch in the data array
+	 * @param boolean	$require	Require the key to exist, otherwise throw an Exception.
 	 *
 	 * @return mixed|null Return the data sent to @see $this->receive()
 	 */
@@ -722,7 +870,71 @@ abstract class Listener_Adapter_Abstract
 		}
 
 		return $this->data[ $key ];
+	}
+	
+	/**
+	 * getDb
+	 *
+	 */
+	public function getDb()
+	{
+		$settings = $this->getSettings('db');
 		
+		if ( !isset( $settings ) ) {
+			$message = 'Database adapter parameters must be setup in the settings configuration file.';
+			throw new Listener_Exception( $message );
+		}
+		
+		// If database adapter is not instatiated, set it up.
+		if ( empty( $this->db ) ) {
+
+			// The adapter to pass to the factory.
+			$adapter = isset( $settings['adapter'] ) ? $settings['adapter'] : '';
+			
+			$this->db = Db::factory( $adapter, $settings );
+		}
+
+		return $this->db;
+	}
+
+	/**
+	 * getInDatabase
+	 *
+	 * @return boolean|null
+	 */
+	public function getInDatabase()
+	{
+		return $this->inDatabase;
+	}
+
+	/**
+	 * setInDatabase
+	 *
+	 * @param boolean $inDatabase
+	 */
+	public function setInDatabase( $inDatabase )
+	{
+		$this->inDatabase = (boolean) $inDatabase;
+	}
+
+	/**
+	 * getInLimbo
+	 *
+	 * @return boolean|null
+	 */
+	public function getInLimbo()
+	{
+		return $this->inLimbo;
+	}
+
+	/**
+	 * setInLimbo
+	 *
+	 * @param boolean $inLimbo
+	 */
+	public function setInLimbo( $inLimbo )
+	{
+		$this->inLimbo = (boolean) $inLimbo;
 	}
 
 	/**
@@ -954,6 +1166,103 @@ abstract class Listener_Adapter_Abstract
 	}
 
 	/**
+	 * getRow
+	 *
+	 */
+	public function getRow()
+	{
+		// If Stomp is not instatiated, set it up.
+		if ( empty( $this->row ) ) {
+
+			$this->row = array();
+		}
+
+		return $this->row;
+	}
+
+	/**
+	 * setSettings
+	 *
+	 * Sets settings for the adapter:
+	 * - database adapter parameters
+	 *
+	 * @param string $file The settings file
+	 */
+	public function setSettings( $file )
+	{
+		if ( !is_file( $file ) ) {
+			$message = 'File does not exist for Listener: ' . $file;
+			$this->log( $message, Listener::LOG_LEVEL_EMERG );
+			throw new Listener_Exception( $message );
+		}
+
+		// Parse the settings file
+		$this->settings = parse_ini_file( $file, true );
+		//Debug::dump($this->settings, eval(DUMP) . "\$this->settings", false);
+		
+		// Check to see if we have database adapter settings.
+		if ( !isset( $this->settings['db'] ) ) {
+			
+			// Database adapter settings do not exist
+			$pullFromDatabase = false;
+		}
+		elseif ( !isset( $this->settings['db']['enable'] ) || empty( $this->settings['db']['enable'] ) ) {
+
+			// Database adapter is not enabled
+			$pullFromDatabase = false;
+		}
+		else {
+			$pullFromDatabase = true;
+		}
+		
+		//Debug::dump($pullFromDatabase, eval(DUMP) . "\$pullFromDatabase", false);
+		$this->setPullFromDatabase( $pullFromDatabase );
+		
+		if ( $pullFromDatabase ) {
+
+			/**
+			 * @see Listener_Adapter_Abstract
+			 */
+			require_once 'Db.php';
+			
+			unset( $this->settings['db']['enable'] );
+		}
+		else {
+			$this->settings['db'] = array();
+			$message = 'No connections will be made to the database.';
+			$this->log( $message, Listener::LOG_LEVEL_DEBUG );
+		}
+	}
+
+	/**
+	 * getSettings
+	 *
+	 * @param string	$key		The key to fetch in the data array
+	 * @param boolean	$require	Require the key to exist, otherwise throw an Exception.
+	 *
+	 * @return mixed|null Return the settings from the configuration file.
+	 */
+	public function getSettings( $key = '', $require = false )
+	{
+		if ( empty( $key ) ) {
+
+			return $this->settings;
+		}
+		
+		if ( !isset( $this->settings[ $key ] ) ) {
+			
+			if ( $require ) {
+				$message = 'The required key is not set in settings: ' . $key;
+				throw new Listener_Exception( $message );
+			}
+			
+			return null;
+		}
+
+		return $this->settings[ $key ];
+	}
+
+	/**
 	 * getStomp
 	 *
 	 */
@@ -962,7 +1271,7 @@ abstract class Listener_Adapter_Abstract
 		// If Stomp is not instatiated, set it up.
 		if ( !( $this->stomp instanceof Stomp ) ) {
 
-				$this->setStomp();
+			$this->setStomp();
 		}
 
 		return $this->stomp;
@@ -1046,7 +1355,7 @@ abstract class Listener_Adapter_Abstract
 
 		$this->stomp->ack( $msg );
 
-		$message = 'The verified message was removed from the pending queue: ' .  print_r( json_decode( $msg, true ) );
+		$message = 'The verified message was removed from the pending queue: ' .  print_r( json_decode( $msg, true ), true );
 		$this->log( $message, Listener::LOG_LEVEL_DEBUG );
 		
 		return true;
@@ -1072,6 +1381,26 @@ abstract class Listener_Adapter_Abstract
 		$this->log( $message, Listener::LOG_LEVEL_DEBUG );
 
 		return $this->stomp->readFrame();
+	}
+
+	/**
+	 * getPullFromDatabase
+	 *
+	 * @return boolean Returns true if the script needs to pull from the database.
+	 */
+	public function getPullFromDatabase()
+	{
+		return $this->pullFromDatabase;
+	}
+
+	/**
+	 * setPullFromDatabase
+	 *
+	 * @param boolean $pull Setting $pull to true will enable pulling from the database.
+	 */
+	public function setPullFromDatabase( $pull )
+	{
+		$this->pullFromDatabase = (boolean) $pull;
 	}
 
 	/**

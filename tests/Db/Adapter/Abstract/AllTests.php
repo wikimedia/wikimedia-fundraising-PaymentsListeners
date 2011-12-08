@@ -14,19 +14,24 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
+ *
+ * @category	UnitTesting
+ * @package		Fundraising_QueueHandling
  * @license		http://www.gnu.org/copyleft/gpl.html GNU GENERAL PUBLIC LICENSE
+ * @since		r462
  * @author		Jeremy Postlethwaite <jpostlethwaite@wikimedia.org>
  */
 
-require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'TestHelper.php';
+require_once dirname( dirname( dirname( dirname( __FILE__ ) ) ) ) . DIRECTORY_SEPARATOR . 'TestHelper.php';
 
-require_once 'Listener/AllTests.php';
-require_once 'Db/AllTests.php';
+require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'ConstructorTestCase.php';
+require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'ConnectionTestCase.php';
 
 /**
- * AllTests
+ * @category	UnitTesting
+ * @package		Fundraising_QueueHandling
  */
-class AllTests
+class Db_Adapter_Abstract_AllTests
 {
 
 	/**
@@ -49,11 +54,10 @@ class AllTests
 	 */
 	public static function suite()
 	{
-		$suite = new PHPUnit_Framework_TestSuite( 'Queue Handling Suite' );
+		$suite = new PHPUnit_Framework_TestSuite( 'Queue Handling - Db - Adapter - Abstract Suite' );
 
-		$suite->addTestSuite( 'Listener_AllTests' );
-		$suite->addTestSuite( 'Db_AllTests' );
-		// $suite->addTest(QueueHandling::suite());
+		$suite->addTestSuite( 'Db_Adapter_Abstract_ConstructorTestCase' );
+		$suite->addTestSuite( 'Db_Adapter_Abstract_ConnectionTestCase' );
 
 		return $suite;
 	}
