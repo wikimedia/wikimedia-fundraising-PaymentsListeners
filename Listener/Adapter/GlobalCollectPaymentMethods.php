@@ -104,6 +104,6 @@ class Listener_Adapter_GlobalCollectPaymentMethods
 		
 		$method = $this->getPaymentMethods( $paymentMethodId );
 		
-		return isset( $method['process'] ) ? $method['process'] : false;
+		return isset( $method['process'] ) ? (boolean) $method['process'] : false;
 	}
 }
