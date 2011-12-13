@@ -148,12 +148,12 @@ class Listener
 	 */
 	public static function setConfigurationFile( $path = '' )
 	{
-		$path = empty( $path ) ? '' : $path;
+		$path = empty( $path ) ? Listener::DEFAULT_CONFIGURATION_FILE : $path;
 		
 		$absolute = ( substr( $path, 0, 1 ) == '/' ) ? true : false;
 		
-		$path = $absolute ? $path : dirname( __FILE__ ) . '/' . Listener::DEFAULT_CONFIGURATION_FILE;
-		
+		$path = $absolute ? $path : dirname( __FILE__ ) . '/' . $path;
+
 		if ( !is_file( $path ) ) {
 			$message = 'The configuration file must be a valid path.';
 			throw new Listener_Exception( $message );
