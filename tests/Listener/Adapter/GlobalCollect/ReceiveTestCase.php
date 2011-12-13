@@ -83,9 +83,7 @@ class Listener_Adapter_GlobalCollect_ReceiveTestCase extends QueueHandlingTestCa
 	public function testReceiveValidPostWithPaymentStatusCode1000Paid() {
 
 		// The parameters to pass to the factory.
-		$parameters = array(
-			'logLevel' => Listener::LOG_LEVEL_INFO,
-		);
+		$parameters = array();
 
 		// The adapter to pass to the factory.
 		$adapter = 'GlobalCollect';
@@ -133,9 +131,7 @@ class Listener_Adapter_GlobalCollect_ReceiveTestCase extends QueueHandlingTestCa
 	public function testReceiveInvalidPostWithEmptyOrderId() {
 
 		// The parameters to pass to the factory.
-		$parameters = array(
-			'logLevel' => Listener::LOG_LEVEL_INFO,
-		);
+		$parameters = array();
 
 		// The adapter to pass to the factory.
 		$adapter = 'GlobalCollect';
@@ -182,9 +178,7 @@ class Listener_Adapter_GlobalCollect_ReceiveTestCase extends QueueHandlingTestCa
 	public function testReceiveInvalidPostWithoutOrderIdWhileLimboIsEnabled() {
 
 		// The parameters to pass to the factory.
-		$parameters = array(
-			'logLevel' => Listener::LOG_LEVEL_INFO,
-		);
+		$parameters = array();
 
 		// The adapter to pass to the factory.
 		$adapter = 'GlobalCollect';
@@ -232,9 +226,7 @@ class Listener_Adapter_GlobalCollect_ReceiveTestCase extends QueueHandlingTestCa
 	public function testReceiveInvalidPostWithoutOrderIdWhileLimboIsDisabled() {
 
 		// The parameters to pass to the factory.
-		$parameters = array(
-			'logLevel' => Listener::LOG_LEVEL_INFO,
-		);
+		$parameters = array();
 
 		// The adapter to pass to the factory.
 		$adapter = 'GlobalCollect';
