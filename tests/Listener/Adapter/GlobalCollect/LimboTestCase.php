@@ -98,9 +98,7 @@ class Listener_Adapter_GlobalCollect_LimboTestCase extends QueueHandlingTestCase
 	public function testFetchFromLimbo() {
 
 		// The parameters to pass to the factory.
-		$parameters = array(
-			'logLevel' => Listener::LOG_LEVEL_INFO,
-		);
+		$parameters = array();
 
 		// The adapter to pass to the factory.
 		$adapter = 'GlobalCollect';
@@ -134,9 +132,7 @@ class Listener_Adapter_GlobalCollect_LimboTestCase extends QueueHandlingTestCase
 	public function testFetchFromLimboAndDequeue() {
 
 		// The parameters to pass to the factory.
-		$parameters = array(
-			'logLevel' => Listener::LOG_LEVEL_INFO,
-		);
+		$parameters = array();
 
 		// The adapter to pass to the factory.
 		$adapter = 'GlobalCollect';
