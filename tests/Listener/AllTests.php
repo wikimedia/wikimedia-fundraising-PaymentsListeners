@@ -29,6 +29,7 @@ if ( !defined( 'PHPUNIT_MAIN_METHOD' ) ) {
 }
 
 require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'IsAdapterTestCase.php';
+require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'ConfigurationFileTestCase.php';
 require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'GetAdaptersTestCase.php';
 require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'FactoryTestCase.php';
 require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'Adapter' . DIRECTORY_SEPARATOR . 'AllTests.php';
@@ -63,6 +64,7 @@ class Listener_AllTests
 		$suite = new PHPUnit_Framework_TestSuite( 'Queue Handling - Listener Suite' );
 
 		$suite->addTestSuite( 'Listener_IsAdapterTestCase' );
+		$suite->addTestSuite( 'Listener_ConfigurationFileTestCase' );
 		$suite->addTestSuite( 'Listener_GetAdaptersTestCase' );
 		$suite->addTestSuite( 'Listener_FactoryTestCase' );
 		$suite->addTestSuite( 'Listener_Adapter_AllTests' );

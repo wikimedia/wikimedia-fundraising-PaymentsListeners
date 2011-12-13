@@ -113,7 +113,7 @@ class Listener_Adapter_GlobalCollect_ReceiveTestCase extends QueueHandlingTestCa
 	}
 	
 	/**
-	 * testReceiveInvalidPostWithEmptyOrderId
+	 * testReceiveInvalidPostWithEmptyOrderIdWithOutPullingFromDatabase
 	 *
 	 * @covers Listener_Adapter_GlobalCollect::init
 	 * @covers Listener_Adapter_Abstract::receive
@@ -128,11 +128,14 @@ class Listener_Adapter_GlobalCollect_ReceiveTestCase extends QueueHandlingTestCa
 	 * @covers Listener_Adapter_Abstract::stompDequeueMessage
 	 * @covers Listener_Adapter_Abstract::pushToQueue
 	 */
-	public function testReceiveInvalidPostWithEmptyOrderId() {
+	public function testReceiveInvalidPostWithEmptyOrderIdWithOutPullingFromDatabase() {
 
 		// The parameters to pass to the factory.
 		$parameters = array();
 
+		// Database is disabled
+		$parameters['settings'] = BASE_PATH . '/tests/resources/settings.database.is.disabled.ini';
+		
 		// The adapter to pass to the factory.
 		$adapter = 'GlobalCollect';
 
@@ -155,8 +158,11 @@ class Listener_Adapter_GlobalCollect_ReceiveTestCase extends QueueHandlingTestCa
 			'STATUSDATE'		=> "20070406170059",
 			'RECEIVEDDATE'		=> "20070406170057",
 		);
+		//Debug::dump($_POST, eval(DUMP) . "\$_POST");
+		//Debug::puke($adapterInstance->receive( $_POST ), eval(DUMP) . "\$adapterInstance->receive( $_POST )");
+		$this->setExpectedException( 'Listener_Exception', 'The order_id must be set.');
 		
-		$this->assertEquals( 'NOK', $adapterInstance->receive( $_POST ) );
+		$adapterInstance->receive( $_POST );
 	}
 	
 	/**
@@ -239,6 +245,8 @@ class Listener_Adapter_GlobalCollect_ReceiveTestCase extends QueueHandlingTestCa
 		
 		$this->assertInstanceOf( 'Listener_Adapter_GlobalCollect', $adapterInstance );
 
+		$this->setExpectedException( 'Listener_Exception', 'The required key is not set in data: ORDERID');
+
 		$_POST = array(
 			'MERCHANTID'		=> "9990",
 			'EFFORTID'			=> "1",
@@ -254,6 +262,6 @@ class Listener_Adapter_GlobalCollect_ReceiveTestCase extends QueueHandlingTestCa
 			'RECEIVEDDATE'		=> "20070406170057",
 		);
 		
-		$this->assertEquals( 'NOK', $adapterInstance->receive( $_POST ) );
+		$adapterInstance->receive( $_POST );
 	}
 }
