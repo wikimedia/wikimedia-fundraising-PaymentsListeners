@@ -42,7 +42,7 @@ class Listener_Adapter_Abstract_LogFileTestCase extends QueueHandlingTestCase
 {
 
 	/**
-	 * testGetLogFileWhichShouldBeEmpty
+	 * setup
 	 *
 	 * @covers Listener_Adapter_Abstract::getLogFile
 	 */
@@ -88,11 +88,11 @@ class Listener_Adapter_Abstract_LogFileTestCase extends QueueHandlingTestCase
 	}
 
 	/**
-	 * testGetLogFileWhichShouldBeEmpty
+	 * testGetLogFileWhichShouldNotBeEmpty
 	 *
 	 * @covers Listener_Adapter_Abstract::getLogFile
 	 */
-	public function testGetLogFileWhichShouldBeEmpty() {
+	public function testGetLogFileWhichShouldNotBeEmpty() {
 
 		// The parameters to pass to the factory.
 		$parameters = array();
@@ -102,15 +102,15 @@ class Listener_Adapter_Abstract_LogFileTestCase extends QueueHandlingTestCase
 
 		$adapterInstance = Listener::factory( $adapter, $parameters );
 
-		$this->assertEmpty( $adapterInstance->getLogFile() );
+		$this->assertNotEmpty( $adapterInstance->getLogFile() );
 	}
 
 	/**
-	 * testDoesNotHasOutputHandleByDefault
+	 * testDoesHaveOutputHandleByDefault
 	 *
 	 * @covers Listener_Adapter_Abstract::hasOutputHandle
 	 */
-	public function testDoesNotHasOutputHandleByDefault() {
+	public function testDoesHaveOutputHandleByDefault() {
 
 		// The parameters to pass to the factory.
 		$parameters = array();
@@ -120,7 +120,7 @@ class Listener_Adapter_Abstract_LogFileTestCase extends QueueHandlingTestCase
 
 		$adapterInstance = Listener::factory( $adapter, $parameters );
 
-		$this->assertFalse( $adapterInstance->hasOutputHandle() );
+		$this->assertTrue( $adapterInstance->hasOutputHandle() );
 	}
 
 	/**

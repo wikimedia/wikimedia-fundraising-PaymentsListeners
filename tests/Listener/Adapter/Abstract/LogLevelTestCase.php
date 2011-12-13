@@ -42,11 +42,11 @@ class Listener_Adapter_Abstract_LogLevelTestCase extends QueueHandlingTestCase
 {
 
 	/**
-	 * testGetLogLevelWhichShouldBeErrByDefault
+	 * testGetLogLevelWhichShouldBeDebugByDefault
 	 *
 	 * @covers Listener_Adapter_Abstract::getLogLevel
 	 */
-	public function testGetLogLevelWhichShouldBeErrByDefault() {
+	public function testGetLogLevelWhichShouldBeDebugByDefault() {
 
 		// The parameters to pass to the factory.
 		$parameters = array();
@@ -56,7 +56,7 @@ class Listener_Adapter_Abstract_LogLevelTestCase extends QueueHandlingTestCase
 
 		$adapterInstance = Listener::factory( $adapter, $parameters );
 
-		$this->assertSame( Listener::LOG_LEVEL_ERR, $adapterInstance->getLogLevel() );
+		$this->assertSame( Listener::LOG_LEVEL_DEBUG, $adapterInstance->getLogLevel() );
 	}
 
 	/**
