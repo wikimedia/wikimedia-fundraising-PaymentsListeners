@@ -298,8 +298,9 @@ abstract class Listener_Adapter_Abstract
 			$this->setSettings( $settings );
 		}
 		else {
-			$message = 'Settings are not being loaded. No connections will be made to the database.';
-			$this->log( $message, Listener::LOG_LEVEL_DEBUG );
+			$message = 'Settings are not being loaded. A configuration file must be specified.';
+			$this->log( $message, Listener::LOG_LEVEL_ERR );
+			throw new Listener_Exception( $message );
 		}
 		
 		$this->init();
@@ -722,85 +723,101 @@ abstract class Listener_Adapter_Abstract
 	 */
 	public function receive( $data, $options = array() ) {
 		//Debug::dump($data, eval(DUMP) . "\$data", false);
+		try {
 		
-		$status = false;
-		$empty = false;
-	 	// Make sure we are actually getting something posted to the page.
-		if ( empty( $data ) ) {
-			
-			$message = 'Received an empty message, nothing to verify.';
-			$this->log( $message, Listener::LOG_LEVEL_DEBUG );
-			
-			return $this->receiveReturn( $status );
-		}
-
-		$this->setData( $data );
-
-		// Log the message
-		$message = 'Received a message: ' . print_r( $this->getData(), true );
-		$this->log( $message, Listener::LOG_LEVEL_DEBUG );
-
-		$proceedWithProcessing = $this->getProcessDecision();
-		
-		if ( !$proceedWithProcessing ) {
-
-			// Tell the provider we received the message with a status of true
-			$status = true;
-			$message = 'Message with [' . $this->getLimboIdName() . ' = ' . $this->getData( $this->getLimboIdName() ) . '] will not be processed.';
-			$this->log( $message, Listener::LOG_LEVEL_DEBUG );
-
-			return $this->receiveReturn( $status );
-		}
-		
-		$inLimbo = null;
-		$inDatabase = null;
-		
-		if ( $this->getPullFromLimbo() ) {
-
-			$inLimbo = $this->fetchFromLimbo();
-		}
-		
-		if ( $this->getPullFromDatabase() ) {
-
-			if ( !$inLimbo ) {
-				$inDatabase = $this->fetchFromDatabaseByOrderId();
-			}
-		}
-		
-		$exists = ( $inLimbo || $inDatabase ) ? true : false;
-		//Debug::dump($exists, eval(DUMP) . "\$exists");
-		
-		if ( !$exists ) {
-
-			// Tell the provider we received the message with a status of true
-			// Should send an alert about this?
-			$status = true;
-			$message = 'Message with [' . $this->getLimboIdName() . ' = ' . $this->getData( $this->getLimboIdName() ) . '] does not be exist in limbo or the database.';
-			$this->log( $message, Listener::LOG_LEVEL_EMERG );
-		}
-		
-		// We will only push to verified
-		// Push the message to pending
-		if ( $this->pushToPending( $this->getData() ) ) {
-			
-			// Fetch from pending
-			if ($this->fetchFromPending() ) {
+			$status = false;
+			$empty = false;
+			// Make sure we are actually getting something posted to the page.
+			if ( empty( $data ) ) {
 				
-				// Verify the message we pulled from the pending queue.
-				if ( $this->pushToVerified() ) {
+				$message = 'Received an empty message, nothing to verify.';
+				$this->log( $message, Listener::LOG_LEVEL_DEBUG );
+				
+				return $this->receiveReturn( $status );
+			}
+	
+			$this->setData( $data );
+	
+			// Log the message
+			$message = 'Received a message: ' . print_r( $this->getData(), true );
+			$this->log( $message, Listener::LOG_LEVEL_DEBUG );
+	
+			$proceedWithProcessing = $this->getProcessDecision();
 			
-					// remove from pending
-					$this->stompDequeueMessage( $this->messageFromPendingQueue );
-					$this->messageFromPendingQueue = null;
-					
-					$status = true;
+			if ( !$proceedWithProcessing ) {
+	
+				// Tell the provider we received the message with a status of true
+				$status = true;
+				$message = 'Message with [' . $this->getLimboIdName() . ' = ' . $this->getData( $this->getLimboIdName() ) . '] will not be processed.';
+				$this->log( $message, Listener::LOG_LEVEL_DEBUG );
+	
+				return $this->receiveReturn( $status );
+			}
+			
+			$inLimbo = null;
+			$inDatabase = null;
+			
+			if ( $this->getPullFromLimbo() ) {
+	
+				$inLimbo = $this->fetchFromLimbo();
+			}
+			
+			if ( $this->getPullFromDatabase() ) {
+	
+				if ( !$inLimbo ) {
+					$inDatabase = $this->fetchFromDatabaseByOrderId();
 				}
 			}
-		}
+			
+			$exists = ( $inLimbo || $inDatabase ) ? true : false;
+			//Debug::dump($exists, eval(DUMP) . "\$exists");
+			
+			if ( !$exists ) {
+	
+				// Tell the provider we received the message with a status of true
+				// Should send an alert about this?
+				$status = true;
+				$message = 'Message with [' . $this->getLimboIdName() . ' = ' . $this->getData( $this->getLimboIdName() ) . '] does not be exist in limbo or the database.';
+				$this->log( $message, Listener::LOG_LEVEL_EMERG );
+			}
+			
+			// We will only push to verified
+			// Push the message to pending
+			if ( $this->pushToPending( $this->getData() ) ) {
+				
+				// Fetch from pending
+				if ($this->fetchFromPending() ) {
+					
+					// Verify the message we pulled from the pending queue.
+					if ( $this->pushToVerified() ) {
+				
+						// remove from pending
+						$this->stompDequeueMessage( $this->messageFromPendingQueue );
+						$this->messageFromPendingQueue = null;
+						
+						$status = true;
+					}
+				}
+			}
+	
+			if ( !empty( $this->messageFromPendingQueue )) {
+				$this->pushToQueue();
+				$this->stompDequeueMessage( $this->messageFromPendingQueue );
+			}
+			
+		} catch ( Listener_Exception $e ) {
 
-		if ( !empty( $this->messageFromPendingQueue )) {
-			$this->pushToQueue();
-			$this->stompDequeueMessage( $this->messageFromPendingQueue );
+			$message = $e->getMessage();
+			$this->log( $message, Listener::LOG_LEVEL_EMERG );
+			
+			throw new Listener_Exception( $message );
+			
+		} catch ( Exception $e ) {
+
+			$message = 'Unknown error: ' . $e->getMessage();
+			$this->log( $message, Listener::LOG_LEVEL_EMERG );
+			
+			$status = false;
 		}
 		
 		return $this->receiveReturn( $status );
