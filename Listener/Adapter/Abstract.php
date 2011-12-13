@@ -572,10 +572,17 @@ abstract class Listener_Adapter_Abstract
 		$return = false;
 		
 		if ( empty( $limboId ) ) {
-			$limboId = $this->getAdapterTypeLowerCase() . '-' . $this->getData( $this->getLimboIdName(), true);
+			
+			$orderId = $this->getData( $this->getLimboIdName(), true );
+		
+			if ( empty( $orderId ) ) {
+				$message = 'The order_id must be set.';
+				throw new Listener_Exception( $message );
+			}
+			
+			$limboId = $this->getAdapterTypeLowerCase() . '-' . $orderId;
 			$message = 'Fetching limbo Id from data.';
 			$this->log( $message, Listener::LOG_LEVEL_DEBUG );
-			
 		}
 
 		// connect to stomp
@@ -761,7 +768,7 @@ abstract class Listener_Adapter_Abstract
 		}
 		
 		$exists = ( $inLimbo || $inDatabase ) ? true : false;
-		//Debug::dump($this->getData(), eval(DUMP) . "\this->getData()");
+		//Debug::dump($exists, eval(DUMP) . "\$exists");
 		
 		if ( !$exists ) {
 
@@ -770,8 +777,6 @@ abstract class Listener_Adapter_Abstract
 			$status = true;
 			$message = 'Message with [' . $this->getLimboIdName() . ' = ' . $this->getData( $this->getLimboIdName() ) . '] does not be exist in limbo or the database.';
 			$this->log( $message, Listener::LOG_LEVEL_EMERG );
-
-			return $this->receiveReturn( $status );
 		}
 		
 		// We will only push to verified
