@@ -124,7 +124,7 @@ abstract class Listener_Adapter_Abstract
 	 *
 	 * @var integer $logLevel
 	 */
-	protected $logLevel = Listener::LOG_LEVEL_ERR;
+	protected $logLevel = Listener::LOG_LEVEL_DEBUG;
 
 	/**
 	 * messageFromPendingQueue
@@ -262,7 +262,8 @@ abstract class Listener_Adapter_Abstract
 		// Create transaction id
 		$this->setTxId();
 
-		$log = isset( $log ) ? (boolean) $log : false;
+		$log = isset( $log ) ? (boolean) $log : true;
+		//Debug::dump($log, eval(DUMP) . "\$log");
 		
 		// Set the stomp path if passed from parameters.
 		if ( isset( $activeMqStompUri ) ) {
@@ -283,27 +284,22 @@ abstract class Listener_Adapter_Abstract
 
 		if ( $log ) {
 			$this->openOutputHandle();
-		}
 		
-		$message = 'Loading ' . $this->getAdapterType() . ' processor with log level: ' . $this->getLogLevel();
-		$this->log( $message );
+			$message = 'Loading ' . $this->getAdapterType() . ' processor with log level: ' . $this->getLogLevel();
+			$this->log( $message );
+		}
 
 		// Set the stomp path if passed from parameters.
 		if ( isset( $stompPath ) ) {
 			$this->setStompPath( $stompPath );
 		}
-
-		$settings = isset( $settings ) ? $settings : '';
 		
-		if ( $settings ) {
+		if ( isset( $settings ) ) {
 			$this->setSettings( $settings );
 		}
 		else {
-			$message = 'Settings are not being loaded.';
+			$message = 'Settings are not being loaded. No connections will be made to the database.';
 			$this->log( $message, Listener::LOG_LEVEL_DEBUG );
-
-			$message = 'No connections will be made to the database.';
-			$this->log( $message );
 		}
 		
 		$this->init();
@@ -597,7 +593,7 @@ abstract class Listener_Adapter_Abstract
 		
 		if ( $this->messageFromLimboQueue ) {
 
-			$message = 'Pulled message from pending queue: ' . $this->messageFromLimboQueue;
+			$message = 'Pulled message from limbo queue: ' . $this->messageFromLimboQueue;
 			$this->log( $message, Listener::LOG_LEVEL_DEBUG );
 
 			if ( $dequeue ) {
@@ -766,6 +762,17 @@ abstract class Listener_Adapter_Abstract
 		
 		$exists = ( $inLimbo || $inDatabase ) ? true : false;
 		//Debug::dump($this->getData(), eval(DUMP) . "\this->getData()");
+		
+		if ( !$exists ) {
+
+			// Tell the provider we received the message with a status of true
+			// Should send an alert about this?
+			$status = true;
+			$message = 'Message with [' . $this->getLimboIdName() . ' = ' . $this->getData( $this->getLimboIdName() ) . '] does not be exist in limbo or the database.';
+			$this->log( $message, Listener::LOG_LEVEL_EMERG );
+
+			return $this->receiveReturn( $status );
+		}
 		
 		// We will only push to verified
 		// Push the message to pending
