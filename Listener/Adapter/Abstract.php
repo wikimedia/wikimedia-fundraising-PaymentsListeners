@@ -425,17 +425,7 @@ abstract class Listener_Adapter_Abstract
 		$this->log( $message, Listener::LOG_LEVEL_DEBUG );
 
 		// Queue the message
-		if ( !$this->stompQueueMessage( $queue, $activeMqMessage, $headers )) {
-			$message = 'There was a problem queueing the message to the queue: ' . $queue;
-			$this->log( $message, Listener::LOG_LEVEL_DEBUG );
-
-			$message = 'Message: ' . print_r( $activeMqMessage, true );
-			$this->log( $message, Listener::LOG_LEVEL_DEBUG );
-		}
-		else {
-
-			$return = true;
-		}
+		$return = $this->stompQueueMessage( $queue, $activeMqMessage, $headers );
 		
 		return $return;
 	}
@@ -449,8 +439,6 @@ abstract class Listener_Adapter_Abstract
 	 */
 	public function pushToQueue( $queue = '' )
 	{
-		$return = true;
-		
 		$queue = empty( $queue ) ? '/queue/unknown_' . strtolower( get_class( $this ) ) : $queue;
 
 		if ( empty( $this->messageFromPendingQueue ) ) {
@@ -461,18 +449,8 @@ abstract class Listener_Adapter_Abstract
 		}
 	
 		// do the queueing - perhaps move out the tracking checking to its own func?
-		if ( !$this->stompQueueMessage( $queue, $this->messageFromPendingQueue->body )) {
+		$return = $this->stompQueueMessage( $queue, $this->messageFromPendingQueue->body );
 
-			$message = 'There was a problem queueing the message to the queue: ' . $queue;
-			$this->log( $message, Listener::LOG_LEVEL_DEBUG );
-
-			$message = 'Message: ' . print_r( $this->contribution, true );
-			$this->log( $message, Listener::LOG_LEVEL_DEBUG );
-			
-			$return = false;
-		}
-
-		//Debug::dump($return, eval(DUMP) . "\$return", false);
 		return $return;
 	}
 
@@ -497,20 +475,9 @@ abstract class Listener_Adapter_Abstract
 			$this->log( $message, Listener::LOG_LEVEL_DEBUG );
 	
 			// do the queueing - perhaps move out the tracking checking to its own func?
-			if ( !$this->stompQueueMessage( $this->getQueuePending(), json_encode( $this->contribution ), $headers )) {
-				$message = 'There was a problem queueing the message to the queue: ' . $this->getQueuePending();
-				$this->log( $message, Listener::LOG_LEVEL_DEBUG );
-	
-				$message = 'Message: ' . print_r( $this->contribution, true );
-				$this->log( $message, Listener::LOG_LEVEL_DEBUG );
-			}
-			else {
-
-				$return = true;
-			}
+			$return = $this->stompQueueMessage( $this->getQueuePending(), json_encode( $this->contribution ), $headers );
 		}
 
-		//Debug::dump($return, eval(DUMP) . "\$return", false);
 		return $return;
 
 	}
@@ -683,19 +650,8 @@ abstract class Listener_Adapter_Abstract
 	 */
 	public function pushToVerified() {
 		
-		$return = true;
-		
 		// push to verified queue
-		if ( !$this->stompQueueMessage( $this->getQueueVerified(), $this->messageFromPendingQueue->body )) {
-		
-			$message = 'There was a problem queueing the message to the queue: ' . $this->getQueueVerified();
-			$this->log( $message, Listener::LOG_LEVEL_DEBUG );
-			
-			$message = 'Message: ' . print_r( $this->contribution, true );
-			$this->log( $message, Listener::LOG_LEVEL_DEBUG );
-			
-			$return = false;
-		}
+		$return = $this->stompQueueMessage( $this->getQueueVerified(), $this->messageFromPendingQueue->body );
 		
 		//Debug::dump($return, eval(DUMP) . "\$return", false);
 		return $return;
@@ -1373,6 +1329,12 @@ abstract class Listener_Adapter_Abstract
 		$sent = $this->stomp->send( $destination, $messageDetails, $properties );
 		$message = 'Result of queuing message: ' . $sent . ' with the txId: ' . $this->getTxId() ;
 		$this->log( $message, Listener::LOG_LEVEL_DEBUG );
+		
+		if ( !$sent ) {
+			$message = 'Unable to send message to queue: ' . $destination . ' - with message details: ' . $messageDetails . ' - and properties: ' . print_r( $properties, true );
+			$this->log( $message, Listener::LOG_LEVEL_ERR );
+			throw new Listener_Exception( $message );
+		}
 
 		return $sent;
 	}
