@@ -14,11 +14,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
- *
- * @category	Fundraising
- * @package		Fundraising_QueueHandling
  * @license		http://www.gnu.org/copyleft/gpl.html GNU GENERAL PUBLIC LICENSE
- * @since		r462
  * @author		Jeremy Postlethwaite <jpostlethwaite@wikimedia.org>
  */
 
@@ -28,12 +24,12 @@
 require_once 'Listener/Adapter/Abstract.php';
 
 /**
+ * Listener_Adapter_Paypal is not usable. This is a placeholder, in case it is
+ *  decided to implement the PSC for Paypal.
  *
  * @todo
  * - Implement factory
  *
- * @category	Fundraising
- * @package		Fundraising_QueueHandling
  */
 class Listener_Adapter_Paypal extends Listener_Adapter_Abstract
 {
