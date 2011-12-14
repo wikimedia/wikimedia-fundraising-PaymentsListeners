@@ -317,6 +317,16 @@ class Db_Adapter_Mysqli extends Db_Adapter_Abstract
 	////////////////////////////////////////////////////////////////////////////
 
 	/**
+	 * Returns the number of affected rows from the previous query.
+	 *
+	 * @return integer
+	 */
+	public function affectedRows() {
+		
+		return $this->getConnection()->affected_rows;
+	}
+
+	/**
 	 * Query the database server with a statement
 	 *
 	 * @param string	$query
