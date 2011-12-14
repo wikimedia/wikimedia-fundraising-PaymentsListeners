@@ -57,35 +57,35 @@ abstract class Db_Adapter_Abstract
 	protected $data = array();
 
 	/**
-	 * The name of the database for the connection
+	 * The is the name of the database for the connection.
 	 *
 	 * @var string $database
 	 */
 	protected $database;
 
 	/**
-	 * The flags to pass to the database adapter
+	 * The flags to pass to the database adapter. See PHP manual for adapter.
 	 *
 	 * @var mixed $flags
 	 */
 	protected $flags;
 
 	/**
-	 * The host
+	 * The database host.
 	 *
 	 * @var string $host
 	 */
 	protected $host = 'localhost';
 
 	/**
-	 * The password
+	 * The password for the database connection.
 	 *
 	 * @var string $password
 	 */
 	protected $password;
 
 	/**
-	 * The port
+	 * The default port should be declared by the adapter.
 	 *
 	 * @var integer $port
 	 */
@@ -108,14 +108,14 @@ abstract class Db_Adapter_Abstract
 	protected $resultSet = array();
 
 	/**
-	 * The socket
+	 * The socket to the database connection.
 	 *
 	 * @var string $socket
 	 */
 	protected $socket;
 
 	/**
-	 * The username
+	 * The username for the database connection.
 	 *
 	 * @var string $username
 	 */
@@ -134,18 +134,26 @@ abstract class Db_Adapter_Abstract
 	 * @param array $parameters The adapter parameters
 	 *
 	 * $parameters
-	 * - activeMqStompUri:	Change the URI for ActiveMQ		DEFAULT => tcp://localhost:61613
-	 * - log:				Enable logging					DEFAULT => tc
-	 * - logLevel:			Set the log level				DEFAULT => Listener::LOG_LEVEL_ERR - Setting this enables logging
-	 * - logFile:			Set the log file path			DEFAULT => BASE_PATH . '/logs/' . strtolower( $this->getAdapterType() ) . '/' . date( 'Ymd' ) . '.log' - Setting this enables logging
-	 * - stompPath:			Set the path to Stomp			DEFAULT => Stomp.php - This should be in queue_handling/library/
+	 * - database:		The is the name of the database for the connection.
+	 * - flags:			The flags to pass to the database adapter. See PHP manual for adapter.
+	 * - host:			The database host.			DEFAULT => 'localhost'
+	 * - password:		The password for the database connection.
+	 * - port:			The port for the database connection. The default port should be declared by the adapter.
+	 * - socket:		The socket to the database connection.
+	 * - username:		The username for the database connection.
 	 *
 	 */
 	public function __construct( $parameters )
 	{
 		//Debug::puke($parameters, eval(DUMP) . "\$parameters");
-		// Extract parameters.
-		extract( $parameters );
+		// Get the parameters
+		$database	= isset( $parameters['database'] )	? $parameters['database']	: null;
+		$flags		= isset( $parameters['flags'] )		? $parameters['flags']		: null;
+		$host		= isset( $parameters['host'] )		? $parameters['host']		: null;
+		$password	= isset( $parameters['password'] )	? $parameters['password']	: null;
+		$port		= isset( $parameters['port'] )		? $parameters['port']		: null;
+		$socket		= isset( $parameters['socket'] )	? $parameters['socket']		: null;
+		$username	= isset( $parameters['username'] )	? $parameters['username']	: null;
 
 		if ( isset( $database ) ) {
 			$this->setDatabase( $database );
@@ -426,6 +434,13 @@ abstract class Db_Adapter_Abstract
 	////////////////////////////////////////////////////////////////////////////
 
 	/**
+	 * Returns the number of affected rows from the previous query.
+	 *
+	 * @return integer
+	 */
+	abstract public function affectedRows();
+
+	/**
 	 * delete
 	 */
 	public function delete($table, $key, $id, $options = array())
@@ -576,26 +591,17 @@ abstract class Db_Adapter_Abstract
 	 *
 	 * @param string	$table	The table to make an insert
 	 * @param array		$data
-	 * @param array		$options	OPTIONAL
+	 * @param array		$options	This will be passed to @see Db_Adapter_Abstract::query
 	 * 
 	 * $options:
-	 * - $options may be extracted. This will be passed to @see Db_Adapter_Abstract::query
+	 * - $stopper: Set this to eval( DUMP ) so you see where the query was called.
 	 *
 	 * @return string	Return the last inserted id
 	 */
 	public function insert( $table, $data, $options = array() ) {
 		
-		// $table must not be overridden
-		if ( isset( $options['table'] ) ) {
-			unset( $options['table'] );
-		}
-		
-		// $data must not be overridden
-		if ( isset( $options['data'] ) ) {
-			unset( $options['data'] );
-		}
-		
-		extract( $options );
+		// $stopper is used for dumping queries and terminating the application. 
+		$stopper = isset( $options['stopper'] ) ? $options['stopper']	: false;
 		
 		$fieldsString = '';
 		$dataString = '';
@@ -629,8 +635,11 @@ abstract class Db_Adapter_Abstract
 		$query .= ' VALUES';
 		$query .= ' (' . $dataString . ')';
 
-		//Debug::puke($query, eval(DUMP) . __FUNCTION__ . PN . _ . "\$query");
-
+		// Dump the query if stopper is enabled.
+		if ( $stopper ) {
+			Debug::puke( $query, $stopper . eval( DUMP ) . __FUNCTION__ . PN . _ . "\$query" );
+		}
+		
 		$this->query( $query, $options );
 		
 		// Parsing the id by primary key has not been developed.
@@ -642,14 +651,62 @@ abstract class Db_Adapter_Abstract
 	}
 
 	/**
-	 * Insert a single record into the database.
+	 * Updates records in the database.
 	 *
 	 * @param string	$table	The table to make an insert
 	 * @param array		$data
-	 * @param array		$options	OPTIONAL
+	 * @param array		$options	This will be passed to @see Db_Adapter_Abstract::query
+	 * 
+	 * $options:
+	 * - $stopper: Set this to eval( DUMP ) so you see where the query was called.
+	 * 
 	 * @return integer	Returns the count of affected rows
 	 */
 	public function update( $table, $data, $where, $options = array() ) {
+
+		// A WHERE statement must be supplied.
+		if ( empty( $where ) ) {
+			$message = '$where cannot be empty.';
+			throw new Db_Exception( $message );
+		}
+		
+		// $stopper is used for dumping queries and terminating the application. 
+		$stopper = isset( $options['stopper'] ) ? $options['stopper']	: false;
+		
+		$set = '';
+		
+		foreach ( $data as $field => $value ) {
+			$set .= ' `' . (string) $field . '` =';
+			
+			if ( $value instanceof Db_Expression ) {
+				$set .= ' ' . $value->__toString() . ',';
+			}
+			else {
+				$set .= " '" . $this->escape( $value ) . "',";
+			}
+		}
+		
+		$set = strlen($set) ? substr($set, 0, -1) : '';
+		
+		if ( empty( $set ) ) {
+			$message = 'No fields set for update on table: ' . $table;
+			throw new Db_Exception($message);
+		}
+
+		$query	= '';
+		$query .= 'UPDATE `' . $table . '`';
+		$query .= ' SET' . $set;
+		$query .= ' WHERE ' . $where;
+
+
+		// Dump the query if stopper is enabled.
+		if ( $stopper ) {
+			Debug::puke( $query, $stopper . eval( DUMP ) . __FUNCTION__ . PN . _ . "\$query" );
+		}
+
+		$this->query($query);
+		
+		return $this->affectedRows();
 	 
 	}
 }
