@@ -44,6 +44,7 @@ class Listener_Adapter_GlobalCollect_ReceiveTestCase extends QueueHandlingTestCa
 	 * testReceiveEmptyShouldReturnNok
 	 *
 	 * @covers Listener_Adapter_Abstract::receive
+	 * @covers Listener_Adapter_GlobalCollect::getProcessDecision
 	 * @covers Listener_Adapter_Abstract::receiveReturn
 	 */
 	public function testReceiveEmptyShouldReturnNok() {
@@ -69,6 +70,7 @@ class Listener_Adapter_GlobalCollect_ReceiveTestCase extends QueueHandlingTestCa
 	 *
 	 * @covers Listener_Adapter_GlobalCollect::init
 	 * @covers Listener_Adapter_Abstract::receive
+	 * @covers Listener_Adapter_GlobalCollect::getProcessDecision
 	 * @covers Listener_Adapter_GlobalCollect::receiveReturn
 	 * @covers Listener_Adapter_GlobalCollect::parse
 	 * @covers Listener_Adapter_Abstract::pushToPending
@@ -92,21 +94,7 @@ class Listener_Adapter_GlobalCollect_ReceiveTestCase extends QueueHandlingTestCa
 
 		$this->assertInstanceOf( 'Listener_Adapter_GlobalCollect', $adapterInstance );
 
-		$_POST = array(
-			'MERCHANTID'		=> "9990",
-			'ORDERID'			=> "23",
-			'EFFORTID'			=> "1",
-			'ATTEMPTID'			=> "1",
-			'AMOUNT'			=> "100",
-			'CURRENCYCODE'		=> "EUR",
-			'REFERENCE'			=> "20070406GC19",
-			'PAYMENTREFERENCE'	=> "",
-			'PAYMENTPRODUCTID'	=> "1",
-			'PAYMENTMETHODID'	=> "8",
-			'STATUSID'			=> "800",
-			'STATUSDATE'		=> "20070406170059",
-			'RECEIVEDDATE'		=> "20070406170057",
-		);
+		$_POST = $this->getPostDataForGlobalCollect();
 		
 		$this->assertEquals( 'OK', $adapterInstance->receive( $_POST ) );
 		
@@ -117,6 +105,7 @@ class Listener_Adapter_GlobalCollect_ReceiveTestCase extends QueueHandlingTestCa
 	 *
 	 * @covers Listener_Adapter_GlobalCollect::init
 	 * @covers Listener_Adapter_Abstract::receive
+	 * @covers Listener_Adapter_GlobalCollect::getProcessDecision
 	 * @covers Listener_Adapter_GlobalCollect::receiveReturn
 	 * @covers Listener_Adapter_GlobalCollect::parse
 	 * @covers Listener_Adapter_Abstract::pushToPending
@@ -143,23 +132,8 @@ class Listener_Adapter_GlobalCollect_ReceiveTestCase extends QueueHandlingTestCa
 
 		$this->assertInstanceOf( 'Listener_Adapter_GlobalCollect', $adapterInstance );
 
-		$_POST = array(
-			'MERCHANTID'		=> "9990",
-			'ORDERID'			=> "",
-			'EFFORTID'			=> "1",
-			'ATTEMPTID'			=> "1",
-			'AMOUNT'			=> "100",
-			'CURRENCYCODE'		=> "EUR",
-			'REFERENCE'			=> "20070406GC19",
-			'PAYMENTREFERENCE'	=> "",
-			'PAYMENTPRODUCTID'	=> "1",
-			'PAYMENTMETHODID'	=> "8",
-			'STATUSID'			=> "800",
-			'STATUSDATE'		=> "20070406170059",
-			'RECEIVEDDATE'		=> "20070406170057",
-		);
-		//Debug::dump($_POST, eval(DUMP) . "\$_POST");
-		//Debug::puke($adapterInstance->receive( $_POST ), eval(DUMP) . "\$adapterInstance->receive( $_POST )");
+		$_POST = $this->getPostDataForGlobalCollectWithEmptyOrderId();
+
 		$this->setExpectedException( 'Listener_Exception', 'The order_id must be set.');
 		
 		$adapterInstance->receive( $_POST );
@@ -170,6 +144,7 @@ class Listener_Adapter_GlobalCollect_ReceiveTestCase extends QueueHandlingTestCa
 	 *
 	 * @covers Listener_Adapter_GlobalCollect::init
 	 * @covers Listener_Adapter_Abstract::receive
+	 * @covers Listener_Adapter_GlobalCollect::getProcessDecision
 	 * @covers Listener_Adapter_GlobalCollect::receiveReturn
 	 * @covers Listener_Adapter_GlobalCollect::parse
 	 * @covers Listener_Adapter_Abstract::pushToPending
@@ -195,20 +170,7 @@ class Listener_Adapter_GlobalCollect_ReceiveTestCase extends QueueHandlingTestCa
 		
 		$this->assertInstanceOf( 'Listener_Adapter_GlobalCollect', $adapterInstance );
 
-		$_POST = array(
-			'MERCHANTID'		=> "9990",
-			'EFFORTID'			=> "1",
-			'ATTEMPTID'			=> "1",
-			'AMOUNT'			=> "100",
-			'CURRENCYCODE'		=> "EUR",
-			'REFERENCE'			=> "20070406GC19",
-			'PAYMENTREFERENCE'	=> "",
-			'PAYMENTPRODUCTID'	=> "1",
-			'PAYMENTMETHODID'	=> "8",
-			'STATUSID'			=> "800",
-			'STATUSDATE'		=> "20070406170059",
-			'RECEIVEDDATE'		=> "20070406170057",
-		);
+		$_POST = $this->getPostDataForGlobalCollectWithOutOrderId();
 		
 		$this->assertEquals( 'NOK', $adapterInstance->receive( $_POST ) );
 	}
@@ -218,6 +180,7 @@ class Listener_Adapter_GlobalCollect_ReceiveTestCase extends QueueHandlingTestCa
 	 *
 	 * @covers Listener_Adapter_GlobalCollect::init
 	 * @covers Listener_Adapter_Abstract::receive
+	 * @covers Listener_Adapter_GlobalCollect::getProcessDecision
 	 * @covers Listener_Adapter_GlobalCollect::receiveReturn
 	 * @covers Listener_Adapter_GlobalCollect::parse
 	 * @covers Listener_Adapter_Abstract::pushToPending
@@ -247,20 +210,7 @@ class Listener_Adapter_GlobalCollect_ReceiveTestCase extends QueueHandlingTestCa
 
 		$this->setExpectedException( 'Listener_Exception', 'The required key is not set in data: ORDERID');
 
-		$_POST = array(
-			'MERCHANTID'		=> "9990",
-			'EFFORTID'			=> "1",
-			'ATTEMPTID'			=> "1",
-			'AMOUNT'			=> "100",
-			'CURRENCYCODE'		=> "EUR",
-			'REFERENCE'			=> "20070406GC19",
-			'PAYMENTREFERENCE'	=> "",
-			'PAYMENTPRODUCTID'	=> "1",
-			'PAYMENTMETHODID'	=> "8",
-			'STATUSID'			=> "800",
-			'STATUSDATE'		=> "20070406170059",
-			'RECEIVEDDATE'		=> "20070406170057",
-		);
+		$_POST = $this->getPostDataForGlobalCollectWithOutOrderId();
 		
 		$adapterInstance->receive( $_POST );
 	}
