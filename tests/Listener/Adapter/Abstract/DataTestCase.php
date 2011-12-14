@@ -73,21 +73,7 @@ class Listener_Adapter_Abstract_DataTestCase extends QueueHandlingTestCase
 
 		$adapterInstance = Listener::factory( $adapter, $parameters );
 
-		$_POST = array(
-			'MERCHANTID'		=> "9990",
-			'ORDERID'			=> "23",
-			'EFFORTID'			=> "1",
-			'ATTEMPTID'			=> "1",
-			'AMOUNT'			=> "100",
-			'CURRENCYCODE'		=> "EUR",
-			'REFERENCE'			=> "20070406GC19",
-			'PAYMENTREFERENCE'	=> "",
-			'PAYMENTPRODUCTID'	=> "1",
-			'PAYMENTMETHODID'	=> "1",
-			'STATUSID'			=> "525",
-			'STATUSDATE'		=> "20070406170059",
-			'RECEIVEDDATE'		=> "20070406170057",
-		);
+		$_POST = $this->getPostDataForGlobalCollect();
 		
 		$adapterInstance->setData( $_POST );
 		
@@ -113,24 +99,11 @@ class Listener_Adapter_Abstract_DataTestCase extends QueueHandlingTestCase
 
 		$adapterInstance = Listener::factory( $adapter, $parameters );
 
-		$_POST = array(
-			'ORDERID'			=> "23",
-			'EFFORTID'			=> "1",
-			'ATTEMPTID'			=> "1",
-			'AMOUNT'			=> "100",
-			'CURRENCYCODE'		=> "EUR",
-			'REFERENCE'			=> "20070406GC19",
-			'PAYMENTREFERENCE'	=> "",
-			'PAYMENTPRODUCTID'	=> "1",
-			'PAYMENTMETHODID'	=> "1",
-			'STATUSID'			=> "525",
-			'STATUSDATE'		=> "20070406170059",
-			'RECEIVEDDATE'		=> "20070406170057",
-		);
+		$_POST = $this->getPostDataForGlobalCollectWithOutOrderId();
 		
 		$adapterInstance->setData( $_POST );
 
-		$adapterInstance->checkRequiredFields();
+		$this->assertFalse( $adapterInstance->checkRequiredFields() );
 	}
 	
 	/**
@@ -151,24 +124,15 @@ class Listener_Adapter_Abstract_DataTestCase extends QueueHandlingTestCase
 
 		$adapterInstance = Listener::factory( $adapter, $parameters );
 
-		$_POST = array(
-			'ORDERID'			=> "23",
-			'EFFORTID'			=> "1",
-			'ATTEMPTID'			=> "1",
-			'AMOUNT'			=> "100",
-			'CURRENCYCODE'		=> "EUR",
-			'REFERENCE'			=> "20070406GC19",
-			'PAYMENTREFERENCE'	=> "",
-			'PAYMENTPRODUCTID'	=> "1",
-			'PAYMENTMETHODID'	=> "1",
-			'STATUSID'			=> "525",
-			'STATUSDATE'		=> "20070406170059",
-			'RECEIVEDDATE'		=> "20070406170057",
-		);
+		$key = 'MERCHANTID';
+
+		$data = array();
+		$data[ $key ] = null;
+		
+		$_POST = $this->getPostDataForGlobalCollect( $data );
 		
 		$adapterInstance->setData( $_POST );
 
-		$key = 'MERCHANTID';
 		//Debug::dump($key, eval(DUMP) . "\$key", false);
 
 		$message = 'The required key is not set in data: ' . $key;
@@ -195,25 +159,14 @@ class Listener_Adapter_Abstract_DataTestCase extends QueueHandlingTestCase
 
 		$adapterInstance = Listener::factory( $adapter, $parameters );
 
-		$_POST = array(
-			'ORDERID'			=> "23",
-			'EFFORTID'			=> "1",
-			'ATTEMPTID'			=> "1",
-			'AMOUNT'			=> "100",
-			'CURRENCYCODE'		=> "EUR",
-			'REFERENCE'			=> "20070406GC19",
-			'PAYMENTREFERENCE'	=> "",
-			'PAYMENTPRODUCTID'	=> "1",
-			'PAYMENTMETHODID'	=> "1",
-			'STATUSID'			=> "525",
-			'STATUSDATE'		=> "20070406170059",
-			'RECEIVEDDATE'		=> "20070406170057",
-		);
+		$key = 'MERCHANTID';
+
+		$data = array();
+		$data[ $key ] = null;
+		
+		$_POST = $this->getPostDataForGlobalCollect( $data );
 		
 		$adapterInstance->setData( $_POST );
-
-		$key = 'MERCHANTID';
-		//Debug::dump($key, eval(DUMP) . "\$key", false);
 
 		$this->assertNull( $adapterInstance->getData( $key ) );
 	}
@@ -236,21 +189,7 @@ class Listener_Adapter_Abstract_DataTestCase extends QueueHandlingTestCase
 
 		$adapterInstance = Listener::factory( $adapter, $parameters );
 
-		$_POST = array(
-			'MERCHANTID'		=> "9990",
-			'ORDERID'			=> "23",
-			'EFFORTID'			=> "1",
-			'ATTEMPTID'			=> "1",
-			'AMOUNT'			=> "100",
-			'CURRENCYCODE'		=> "EUR",
-			'REFERENCE'			=> "20070406GC19",
-			'PAYMENTREFERENCE'	=> "",
-			'PAYMENTPRODUCTID'	=> "1",
-			'PAYMENTMETHODID'	=> "1",
-			'STATUSID'			=> "525",
-			'STATUSDATE'		=> "20070406170059",
-			'RECEIVEDDATE'		=> "20070406170057",
-		);
+		$_POST = $this->getPostDataForGlobalCollect();
 		
 		$adapterInstance->setData( $_POST );
 
