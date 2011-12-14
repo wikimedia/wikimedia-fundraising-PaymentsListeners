@@ -14,29 +14,20 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
- *
- * @category	UnitTesting
- * @package		Fundraising_QueueHandling
  * @license		http://www.gnu.org/copyleft/gpl.html GNU GENERAL PUBLIC LICENSE
- * @since		r462
  * @author		Jeremy Postlethwaite <jpostlethwaite@wikimedia.org>
  */
 
 require_once dirname( dirname( dirname( dirname( __FILE__ ) ) ) ) . DIRECTORY_SEPARATOR . 'TestHelper.php';
 
-if ( !defined( 'PHPUNIT_MAIN_METHOD' ) ) {
-	define( 'PHPUNIT_MAIN_METHOD', 'Listener_Adapter_GlobalCollect_AllTests::main' );
-}
-
-// Debug::dump(__FILE__, eval(DUMP) . "__FILE__", false);
-
+require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'GlobalCollectPaymentMethodsTestCase.php';
 require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'ConstructorTestCase.php';
+require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'CheckRequiredFieldsTestCase.php';
 require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'LimboTestCase.php';
 require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'ReceiveTestCase.php';
 
 /**
- * @category	UnitTesting
- * @package		Fundraising_QueueHandling
+ * Listener_Adapter_GlobalCollect_AllTests
  */
 class Listener_Adapter_GlobalCollect_AllTests
 {
@@ -63,14 +54,16 @@ class Listener_Adapter_GlobalCollect_AllTests
 	{
 		$suite = new PHPUnit_Framework_TestSuite( 'Queue Handling - Listener - Adapter - GlobalCollect Suite' );
 
+		// Test Listener_Adapter_GlobalCollect_GlobalCollectPaymentMethodsTestCase before GlobalCollect adapter
+		$suite->addTestSuite( 'Listener_Adapter_GlobalCollect_GlobalCollectPaymentMethodsTestCase' );
+		
 		$suite->addTestSuite( 'Listener_Adapter_GlobalCollect_ConstructorTestCase' );
+
+		$suite->addTestSuite( 'Listener_Adapter_GlobalCollect_CheckRequiredFieldsTestCase' );
+
 		$suite->addTestSuite( 'Listener_Adapter_GlobalCollect_LimboTestCase' );
 		$suite->addTestSuite( 'Listener_Adapter_GlobalCollect_ReceiveTestCase' );
 
 		return $suite;
 	}
-}
-
-if ( PHPUNIT_MAIN_METHOD == 'Listener_Adapter_GlobalCollect_AllTests::main' ) {
-	// Listener_Adapter_GlobalCollect_AllTests::main();
 }
