@@ -112,6 +112,8 @@ class Listener_Adapter_GlobalCollect extends Listener_Adapter_Abstract
 	/**
 	 * Verify the data has the required fields
 	 *
+	 * @param boolean $rethrowExceptions	If true, exceptions will be rethrown in the catch.
+	 *
 	 * Field types:
 	 * - 
 	 * - MERCHANTID: N10 -> 1
@@ -130,8 +132,11 @@ class Listener_Adapter_GlobalCollect extends Listener_Adapter_Abstract
 	 *
 	 * @return boolean Returns true on success
 	 */
-	public function checkRequiredFields() {
+	public function checkRequiredFields( $rethrowExceptions = false ) {
 
+		$rethrowExceptions = (boolean) $rethrowExceptions;
+		$return = false;
+		
 		try {
 			
 			$sanitized = array(
@@ -149,12 +154,16 @@ class Listener_Adapter_GlobalCollect extends Listener_Adapter_Abstract
 				'STATUSDATE'		=> (integer)	$this->getData('STATUSDATE', true),
 				'RECEIVEDDATE'		=> (integer)	$this->getData('RECEIVEDDATE', true),
 			);
+
 			
 			if ( empty( $sanitized['ORDERID'] ) ) {
 				$message = 'ORDERID cannot be empty.';
 				throw new Listener_Exception( $message );
 			}
 
+			$return = true;
+
+			$this->setData( $sanitized );
 			
 			
 		} catch ( Listener_Exception $e ) {
@@ -162,14 +171,13 @@ class Listener_Adapter_GlobalCollect extends Listener_Adapter_Abstract
 			$message = 'Unable to check required fields: ' . $e->getMessage();
 			$this->log( $message, Listener::LOG_LEVEL_EMERG );
 			
-			return false;
+			if ( $rethrowExceptions ) {
+				throw new Listener_Exception( $e->getMessage() );
+			}
+			
 		}
 
-		//Debug::dump($sanitized, eval(DUMP) . "\$sanitized", false);
-
-		$this->setData( $sanitized );
-		
-		return true;
+		return $return;
 	}
 
 	/**
