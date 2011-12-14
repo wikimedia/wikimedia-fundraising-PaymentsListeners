@@ -29,6 +29,13 @@ class Db_Adapter_Mysqli extends Db_Adapter_Abstract
 {
 
 	/**
+	 * The port
+	 *
+	 * @var integer $port
+	 */
+	protected $port = 3306;
+
+	/**
 	 * Get the error code.
 	 *
 	 * @return mixed	Returns false if there is no error, otherwise returns the error code.
