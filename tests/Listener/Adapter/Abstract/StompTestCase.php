@@ -254,53 +254,12 @@ class Listener_Adapter_Abstract_StompTestCase extends QueueHandlingTestCase
 
 		$this->assertFalse( $adapterInstance->connectStomp() );
 	}
-
-	/**
-	 * queueMessageToPending
-	 *
-	 * @param Listener_Adapter_Abstract				$adapterInstance
-	 * @param array						OPTIONAL	$options
-	 *
-	 * @return boolean	Returns result of send
-	 */
-	public function queueMessageToPending( &$adapterInstance, $options = array() ) {
-
-		extract( $options );
-		
-		$jsonEncode = isset( $jsonEncode ) ? (boolean) $jsonEncode : true ;
-		
-		if ( isset( $txId ) ) {
-			$adapterInstance->setTxId( $txId );
-		}
-		else {
-			$txId = $adapterInstance->getTxId();
-		}
-		
-		if ( !isset( $fakeData ) ) {
-			$fakeData = array(
-				'things'	=> 'stuff',
-				'this'		=> 'that',
-				'count'		=> 3,
-				'errors'	=> false,
-			);
-		}
-		
-		// Encode with json if necessary
-		$message = $jsonEncode ? json_encode( $fakeData ) : $fakeData ;
-		
-		// Set the transaction id.
-		$properties = array( 'JMSCorrelationID' => $txId );
-
-		// Set to pending queue
-		$queue = $adapterInstance->getQueuePending();
-		
-		return $adapterInstance->stompQueueMessage( $queue, $message, $properties );
-	}
 	
 	/**
 	 * testStompQueueMessageToPending
 	 *
 	 * @covers Listener_Adapter_Abstract::stompQueueMessage
+	 * @covers Listener_Adapter_Abstract::pushToQueueWithJmsCorrelationId
 	 */
 	public function testStompQueueMessageToPending() {
 		// The parameters to pass to the factory.
@@ -320,8 +279,12 @@ class Listener_Adapter_Abstract_StompTestCase extends QueueHandlingTestCase
 		$adapterInstance->connectStomp();
 
 		$this->assertTrue( $adapterInstance->getStomp()->isConnected() );
-
-		$this->assertTrue( $this->queueMessageToPending( $adapterInstance ) );
+		
+		$activeMqMessage = $this->getPostDataForGlobalCollect();
+		$queue = $adapterInstance->getQueuePending();
+		$id = $adapterInstance->getTxId();
+		
+		$this->assertTrue( $adapterInstance->pushToQueueWithJmsCorrelationId( $activeMqMessage, $queue, $id ) );
 	}
 
 	/**
@@ -338,6 +301,7 @@ class Listener_Adapter_Abstract_StompTestCase extends QueueHandlingTestCase
 	 *
 	 * @covers Listener_Adapter_Abstract::stompFetchMessage
 	 * @covers Listener_Adapter_Abstract::stompDequeueMessage
+	 * @covers Listener_Adapter_Abstract::pushToQueueWithJmsCorrelationId
 	 */
 	public function testStompEmptyQueueIfEmptyAddSomeAndRemoveThem() {
 		// The parameters to pass to the factory.
@@ -467,7 +431,13 @@ class Listener_Adapter_Abstract_StompTestCase extends QueueHandlingTestCase
 		for ( $txId = $first; $txId < $stop; $txId++ ) { 
 			
 			$message = 'Failed to send txId: ' . $txId;
-			$this->assertTrue( $this->queueMessageToPending( $adapterInstance, array( 'txId' => $txId, ) ), $message );
+
+		
+			$activeMqMessage = $this->getPostDataForGlobalCollect();
+			$queue = $adapterInstance->getQueuePending();
+			$id = $adapterInstance->getTxId();
+			
+			$this->assertTrue( $adapterInstance->pushToQueueWithJmsCorrelationId( $activeMqMessage, $queue, $txId ), $message  );
 		}
 		
 		
