@@ -247,11 +247,12 @@ abstract class Listener_Adapter_Abstract
 	 * @param array $parameters The adapter parameters
 	 *
 	 * $parameters
-	 * - activeMqStompUri:	Change the URI for ActiveMQ		DEFAULT => tcp://localhost:61613
-	 * - log:				Enable logging 					DEFAULT => tc
-	 * - logLevel:			Set the log level				DEFAULT => Listener::LOG_LEVEL_ERR - Setting this enables logging
-	 * - logFile:			Set the log file path 			DEFAULT => BASE_PATH . '/logs/' . strtolower( $this->getAdapterType() ) . '/' . date( 'Ymd' ) . '.log' - Setting this enables logging
-	 * - stompPath:			Set the path to Stomp 			DEFAULT => Stomp.php - This should be in queue_handling/library/
+	 * - activeMqStompUri:	Change the URI for ActiveMQ			DEFAULT => tcp://localhost:61613
+	 * - log:				Enable logging 						DEFAULT => true
+	 * - logLevel:			Set the log level					DEFAULT => Listener::LOG_LEVEL_DEBUG - Setting this enables logging
+	 * - logFile:			Set the log file path 				DEFAULT => BASE_PATH . '/logs/' . strtolower( $this->getAdapterType() ) . '/' . date( 'Ymd' ) . '.log' - Setting this enables logging
+	 * - stompPath:			Set the path to Stomp 				DEFAULT => Stomp.php - This should be in queue_handling/library/
+	 * - settings:			Set the path to the settings file	DEFAULT => settings.ini - This should be in queue_handling/ - You may also specify an absolute path to a file.
 	 *
 	 */
 	public function __construct( $parameters )
