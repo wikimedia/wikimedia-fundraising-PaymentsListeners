@@ -43,7 +43,7 @@ define( 'PREc', '</pre>' );
 define( 'HR', '<hr />' );
 
 /**
- * HR The WWW Horizontal Rule
+ * A constant for outputting a space
  */
 define( '_', ' ' );
 
