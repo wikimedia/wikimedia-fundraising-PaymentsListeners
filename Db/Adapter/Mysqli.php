@@ -172,7 +172,9 @@ class Db_Adapter_Mysqli extends Db_Adapter_Abstract
 	 *
 	 * fetch() a row from the query result
 	 *
-	 * @return string
+	 * @param array $options OPTIONAL parameters
+	 *
+	 * @return array
 	 */
 	public function fetch( $options = array() )
 	{
@@ -189,15 +191,17 @@ class Db_Adapter_Mysqli extends Db_Adapter_Abstract
 	 *
 	 * fetchAll() rows from the query result
 	 *
-	 * @param array		$options	OPTIONAL
+	 * @param array $options OPTIONAL parameters
+	 *
+	 * $options
+	 * - key:	The key that will be used to index the results
 	 *
 	 * @return string
 	 */
 	public function fetchAll( $options = array() ) {
 		
-		extract( $options );
+		$key = isset( $options['key'] ) ? $options['key'] : '';
 		
-		$key = isset( $key ) ? $key : '';
 		$this->resetResultSet();
 		
 		while ( $row = $this->fetch() ) {
@@ -331,36 +335,23 @@ class Db_Adapter_Mysqli extends Db_Adapter_Abstract
 	 *
 	 * @param string	$query
 	 * @param array		$options	OPTIONAL
+	 *
+	 * $options
+	 * - storeResult:	This is a boolean parameters that will be converted into one of the constants: MYSQLI_STORE_RESULT || MYSQLI_USE_RESULT
+	 *
 	 * @return mixed|Db_Adapter_Abstract
 	 */
 	public function query( $query, $options = array() ) {
 		
-		extract( $options );
-		
-		$storeResult = ( isset( $storeResult ) && $storeResult ) ? (boolean) $storeResult : false;  
-		//Debug::dump( $storeResult, eval(DUMP) . "\$storeResult");
+		$storeResult = ( isset( $options['storeResult'] ) && $options['storeResult'] ) ? (boolean) $options['storeResult'] : false;  
 		$storeResult = $storeResult ? MYSQLI_STORE_RESULT : MYSQLI_USE_RESULT;	
-		//Debug::dump( $storeResult, eval(DUMP) . "\$storeResult");
-		//Debug::dump( $query, eval(DUMP) . "\$query");
-		
-		//$this->result = $this->getConnection()->query( $query, $storeResult );
-		//$connection = $this->getConnection();
-		//Debug::puke( $connection, eval(DUMP) . "\$connection");
-		
-		//$this->result = $connection->query( $query, $storeResult );
+
 		$this->result = $this->getConnection()->query( $query, $storeResult );
-		//Debug::dump( $this->result, eval(DUMP) . "\$this->result");
 		
 		if ( $this->getErrorCode() ) {
 			$message = $this->getErrorMessage();
-			//Debug::puke($message, eval(DUMP) . __FUNCTION__ . PN . _ . "\$message");
 			throw new Db_Exception( $message );
 		}
-		
-		//$this->result = $this->getConnection()->query( $query);
-		//$message = mysqli_connect_error();
-		//Debug::puke( $message, eval(DUMP) . "\$message");
-		//Debug::puke( $this->result, eval(DUMP) . "\$this->result");
 		
 		return ( $storeResult ) ? $this : $this->getResult();
 	}
