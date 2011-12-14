@@ -249,22 +249,25 @@ abstract class Listener_Adapter_Abstract
 	 * $parameters
 	 * - activeMqStompUri:	Change the URI for ActiveMQ			DEFAULT => tcp://localhost:61613
 	 * - log:				Enable logging 						DEFAULT => true
-	 * - logLevel:			Set the log level					DEFAULT => Listener::LOG_LEVEL_DEBUG - Setting this enables logging
 	 * - logFile:			Set the log file path 				DEFAULT => BASE_PATH . '/logs/' . strtolower( $this->getAdapterType() ) . '/' . date( 'Ymd' ) . '.log' - Setting this enables logging
-	 * - stompPath:			Set the path to Stomp 				DEFAULT => Stomp.php - This should be in queue_handling/library/
+	 * - logLevel:			Set the log level					DEFAULT => Listener::LOG_LEVEL_DEBUG - Setting this enables logging
 	 * - settings:			Set the path to the settings file	DEFAULT => settings.ini - This should be in queue_handling/ - You may also specify an absolute path to a file.
+	 * - stompPath:			Set the path to Stomp 				DEFAULT => Stomp.php - This should be in queue_handling/library/
 	 *
 	 */
-	public function __construct( $parameters )
+	public function __construct( $parameters = array() )
 	{
-		// Extract parameters.
-		extract( $parameters );
 
 		// Create transaction id
 		$this->setTxId();
 
-		$log = isset( $log ) ? (boolean) $log : true;
-		//Debug::dump($log, eval(DUMP) . "\$log");
+		// Get the parameters
+		$activeMqStompUri	= isset( $parameters['activeMqStompUri'] )	? $parameters['activeMqStompUri']	: null;
+		$log				= isset( $parameters['log'] )				? (boolean) $parameters['log']		: true;
+		$logFile			= isset( $parameters['logFile'] )			? $parameters['logFile']			: null;
+		$logLevel			= isset( $parameters['logLevel'] )			? $parameters['logLevel']			: null;
+		$settings			= isset( $parameters['settings'] )			? $parameters['settings']			: null;
+		$stompPath			= isset( $parameters['stompPath'] )			? $parameters['stompPath']			: null;
 		
 		// Set the stomp path if passed from parameters.
 		if ( isset( $activeMqStompUri ) ) {
