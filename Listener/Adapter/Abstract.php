@@ -1028,20 +1028,20 @@ abstract class Listener_Adapter_Abstract
 	 * openOutputHandle
 	 *
 	 * Log files are always opened with the 'a' append flag for writing only.
-	 *
-	 * @param string $logFile	 OPTIONAL	 The path to a log file
 	 */
-	public function openOutputHandle( $logFile = '' )
+	public function openOutputHandle()
 	{
+		// Check to see if a log file has already been set.
+		$logFile = $this->getLogFile();
+		
 		if ( empty( $logFile ) ) {
 
 			// Create a default log file name
 			$this->setLogFile();
 
-			$logFile = $this->getLogFile();
 		}
 
-		$this->outputHandle = fopen( $logFile, 'a' );
+		$this->outputHandle = fopen( $this->getLogFile(), 'a' );
 	}
 
 	/**
