@@ -43,29 +43,6 @@ class Db_Adapter_Mysqli_QueryTestCase extends QueueHandlingTestCase
 	 * @covers Db_Adapter_Mysqli::fetch
 	 * @covers Db_Adapter_Mysqli::fetchAll
 	 *
-		CREATE TABLE IF NOT EXISTS `queue2civicrm_limbo` (
-		  `queue2civicrm_limbo_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-		  `contribution_tracking_id` int(10) unsigned DEFAULT NOT NULL,
-		  `order_id` varchar(32) NOT NULL,
-		  `timestamp` int(10) unsigned NOT NULL,
-		  `data` text NOT NULL,
-		  `gateway` varchar(32) NOT NULL,
-		  `payment_method` varchar(32) NOT NULL,
-		  `payment_submethod` varchar(32) NOT NULL,
-		  PRIMARY KEY (`queue2civicrm_limbo_id`),
-		  KEY `contribution_tracking_id` (`contribution_tracking_id`),
-		  KEY `order_id` (`order_id`),
-		  KEY `timestamp` (`timestamp`),
-		  KEY `gateway` (`gateway`),
-		  KEY `payment_method` (`payment_method`),
-		  KEY `payment_submethod` (`payment_submethod`)
-		) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
-
-		CREATE TABLE IF NOT EXISTS `unit_test_table` (
-		  `unit_test_table_id` int(11) NOT NULL AUTO_INCREMENT,
-		  `unit_test_table` varchar(255) NOT NULL,
-		  PRIMARY KEY (`unit_test_table_id`)
-		) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 	 */
 	public function testQueryWithStoreResult() {
 
@@ -92,5 +69,127 @@ class Db_Adapter_Mysqli_QueryTestCase extends QueueHandlingTestCase
 		$query = 'SELECT * FROM `queue2civicrm_limbo`';
 		$adapterInstance->query( $query );
 		$adapterInstance->fetchAll();
+	}
+
+	/**
+	 * testDeleteThenInsertThenUpdateAndFetchTheRecord
+	 *
+	 * @covers Db_Adapter_Abstract::__construct
+	 * @covers Db_Adapter_Abstract::delete
+	 * @covers Db_Adapter_Abstract::insert
+	 * @covers Db_Adapter_Abstract::query
+	 * @covers Db_Adapter_Abstract::update
+	 * @covers Db_Adapter_Abstract::getLastInsertId
+	 * @covers Db_Adapter_Abstract::quoteInto
+	 * @covers Db_Adapter_Mysqli::setLastInsertId
+	 * @covers Db_Adapter_Mysqli::getErrorCode
+	 * @covers Db_Adapter_Mysqli::lastInsertId
+	 * @covers Db_Adapter_Mysqli::fetch
+	 * @covers Db_Expression::__construct
+	 * @covers Db_Expression::__toString
+	 *
+	 */
+	public function testFetchWithNoResultSet() {
+
+		// The parameters to pass to the factory.
+		$parameters = array(
+			'database'	=> TESTS_DB_ADAPTER_DATABASE_FOR_TESTING,
+			'host'		=> TESTS_DB_ADAPTER_HOST,
+			'password'	=> TESTS_DB_ADAPTER_PASSWORD,
+			'username'	=> TESTS_DB_ADAPTER_USERNAME,
+			'port'		=> TESTS_DB_ADAPTER_PORT,
+			'socket'	=> TESTS_DB_ADAPTER_SOCKET,
+			'flags'		=> MYSQLI_CLIENT_INTERACTIVE,
+		);
+
+		// The adapter to pass to the factory.
+		$adapter = 'Mysqli';
+
+		$adapterInstance = Db::factory( $adapter, $parameters );
+
+		$this->assertInstanceOf( 'Db_Adapter_Mysqli', $adapterInstance );
+		$this->assertInstanceOf( 'mysqli', $adapterInstance->getConnection() );
+
+		$adapterInstance->resetResultSet();
+		
+		$message = 'The result is not an instance of MySQLi_Result';
+		$this->setExpectedException( 'Db_Exception', $message );
+		
+		$adapterInstance->fetch();
+	}
+	
+	/**
+	 * testDeleteThenInsertThenFetchTheRecordAndFetchAllByInvalidKey
+	 *
+	 * @covers Db_Adapter_Abstract::__construct
+	 * @covers Db_Adapter_Abstract::delete
+	 * @covers Db_Adapter_Abstract::insert
+	 * @covers Db_Adapter_Abstract::query
+	 * @covers Db_Adapter_Abstract::update
+	 * @covers Db_Adapter_Abstract::getLastInsertId
+	 * @covers Db_Adapter_Abstract::quoteInto
+	 * @covers Db_Adapter_Mysqli::setLastInsertId
+	 * @covers Db_Adapter_Mysqli::getErrorCode
+	 * @covers Db_Adapter_Mysqli::lastInsertId
+	 * @covers Db_Adapter_Mysqli::fetch
+	 * @covers Db_Adapter_Mysqli::fetchAll
+	 * @covers Db_Adapter_Mysqli::fetchAllByKey
+	 * @covers Db_Adapter_Abstract::resetResultSet
+	 * @covers Db_Expression::__construct
+	 * @covers Db_Expression::__toString
+	 *
+	 */
+	public function testDeleteThenInsertThenFetchTheRecordAndFetchAllByInvalidKey() {
+
+		// The parameters to pass to the factory.
+		$parameters = array(
+			'database'	=> TESTS_DB_ADAPTER_DATABASE_FOR_TESTING,
+			'host'		=> TESTS_DB_ADAPTER_HOST,
+			'password'	=> TESTS_DB_ADAPTER_PASSWORD,
+			'username'	=> TESTS_DB_ADAPTER_USERNAME,
+			'port'		=> TESTS_DB_ADAPTER_PORT,
+			'socket'	=> TESTS_DB_ADAPTER_SOCKET,
+			'flags'		=> MYSQLI_CLIENT_INTERACTIVE,
+		);
+
+		// The adapter to pass to the factory.
+		$adapter = 'Mysqli';
+
+		$adapterInstance = Db::factory( $adapter, $parameters );
+
+		$this->assertInstanceOf( 'Db_Adapter_Mysqli', $adapterInstance );
+		$this->assertInstanceOf( 'mysqli', $adapterInstance->getConnection() );
+
+		$table = 'queue2civicrm_limbo';
+		$id = 1;
+		$key = 'queue2civicrm_limbo_id';
+		$orderId = 1;
+		
+		// Delete the record if it exists
+		$value = $adapterInstance->delete( $table, $key, $id );
+
+		
+		$data = array(
+			'queue2civicrm_limbo_id'		=> $id,
+			'contribution_tracking_id'	=> new Db_Expression(1),
+			'order_id'					=> $orderId,
+			'timestamp'					=> time(),
+			'data'						=> 'Just some data that should be in json format.',
+			'gateway'					=> strtolower( TESTS_LISTENER_ADAPTER_DEFAULT ),
+			'payment_method'			=> 'rtbt',
+			'payment_submethod'			=> 'rtbt_ideal',
+		);
+		
+		$value = $adapterInstance->insert( $table, $data );
+
+		$query = "SELECT * FROM `queue2civicrm_limbo` where `order_id` = '?'";
+		$adapterInstance->query( $adapterInstance->quoteInto( $query, $orderId ) );
+
+		$options = array();
+		
+		$message = 'The key (some_non_existent_key) is not set in the row of the result set.';
+		$this->setExpectedException( 'Db_Exception', $message );
+		
+		$row = $adapterInstance->fetchAllByKey( 'some_non_existent_key' );
 	}
 }
