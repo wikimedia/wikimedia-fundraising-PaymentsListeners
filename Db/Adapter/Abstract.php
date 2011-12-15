@@ -441,7 +441,17 @@ abstract class Db_Adapter_Abstract
 	abstract public function affectedRows();
 
 	/**
-	 * delete
+	 * deletes records in the database.
+	 *
+	 * @param string		$table		The table to make an update
+	 * @param string		$key		This is a field in the database table you wish to delete on.
+	 * @param array			$options	This will be passed to @see Db_Adapter_Abstract::query
+	 * 
+	 * $options:
+	 * - $stopper: Set this to eval( DUMP ) so you see where the query was called. The query will be dumped to the screen. The script will continue to run.
+	 * - $stopperKill: Set this to eval( DUMP ) so you see where the query was called. The query will be dumped to the screen. The script will terminate before the query is executed.
+	 * 
+	 * @return integer	Returns the count of affected rows
 	 */
 	public function delete( $table, $key, $id, $options = array())
 	{
@@ -472,17 +482,18 @@ abstract class Db_Adapter_Abstract
 
 		// @codeCoverageIgnoreStart
 		$stopper = isset( $options['stopper'] ) ? $options['stopper'] : false;
-		$stopperDisable = isset( $options['stopperDisable'] ) ? $options['stopperDisable'] : false;
 		$stopperKill = isset( $options['stopperKill'] ) ? $options['stopperKill'] : false;
 
 		if ($stopperKill) {
+			Debug::dump( $table, $stopperKill . ' - ' . eval( DUMP ) . __FUNCTION__ . PN . _ . "\$table" );
+			Debug::dump( $id, $stopperKill . ' - ' . eval( DUMP ) . __FUNCTION__ . PN . _ . "\$id" );
+			Debug::dump( $where, $stopperKill . ' - ' . eval( DUMP ) . __FUNCTION__ . PN . _ . "\$where" );
 			Debug::puke( $query, $stopperKill . ' - ' . eval( DUMP ) . __FUNCTION__ . PN . _ . "\$query" );
 		}
-		elseif ($stopperDisable) {
-			Debug::dump( $query, $stopperDisable . ' - ' . eval( DUMP ) . __FUNCTION__ . PN . _ . "\$query" );
-			return;
-		}
 		elseif ($stopper) {
+			Debug::dump( $table, $stopper . ' - ' . eval( DUMP ) . __FUNCTION__ . PN . _ . "\$table" );
+			Debug::dump( $id, $stopper . ' - ' . eval( DUMP ) . __FUNCTION__ . PN . _ . "\$id" );
+			Debug::dump( $where, $stopper . ' - ' . eval( DUMP ) . __FUNCTION__ . PN . _ . "\$where" );
 			Debug::dump( $query, $stopper . ' - ' . eval( DUMP ) . __FUNCTION__ . PN . _ . "\$query" );
 		}
 		// @codeCoverageIgnoreEnd
@@ -598,12 +609,13 @@ abstract class Db_Adapter_Abstract
 	/**
 	 * Insert a single record into the database.
 	 *
-	 * @param string	$table	The table to make an insert
-	 * @param array		$data
+	 * @param string	$table		The table to make an insert
+	 * @param array		$data		Keys in this array will be quoted with backticks. Values will be escaped unless they are encapsulated with @see Db_Expression
 	 * @param array		$options	This will be passed to @see Db_Adapter_Abstract::query
 	 * 
 	 * $options:
-	 * - $stopper: Set this to eval( DUMP ) so you see where the query was called.
+	 * - $stopper: Set this to eval( DUMP ) so you see where the query was called. The query will be dumped to the screen. The script will continue to run.
+	 * - $stopperKill: Set this to eval( DUMP ) so you see where the query was called. The query will be dumped to the screen. The script will terminate before the query is executed.
 	 *
 	 * @return string	Return the last inserted id
 	 */
@@ -612,11 +624,8 @@ abstract class Db_Adapter_Abstract
 		// Require table
 		if ( empty( $table ) ) {
 			$message = '$table cannot be empty.';
-			throw new Exception( $message );
+			throw new Db_Exception( $message );
 		}
-		
-		// $stopper is used for dumping queries and terminating the application. 
-		$stopper = isset( $options['stopper'] ) ? $options['stopper']	: false;
 		
 		$fieldsString = '';
 		$dataString = '';
@@ -651,9 +660,20 @@ abstract class Db_Adapter_Abstract
 		$query .= ' (' . $dataString . ')';
 
 		// @codeCoverageIgnoreStart
-		// Dump the query if stopper is enabled.
-		if ( $stopper ) {
-			Debug::puke( $query, $stopper . eval( DUMP ) . __FUNCTION__ . PN . _ . "\$query" );
+		
+		// $stopper is used for dumping queries and terminating the application. 
+		$stopper = isset( $options['stopper'] ) ? $options['stopper'] : false;
+		$stopperKill = isset( $options['stopperKill'] ) ? $options['stopperKill'] : false;
+
+		if ($stopperKill) {
+			Debug::dump( $table, $stopperKill . ' - ' . eval( DUMP ) . __FUNCTION__ . PN . _ . "\$table" );
+			Debug::dump( $data, $stopperKill . ' - ' . eval( DUMP ) . __FUNCTION__ . PN . _ . "\$data" );
+			Debug::puke( $query, $stopperKill . ' - ' . eval( DUMP ) . __FUNCTION__ . PN . _ . "\$query" );
+		}
+		elseif ($stopper) {
+			Debug::dump( $table, $stopper . ' - ' . eval( DUMP ) . __FUNCTION__ . PN . _ . "\$table" );
+			Debug::dump( $data, $stopper . ' - ' . eval( DUMP ) . __FUNCTION__ . PN . _ . "\$data" );
+			Debug::dump( $query, $stopper . ' - ' . eval( DUMP ) . __FUNCTION__ . PN . _ . "\$query" );
 		}
 		// @codeCoverageIgnoreEnd
 		
@@ -670,12 +690,14 @@ abstract class Db_Adapter_Abstract
 	/**
 	 * Updates records in the database.
 	 *
-	 * @param string	$table	The table to make an insert
-	 * @param array		$data
-	 * @param array		$options	This will be passed to @see Db_Adapter_Abstract::query
+	 * @param string		$table		The table to make an update
+	 * @param array			$data		Keys in this array will be quoted with backticks. Values will be escaped unless they are encapsulated with @see Db_Expression
+	 * @param string|array	$where		If this is an array, it will be concatenated with AND.
+	 * @param array			$options	This will be passed to @see Db_Adapter_Abstract::query
 	 * 
 	 * $options:
-	 * - $stopper: Set this to eval( DUMP ) so you see where the query was called.
+	 * - $stopper: Set this to eval( DUMP ) so you see where the query was called. The query will be dumped to the screen. The script will continue to run.
+	 * - $stopperKill: Set this to eval( DUMP ) so you see where the query was called. The query will be dumped to the screen. The script will terminate before the query is executed.
 	 * 
 	 * @return integer	Returns the count of affected rows
 	 */
@@ -687,14 +709,20 @@ abstract class Db_Adapter_Abstract
 			throw new Db_Exception( $message );
 		}
 
+		// Require data
+		if ( empty( $data ) || !is_array( $data ) ) {
+			$message = '$data cannot be empty.';
+			throw new Db_Exception( $message );
+		}
+
 		// A WHERE statement must be supplied.
 		if ( empty( $where ) ) {
 			$message = '$where cannot be empty.';
 			throw new Db_Exception( $message );
 		}
 		
-		// $stopper is used for dumping queries and terminating the application. 
-		$stopper = isset( $options['stopper'] ) ? $options['stopper']	: false;
+		// Convert where to a string 
+		$where = is_array( $where ) ? implode( ' AND ', $where ) : $where ;
 		
 		$set = '';
 		
@@ -710,11 +738,6 @@ abstract class Db_Adapter_Abstract
 		}
 		
 		$set = strlen($set) ? substr($set, 0, -1) : '';
-		
-		if ( empty( $set ) ) {
-			$message = 'No fields set for update on table: ' . $table;
-			throw new Db_Exception($message);
-		}
 
 		$query	= '';
 		$query .= 'UPDATE `' . $table . '`';
@@ -723,9 +746,22 @@ abstract class Db_Adapter_Abstract
 
 
 		// @codeCoverageIgnoreStart
-		// Dump the query if stopper is enabled.
-		if ( $stopper ) {
-			Debug::puke( $query, $stopper . eval( DUMP ) . __FUNCTION__ . PN . _ . "\$query" );
+		
+		// $stopper is used for dumping queries and terminating the application. 
+		$stopper = isset( $options['stopper'] ) ? $options['stopper'] : false;
+		$stopperKill = isset( $options['stopperKill'] ) ? $options['stopperKill'] : false;
+
+		if ($stopperKill) {
+			Debug::dump( $table, $stopperKill . ' - ' . eval( DUMP ) . __FUNCTION__ . PN . _ . "\$table" );
+			Debug::dump( $data, $stopperKill . ' - ' . eval( DUMP ) . __FUNCTION__ . PN . _ . "\$data" );
+			Debug::dump( $where, $stopperKill . ' - ' . eval( DUMP ) . __FUNCTION__ . PN . _ . "\$where" );
+			Debug::puke( $query, $stopperKill . ' - ' . eval( DUMP ) . __FUNCTION__ . PN . _ . "\$query" );
+		}
+		elseif ($stopper) {
+			Debug::dump( $table, $stopper . ' - ' . eval( DUMP ) . __FUNCTION__ . PN . _ . "\$table" );
+			Debug::dump( $data, $stopper . ' - ' . eval( DUMP ) . __FUNCTION__ . PN . _ . "\$data" );
+			Debug::dump( $where, $stopper . ' - ' . eval( DUMP ) . __FUNCTION__ . PN . _ . "\$where" );
+			Debug::dump( $query, $stopper . ' - ' . eval( DUMP ) . __FUNCTION__ . PN . _ . "\$query" );
 		}
 		// @codeCoverageIgnoreEnd
 
