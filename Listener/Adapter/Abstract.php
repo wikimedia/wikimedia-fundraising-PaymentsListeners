@@ -1341,7 +1341,8 @@ abstract class Listener_Adapter_Abstract
 
 	/**
 	 * Remove a message from the Stomp queue.
-	 * @param bool $msg
+	 *
+	 * @param Stomp_Frame  $msg
 	 */
 	public function stompDequeueMessage( $msg ) {
 
