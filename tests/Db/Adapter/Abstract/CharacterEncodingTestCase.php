@@ -130,8 +130,10 @@ class Db_Adapter_Abstract_CharacterEncodingTestCase extends QueueHandlingTestCas
 	 * @covers Db_Adapter_Abstract::setCharacterEncoding
 	 * @covers Db_Adapter_Abstract::getCharacterEncoding
 	 * @covers Db_Adapter_Mysqli::query
+	 * @covers Db_Adapter_Mysqli::resetResultSet
+	 * @covers Db_Adapter_Mysqli::getResultSet
 	 * @covers Db_Adapter_Mysqli::quoteInto
-	 * @covers Db_Adapter_Mysqli::fetch
+	 * @covers Db_Adapter_Mysqli::fetchAll
 	 */
 	public function testChangingCharacterEncodingOnDatabaseConnectionAndVerifyItIsLatin1() {
 
