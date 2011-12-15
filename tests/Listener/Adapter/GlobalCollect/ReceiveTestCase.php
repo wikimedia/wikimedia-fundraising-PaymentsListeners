@@ -208,7 +208,8 @@ class Listener_Adapter_GlobalCollect_ReceiveTestCase extends QueueHandlingTestCa
 		
 		$this->assertInstanceOf( 'Listener_Adapter_GlobalCollect', $adapterInstance );
 
-		$this->setExpectedException( 'Listener_Exception', 'The required key is not set in data: ORDERID');
+		$message = 'The required key is not set in data: ORDERID';
+		$this->setExpectedException( 'Listener_Exception', $message );
 
 		$_POST = $this->getPostDataForGlobalCollectWithOutOrderId();
 		
