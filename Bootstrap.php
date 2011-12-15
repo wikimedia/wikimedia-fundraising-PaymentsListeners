@@ -14,11 +14,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
- *
- * @category	UnitTesting
- * @package		Fundraising_QueueHandling
  * @license		http://www.gnu.org/copyleft/gpl.html GNU GENERAL PUBLIC LICENSE
- * @since		r462
  * @author		Jeremy Postlethwaite <jpostlethwaite@wikimedia.org>
  */
 
@@ -87,7 +83,7 @@ if ( !defined( 'APPLICATION_ENVIRONMENT' ) ) {
 /**
  * @see QueueHandling_Exception
  */
-require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'Exception.php';
+require_once BASE_PATH . DIRECTORY_SEPARATOR . 'Exception.php';
 
 /**
  * @see Debug
