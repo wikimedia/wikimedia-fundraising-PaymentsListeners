@@ -49,6 +49,7 @@ class Db_Adapter_Mysqli_UpdateTestCase extends QueueHandlingTestCase
 	 * @covers Db_Adapter_Mysqli::getErrorCode
 	 * @covers Db_Adapter_Mysqli::lastInsertId
 	 * @covers Db_Adapter_Mysqli::fetch
+	 * @covers Db_Adapter_Mysqli::affectedRows
 	 * @covers Db_Expression::__construct
 	 * @covers Db_Expression::__toString
 	 *
@@ -126,9 +127,11 @@ class Db_Adapter_Mysqli_UpdateTestCase extends QueueHandlingTestCase
 		
 		$data['data'] = $newData;
 		//$options = array( 'stopperKill' => eval( DUMP ) ) ;
-		$value = $adapterInstance->update( $table, $data, $where );
+		$affectedRows = $adapterInstance->update( $table, $data, $where );
+
+		// Make sure one row was updated.
+		$this->assertEquals( 1, $affectedRows );
 		
-		return;
 		// Get the row and check to see if it was updated.
 		$query = "SELECT * FROM `queue2civicrm_limbo` where `order_id` = '?'";
 		$adapterInstance->query( $adapterInstance->quoteInto( $query, $orderId ) );
