@@ -23,9 +23,11 @@ require_once dirname( dirname( dirname( dirname( __FILE__ ) ) ) ) . DIRECTORY_SE
 require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'ConnectionTestCase.php';
 require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'ConstructorTestCase.php';
 require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'EscapeTestCase.php';
-require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'InsertTestCase.php';
 require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'LimitTestCase.php';
 require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'QueryTestCase.php';
+
+require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'DeleteTestCase.php';
+require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'InsertTestCase.php';
 
 /**
  * @category	UnitTesting
@@ -63,6 +65,7 @@ class Db_Adapter_Mysqli_AllTests
 		$suite->addTestSuite( 'Db_Adapter_Mysqli_QueryTestCase' );
 		
 		// InsertTestCase should be tested after QueryTestCase.
+		$suite->addTestSuite( 'Db_Adapter_Mysqli_DeleteTestCase' );
 		$suite->addTestSuite( 'Db_Adapter_Mysqli_InsertTestCase' );
 
 		return $suite;
