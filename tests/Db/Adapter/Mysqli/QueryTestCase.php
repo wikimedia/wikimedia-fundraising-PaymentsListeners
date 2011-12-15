@@ -192,4 +192,42 @@ class Db_Adapter_Mysqli_QueryTestCase extends QueueHandlingTestCase
 		
 		$row = $adapterInstance->fetchAllByKey( 'some_non_existent_key' );
 	}
+	
+	/**
+	 * testQueryWithInvalidStatementAndGenerateAnException
+	 *
+	 * @covers Db_Adapter_Abstract::__construct
+	 * @covers Db_Adapter_Mysqli::query
+	 * @covers Db_Adapter_Abstract::quoteInto
+	 * @covers Db_Adapter_Mysqli::getErrorCode
+	 *
+	 */
+	public function testQueryWithATableThatDoesNotExistAndGenerateAnException() {
+
+		// The parameters to pass to the factory.
+		$parameters = array(
+			'database'	=> TESTS_DB_ADAPTER_DATABASE_FOR_TESTING,
+			'host'		=> TESTS_DB_ADAPTER_HOST,
+			'password'	=> TESTS_DB_ADAPTER_PASSWORD,
+			'username'	=> TESTS_DB_ADAPTER_USERNAME,
+			'port'		=> TESTS_DB_ADAPTER_PORT,
+			'socket'	=> TESTS_DB_ADAPTER_SOCKET,
+			'flags'		=> MYSQLI_CLIENT_INTERACTIVE,
+		);
+
+		// The adapter to pass to the factory.
+		$adapter = 'Mysqli';
+
+		$adapterInstance = Db::factory( $adapter, $parameters );
+
+		$this->assertInstanceOf( 'Db_Adapter_Mysqli', $adapterInstance );
+		$this->assertInstanceOf( 'mysqli', $adapterInstance->getConnection() );
+		
+		$message = "Table '" . $adapterInstance->getDatabase() . ".barrel' doesn't exist";
+		$this->setExpectedException( 'Db_Exception', $message );
+
+		$query = "SELECT * FROM `barrel` where `apples` = '?'";
+		$parameter = 'oranges';
+		$adapterInstance->query( $adapterInstance->quoteInto( $query, $parameter ) );
+	}
 }
