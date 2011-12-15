@@ -1367,6 +1367,8 @@ abstract class Listener_Adapter_Abstract
 		$message = 'Attempting to connect to queue at: ' . $destination;
 		$this->log( $message, Listener::LOG_LEVEL_DEBUG );
 
+		$properties['ack'] = 'client';
+		
 		if ( count( $properties ) ) {
 			$message = 'With the following properties: ' . print_r( $properties, true );
 			$this->log( $message, Listener::LOG_LEVEL_DEBUG );
