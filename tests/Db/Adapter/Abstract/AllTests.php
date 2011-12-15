@@ -26,6 +26,7 @@ require_once dirname( dirname( dirname( dirname( __FILE__ ) ) ) ) . DIRECTORY_SE
 
 require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'ConstructorTestCase.php';
 require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'ConnectionTestCase.php';
+require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'CharacterEncodingTestCase.php';
 
 /**
  * @category	UnitTesting
@@ -58,6 +59,7 @@ class Db_Adapter_Abstract_AllTests
 
 		$suite->addTestSuite( 'Db_Adapter_Abstract_ConstructorTestCase' );
 		$suite->addTestSuite( 'Db_Adapter_Abstract_ConnectionTestCase' );
+		$suite->addTestSuite( 'Db_Adapter_Abstract_CharacterEncodingTestCase' );
 
 		return $suite;
 	}
