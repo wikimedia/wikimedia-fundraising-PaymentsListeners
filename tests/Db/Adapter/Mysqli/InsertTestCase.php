@@ -170,4 +170,52 @@ class Db_Adapter_Mysqli_InsertTestCase extends QueueHandlingTestCase
 		//Debug::puke($adapterInstance, eval(DUMP) . __FUNCTION__ . PN . _ . "\$adapterInstance");
 		//$adapterInstance->fetchAll();
 	}
+
+	/**
+	 * testInsertWithNoDataToGenerateAnException
+	 *
+	 * @covers Db_Adapter_Abstract::__construct
+	 * @covers Db_Adapter_Abstract::insert
+	 * @covers Db_Adapter_Abstract::query
+	 * @covers Db_Adapter_Abstract::getLastInsertId
+	 * @covers Db_Adapter_Abstract::quoteInto
+	 * @covers Db_Adapter_Mysqli::setLastInsertId
+	 * @covers Db_Adapter_Mysqli::getErrorCode
+	 * @covers Db_Adapter_Mysqli::lastInsertId
+	 * @covers Db_Adapter_Mysqli::fetch
+	 * @covers Db_Expression::__construct
+	 * @covers Db_Expression::__toString
+	 *
+	 */
+	public function testInsertWithNoDataToGenerateAnException() {
+
+		// The parameters to pass to the factory.
+		$parameters = array(
+			'database'	=> TESTS_DB_ADAPTER_DATABASE_FOR_TESTING,
+			'host'		=> TESTS_DB_ADAPTER_HOST,
+			'password'	=> TESTS_DB_ADAPTER_PASSWORD,
+			'username'	=> TESTS_DB_ADAPTER_USERNAME,
+			'port'		=> TESTS_DB_ADAPTER_PORT,
+			'socket'	=> TESTS_DB_ADAPTER_SOCKET,
+			'flags'		=> MYSQLI_CLIENT_INTERACTIVE,
+		);
+
+		// The adapter to pass to the factory.
+		$adapter = 'Mysqli';
+
+		$adapterInstance = Db::factory( $adapter, $parameters );
+
+		$this->assertInstanceOf( 'Db_Adapter_Mysqli', $adapterInstance );
+		$this->assertInstanceOf( 'mysqli', $adapterInstance->getConnection() );
+
+		//$insert = 'SHOW DATABASES LIKE ' . $adapterInstance->escape( TESTS_DB_ADAPTER_DATABASE_FOR_TESTING );
+		$table = 'queue2civicrm_limbo';
+
+		$data = array();
+		$message = 'No fields set for insertion on table: ' . $table;
+		$this->setExpectedException( 'Db_Exception', $message );
+		
+		$value = $adapterInstance->insert( $table, $data );
+		//Debug::dump($value, eval(DUMP) . __FUNCTION__ . PN . _ . "\$value");
+	}
 }

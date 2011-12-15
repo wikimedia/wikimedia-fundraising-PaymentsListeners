@@ -635,10 +635,12 @@ abstract class Db_Adapter_Abstract
 		$query .= ' VALUES';
 		$query .= ' (' . $dataString . ')';
 
+		// @codeCoverageIgnoreStart
 		// Dump the query if stopper is enabled.
 		if ( $stopper ) {
 			Debug::puke( $query, $stopper . eval( DUMP ) . __FUNCTION__ . PN . _ . "\$query" );
 		}
+		// @codeCoverageIgnoreEnd
 		
 		$this->query( $query, $options );
 		
@@ -699,10 +701,12 @@ abstract class Db_Adapter_Abstract
 		$query .= ' WHERE ' . $where;
 
 
+		// @codeCoverageIgnoreStart
 		// Dump the query if stopper is enabled.
 		if ( $stopper ) {
 			Debug::puke( $query, $stopper . eval( DUMP ) . __FUNCTION__ . PN . _ . "\$query" );
 		}
+		// @codeCoverageIgnoreEnd
 
 		$this->query($query);
 		
