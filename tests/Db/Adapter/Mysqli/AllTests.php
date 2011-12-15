@@ -28,6 +28,7 @@ require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'QueryTestCase.php';
 
 require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'DeleteTestCase.php';
 require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'InsertTestCase.php';
+require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'UpdateTestCase.php';
 
 /**
  * @category	UnitTesting
@@ -67,6 +68,7 @@ class Db_Adapter_Mysqli_AllTests
 		// InsertTestCase should be tested after QueryTestCase.
 		$suite->addTestSuite( 'Db_Adapter_Mysqli_DeleteTestCase' );
 		$suite->addTestSuite( 'Db_Adapter_Mysqli_InsertTestCase' );
+		$suite->addTestSuite( 'Db_Adapter_Mysqli_UpdateTestCase' );
 
 		return $suite;
 	}
