@@ -443,40 +443,49 @@ abstract class Db_Adapter_Abstract
 	/**
 	 * delete
 	 */
-	public function delete($table, $key, $id, $options = array())
+	public function delete( $table, $key, $id, $options = array())
 	{
-		if (empty($table)) {
-			throw new Exception('$table cannot be empty.');
+
+		// Require table
+		if ( empty( $table ) ) {
+			$message = '$table cannot be empty.';
+			throw new Db_Exception( $message );
 		}
 
-		if (empty($key)) {
-			throw new Exception('$key cannot be empty.');
+		// Require key
+		if ( empty( $key ) ) {
+			$message = '$key cannot be empty.';
+			throw new Db_Exception( $message );
 		}
 
-		if (empty($id)) {
-			throw new Exception('$id cannot be empty.');
+		// Require id
+		if ( empty( $id ) ) {
+			$message = '$id cannot be empty.';
+			throw new Db_Exception( $message );
 		}
 
-		$stopper = isset( $options['stopper'] ) ? $options['stopper'] : false;
-		$stopperDisable = isset( $options['stopperDisable'] ) ? $options['stopperDisable'] : false;
-		$stopperKill = isset( $options['stopperKill'] ) ? $options['stopperKill'] : false;
-
-		$where = '`' . $table . '`.`' . $key . '` = \'' . $this->escape($id) . '\'';
+		$where = '`' . $table . '`.`' . $key . '` = \'' . $this->escape( $id ) . '\'';
 		
 		$query	= '';
 		$query .= 'DELETE FROM `' . $table . '`';
 		$query .= ' WHERE ' . $where;
 
+		// @codeCoverageIgnoreStart
+		$stopper = isset( $options['stopper'] ) ? $options['stopper'] : false;
+		$stopperDisable = isset( $options['stopperDisable'] ) ? $options['stopperDisable'] : false;
+		$stopperKill = isset( $options['stopperKill'] ) ? $options['stopperKill'] : false;
+
 		if ($stopperKill) {
-			Debug::puke($query, $stopperKill . ' - ' . eval(DUMP) . __FUNCTION__ . PN . _ . "\$query");
+			Debug::puke( $query, $stopperKill . ' - ' . eval( DUMP ) . __FUNCTION__ . PN . _ . "\$query" );
 		}
 		elseif ($stopperDisable) {
-			Debug::dump($query, $stopperDisable . ' - ' . eval(DUMP) . __FUNCTION__ . PN . _ . "\$query");
+			Debug::dump( $query, $stopperDisable . ' - ' . eval( DUMP ) . __FUNCTION__ . PN . _ . "\$query" );
 			return;
 		}
 		elseif ($stopper) {
-			Debug::dump($query, $stopper . ' - ' . eval(DUMP) . __FUNCTION__ . PN . _ . "\$query");
+			Debug::dump( $query, $stopper . ' - ' . eval( DUMP ) . __FUNCTION__ . PN . _ . "\$query" );
 		}
+		// @codeCoverageIgnoreEnd
 
 		//Debug::puke($query, $stopperKill . ' - ' . eval(DUMP) . __FUNCTION__ . PN . _ . "\$query");
 		$this->query( $query );
@@ -599,6 +608,12 @@ abstract class Db_Adapter_Abstract
 	 * @return string	Return the last inserted id
 	 */
 	public function insert( $table, $data, $options = array() ) {
+
+		// Require table
+		if ( empty( $table ) ) {
+			$message = '$table cannot be empty.';
+			throw new Exception( $message );
+		}
 		
 		// $stopper is used for dumping queries and terminating the application. 
 		$stopper = isset( $options['stopper'] ) ? $options['stopper']	: false;
@@ -665,6 +680,12 @@ abstract class Db_Adapter_Abstract
 	 * @return integer	Returns the count of affected rows
 	 */
 	public function update( $table, $data, $where, $options = array() ) {
+
+		// Require table
+		if ( empty( $table ) ) {
+			$message = '$table cannot be empty.';
+			throw new Db_Exception( $message );
+		}
 
 		// A WHERE statement must be supplied.
 		if ( empty( $where ) ) {
