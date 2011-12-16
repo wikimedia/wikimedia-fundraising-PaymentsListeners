@@ -431,30 +431,6 @@ abstract class Listener_Adapter_Abstract
 	}
 
 	/**
-	 * Push the message to a queue.
-	 *
-	 * If a queue is not specified, the message will be sent to: unknown_<lower_case_class_name>
-	 *
-	 * @param string	$queue The queue to send the message
-	 */
-	public function pushToQueue( $queue = '' )
-	{
-		$queue = empty( $queue ) ? '/queue/unknown_' . strtolower( get_class( $this ) ) : $queue;
-
-		if ( empty( $this->messageFromPendingQueue ) ) {
-			$message = 'There was no message to push to the queue: ' . $queue;
-			$this->log( $message, Listener::LOG_LEVEL_DEBUG );
-			
-			return false;
-		}
-	
-		// do the queueing - perhaps move out the tracking checking to its own func?
-		$return = $this->stompQueueMessage( $queue, $this->messageFromPendingQueue->body );
-
-		return $return;
-	}
-
-	/**
 	 * Push the message to the pending queue
 	 */
 	public function pushToPending()
@@ -758,11 +734,6 @@ abstract class Listener_Adapter_Abstract
 						$status = true;
 					}
 				}
-			}
-	
-			if ( !empty( $this->messageFromPendingQueue )) {
-				$this->pushToQueue();
-				$this->stompDequeueMessage( $this->messageFromPendingQueue );
 			}
 			
 		} catch ( Listener_Exception $e ) {
