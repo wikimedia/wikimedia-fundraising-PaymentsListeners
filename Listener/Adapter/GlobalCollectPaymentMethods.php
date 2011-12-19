@@ -60,7 +60,7 @@ class Listener_Adapter_GlobalCollectPaymentMethods
 			10	=> array(	'paymentProducts' => array(),	'process'	=> false,	'queue' => 'limbo',		'label' => 'Bank refunds',),
 			12	=> array(	'paymentProducts' => array(),	'process'	=> false,	'queue' => 'limbo',		'label' => 'Payouts',),
 			14	=> array(	'paymentProducts' => array(),	'process'	=> false,	'queue' => 'limbo',		'label' => 'Pre-paid methods',),
-			15	=> array(	'paymentProducts' => array(),	'process'	=> false,	'queue' => 'limbo',		'label' => 'Cash',),
+			15	=> array(	'paymentProducts' => array(),	'process'	=> true,	'queue' => 'limbo',		'label' => 'Cash',),
 		);
 	}
 
