@@ -501,7 +501,7 @@ abstract class Db_Adapter_Abstract
 		//Debug::puke($query, $stopperKill . ' - ' . eval(DUMP) . __FUNCTION__ . PN . _ . "\$query");
 		$this->query( $query );
 		
-		return true;
+		return $this->affectedRows();
 	}
 
 	/**
