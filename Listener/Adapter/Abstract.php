@@ -213,6 +213,15 @@ abstract class Listener_Adapter_Abstract
 	protected $row = array();
 
 	/**
+	 * settings
+	 *
+	 * Settings from the configuration file
+	 *
+	 * @var array $settings
+	 */
+	protected $settings = array();
+
+	/**
 	 * stomp
 	 *
 	 * The instance of Stomp
@@ -475,7 +484,7 @@ abstract class Listener_Adapter_Abstract
 		
 		// An $orderId must be set to search.
 		if ( empty( $orderId ) ) {
-			$message = 'An order_id must not be empty.';
+			$message = $this->getLimboIdName() . ' must not be empty.';
 			$this->log( $message, Listener::LOG_LEVEL_EMERG );
 			throw new Listener_Exception( $message );
 		}
@@ -485,6 +494,8 @@ abstract class Listener_Adapter_Abstract
 		$this->log( $message, Listener::LOG_LEVEL_DEBUG );
 
 		$query = "SELECT * FROM `queue2civicrm_limbo` where `order_id` = '?'";
+		//Debug::dump($orderId, eval(DUMP) . __FUNCTION__ . PN . _ . "\$orderId");
+		//Debug::dump($query, eval(DUMP) . __FUNCTION__ . PN . _ . "\$query");
 		$this->log( $query . ' -> ' . $orderId, Listener::LOG_LEVEL_DEBUG );
 		$this->db->query( $this->db->quoteInto( $query, $orderId ) );
 		
@@ -554,7 +565,7 @@ abstract class Listener_Adapter_Abstract
 			if ( $dequeue ) {
 				// remove from limbo
 				$this->stompDequeueMessage( $this->messageFromLimboQueue );
-				$this->messageFromPendingQueue = null;
+				$this->messageFromLimboQueue = null;
 			}
 
 			$return = true;
@@ -586,13 +597,19 @@ abstract class Listener_Adapter_Abstract
 	
 	/**
 	 * Fetch the message from the pending queue
+	 * @param string	$limboId 	The JMSCorrelationID of the message in the limbo queue
+	 * @param array		$options	Optional settings
+	 * - $dequeue:	(boolean)	 By default, messages will not be dequeued.
 	 *
 	 * @return boolean Return true on success.
 	 */
-	public function fetchFromPending() {
+	public function fetchFromPending( $limboId = '', $options = array() ) {
+		
+		$dequeue = empty( $options['dequeue'] ) ? false : (boolean) $options['dequeue'];
+		$limboId = empty( $limboId ) ? $this->getTxId() : $limboId;
 		// define a selector property for pulling a particular msg off the queue
 		$properties = array();
-		$properties['selector'] = "JMSCorrelationID = '" . $this->getTxId() . "'";
+		$properties['selector'] = "JMSCorrelationID = '" . $limboId . "'";
 
 		// pull the message object from the pending queue without completely removing it 
 		$message = 'Attempting to pull message from pending queue with JMSCorrelationID: ' . $this->getTxId();
@@ -605,6 +622,12 @@ abstract class Listener_Adapter_Abstract
 
 			$message = 'Pulled message from pending queue: ' . $this->messageFromPendingQueue;
 			$this->log( $message, Listener::LOG_LEVEL_DEBUG );
+
+			if ( $dequeue ) {
+				// remove from limbo
+				$this->stompDequeueMessage( $this->messageFromPendingQueue );
+				$this->messageFromPendingQueue = null;
+			}
 			
 			$return = true;
 		}
@@ -617,6 +640,21 @@ abstract class Listener_Adapter_Abstract
 		
 		//Debug::dump($return, eval(DUMP) . "\$return", false);
 		return $return;
+	}
+
+	/**
+	 * Fetch the message from the pending queue and remove it
+	 *
+	 * @param string	$limboId 	The JMSCorrelationID of the message in the limbo queue
+	 * @param array		$options	@see Listener_Adapter_Abstract::fetchFromLimbo
+	 *
+	 * @return boolean Return true on success.
+	 */
+	public function fetchFromPendingAndDequeue( $limboId = '', $options = array() ) {
+		
+		$options['dequeue'] = true;
+		
+		return $this->fetchFromPending( $limboId, $options );
 	}
 
 	/**
@@ -698,6 +736,8 @@ abstract class Listener_Adapter_Abstract
 				$inLimbo = $this->fetchFromLimbo();
 			}
 			
+			$this->setInLimbo( $inLimbo );
+			
 			if ( $this->getPullFromDatabase() ) {
 	
 				if ( !$inLimbo ) {
@@ -705,7 +745,9 @@ abstract class Listener_Adapter_Abstract
 				}
 			}
 			
-			$exists = ( $inLimbo || $inDatabase ) ? true : false;
+			$this->setInDatabase( $inDatabase );
+			
+			$exists = ( $this->getInLimbo() || $this->getInDatabase() ) ? true : false;
 			//Debug::dump($exists, eval(DUMP) . "\$exists");
 			
 			if ( !$exists ) {
@@ -845,7 +887,7 @@ abstract class Listener_Adapter_Abstract
 			throw new Listener_Exception( $message );
 		}
 		
-		// If database adapter is not instatiated, set it up.
+		// If database adapter is not instantiated, set it up.
 		if ( empty( $this->db ) ) {
 
 			// The adapter to pass to the factory.
@@ -1222,6 +1264,15 @@ abstract class Listener_Adapter_Abstract
 		return $this->settings[ $key ];
 	}
 
+	/**
+	 * resetSettings
+	 *
+	 */
+	public function resetSettings()
+	{
+		$this->settings = array();
+	}
+	
 	/**
 	 * getStomp
 	 *
