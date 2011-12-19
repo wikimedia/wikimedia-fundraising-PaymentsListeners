@@ -66,7 +66,7 @@ class Listener_Adapter_GlobalCollect_ReceiveTestCase extends QueueHandlingTestCa
 	}
 	
 	/**
-	 * testReceiveValidPostWithPaymentStatusCode1000Paid
+	 * testReceiveValidPost
 	 *
 	 * @covers Listener_Adapter_GlobalCollect::init
 	 * @covers Listener_Adapter_Abstract::receive
@@ -80,9 +80,8 @@ class Listener_Adapter_GlobalCollect_ReceiveTestCase extends QueueHandlingTestCa
 	 * @covers Listener_Adapter_Abstract::fetchFromPending
 	 * @covers Listener_Adapter_Abstract::pushToVerified
 	 * @covers Listener_Adapter_Abstract::stompDequeueMessage
-	 * @covers Listener_Adapter_Abstract::pushToQueue
 	 */
-	public function testReceiveValidPostWithPaymentStatusCode1000Paid() {
+	public function testReceiveValidPost() {
 
 		// The parameters to pass to the factory.
 		$parameters = array();
@@ -115,7 +114,6 @@ class Listener_Adapter_GlobalCollect_ReceiveTestCase extends QueueHandlingTestCa
 	 * @covers Listener_Adapter_Abstract::fetchFromPending
 	 * @covers Listener_Adapter_Abstract::pushToVerified
 	 * @covers Listener_Adapter_Abstract::stompDequeueMessage
-	 * @covers Listener_Adapter_Abstract::pushToQueue
 	 */
 	public function testReceiveInvalidPostWithEmptyOrderIdWithOutPullingFromDatabase() {
 
@@ -154,7 +152,6 @@ class Listener_Adapter_GlobalCollect_ReceiveTestCase extends QueueHandlingTestCa
 	 * @covers Listener_Adapter_Abstract::fetchFromPending
 	 * @covers Listener_Adapter_Abstract::pushToVerified
 	 * @covers Listener_Adapter_Abstract::stompDequeueMessage
-	 * @covers Listener_Adapter_Abstract::pushToQueue
 	 */
 	public function testReceiveInvalidPostWithoutOrderIdWhileLimboIsEnabled() {
 
@@ -190,7 +187,6 @@ class Listener_Adapter_GlobalCollect_ReceiveTestCase extends QueueHandlingTestCa
 	 * @covers Listener_Adapter_Abstract::fetchFromPending
 	 * @covers Listener_Adapter_Abstract::pushToVerified
 	 * @covers Listener_Adapter_Abstract::stompDequeueMessage
-	 * @covers Listener_Adapter_Abstract::pushToQueue
 	 */
 	public function testReceiveInvalidPostWithoutOrderIdWhileLimboIsDisabled() {
 
@@ -214,5 +210,85 @@ class Listener_Adapter_GlobalCollect_ReceiveTestCase extends QueueHandlingTestCa
 		$_POST = $this->getPostDataForGlobalCollectWithOutOrderId();
 		
 		$adapterInstance->receive( $_POST );
+	}
+	
+	/**
+	 * testReceiveValidPostWithAPaymentMethodWeDoNotProcessCash
+	 *
+	 * @covers Listener_Adapter_GlobalCollect::init
+	 * @covers Listener_Adapter_Abstract::receive
+	 * @covers Listener_Adapter_GlobalCollect::getProcessDecision
+	 * @covers Listener_Adapter_GlobalCollect::receiveReturn
+	 * @covers Listener_Adapter_GlobalCollect::parse
+	 * @covers Listener_Adapter_Abstract::pushToPending
+	 * @covers Listener_Adapter_Abstract::messageSanityCheck
+	 * @covers Listener_Adapter_GlobalCollect::checkRequiredFields
+	 * @covers Listener_Adapter_GlobalCollect::verifyPaymentNotification
+	 * @covers Listener_Adapter_Abstract::fetchFromPending
+	 * @covers Listener_Adapter_Abstract::pushToVerified
+	 * @covers Listener_Adapter_Abstract::stompDequeueMessage
+	 */
+	public function testReceiveValidPostWithAPaymentMethodWeDoNotProcessCash() {
+
+		// The parameters to pass to the factory.
+		$parameters = array();
+
+		// The adapter to pass to the factory.
+		$adapter = 'GlobalCollect';
+
+		$adapterInstance = Listener::factory( $adapter, $parameters );
+
+		$this->assertInstanceOf( 'Listener_Adapter_GlobalCollect', $adapterInstance );
+
+		$data = array();
+		$data['PAYMENTMETHODID'] = 15;
+		$_POST = $this->getPostDataForGlobalCollect( $data );
+		
+		$this->assertEquals( 'OK', $adapterInstance->receive( $_POST ) );
+		
+	}
+	
+	/**
+	 * testReceiveValidPostThatDoesNotExistInLimboOrDatabase
+	 *
+	 * @covers Listener_Adapter_GlobalCollect::init
+	 * @covers Listener_Adapter_Abstract::receive
+	 * @covers Listener_Adapter_GlobalCollect::getProcessDecision
+	 * @covers Listener_Adapter_GlobalCollect::receiveReturn
+	 * @covers Listener_Adapter_GlobalCollect::parse
+	 * @covers Listener_Adapter_Abstract::pushToPending
+	 * @covers Listener_Adapter_Abstract::messageSanityCheck
+	 * @covers Listener_Adapter_GlobalCollect::checkRequiredFields
+	 * @covers Listener_Adapter_GlobalCollect::verifyPaymentNotification
+	 * @covers Listener_Adapter_Abstract::fetchFromPending
+	 * @covers Listener_Adapter_Abstract::pushToVerified
+	 * @covers Listener_Adapter_Abstract::stompDequeueMessage
+	 * @covers Listener_Adapter_Abstract::getInDatabase
+	 * @covers Listener_Adapter_Abstract::setInDatabase
+	 * @covers Listener_Adapter_Abstract::getInLimbo
+	 * @covers Listener_Adapter_Abstract::setInLimbo
+	 */
+	public function testReceiveValidPostThatDoesNotExistInLimboOrDatabase() {
+
+		// The parameters to pass to the factory.
+		$parameters = array();
+
+		// The adapter to pass to the factory.
+		$adapter = 'GlobalCollect';
+
+		$adapterInstance = Listener::factory( $adapter, $parameters );
+
+		$this->assertInstanceOf( 'Listener_Adapter_GlobalCollect', $adapterInstance );
+
+		$_POST = $this->getPostDataForGlobalCollect();
+
+		$adapterInstance->setData( $_POST );
+		
+		$this->removeFromDatabaseByOrderId( $adapterInstance->getData( $adapterInstance->getLimboIdName(), true) );
+
+		$this->removeFromLimboByOrderId();
+		
+		$this->assertEquals( 'OK', $adapterInstance->receive( $_POST ) );
+		
 	}
 }

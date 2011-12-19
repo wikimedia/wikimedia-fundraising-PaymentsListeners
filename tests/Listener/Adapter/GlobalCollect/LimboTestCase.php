@@ -14,16 +14,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
- *
- * @category	UnitTesting
- * @package		Fundraising_QueueHandling
  * @license		http://www.gnu.org/copyleft/gpl.html GNU GENERAL PUBLIC LICENSE
- * @since		r462
  * @author		Jeremy Postlethwaite <jpostlethwaite@wikimedia.org>
  */
 
 /**
- * Require
+ * @see QueueHandlingTestCase
  */
 require_once dirname( dirname( dirname( dirname( __FILE__ ) ) ) ) . DIRECTORY_SEPARATOR . 'QueueHandlingTestCase.php';
 
@@ -34,8 +30,7 @@ require_once dirname( dirname( dirname( dirname( __FILE__ ) ) ) ) . DIRECTORY_SE
  * @group		ListenerAdapter
  * @group		GlobalCollect
  *
- * @category	UnitTesting
- * @package		Fundraising_QueueHandling
+ * Listener_Adapter_GlobalCollect_LimboTestCase
  */
 class Listener_Adapter_GlobalCollect_LimboTestCase extends QueueHandlingTestCase
 {
@@ -65,9 +60,11 @@ class Listener_Adapter_GlobalCollect_LimboTestCase extends QueueHandlingTestCase
 
 		$this->assertInstanceOf( 'Listener_Adapter_GlobalCollect', $adapterInstance );
 
+		$this->removeFromLimboByOrderId();
+		
 		$message = array(
 			'MERCHANTID'	=> 9990,
-			'ORDERID'		=> 'GC-' . 23,
+			'ORDERID'		=> 'globalcollect-' . 23,
 			'AMOUNT'		=> 100,
 			'CURRENCYCODE'	=> 'EUR',
 			'STATUS'		=> 525,
@@ -75,7 +72,7 @@ class Listener_Adapter_GlobalCollect_LimboTestCase extends QueueHandlingTestCase
 
 		$queue = $adapterInstance->getQueueLimbo();
 
-		$id = 'GC-' . 23;
+		$id = 'globalcollect-' . 23;
 		
 		$this->assertTrue( $adapterInstance->pushToQueueWithJmsCorrelationId( $message, $queue, $id ) );
 	}
@@ -107,7 +104,7 @@ class Listener_Adapter_GlobalCollect_LimboTestCase extends QueueHandlingTestCase
 
 		$this->assertInstanceOf( 'Listener_Adapter_GlobalCollect', $adapterInstance );
 		
-		$id = 'GC-' . 23;
+		$id = 'globalcollect-' . 23;
 		
 		$this->assertTrue( $adapterInstance->fetchFromLimbo( $id ) );
 		
@@ -141,9 +138,121 @@ class Listener_Adapter_GlobalCollect_LimboTestCase extends QueueHandlingTestCase
 
 		$this->assertInstanceOf( 'Listener_Adapter_GlobalCollect', $adapterInstance );
 		
-		$id = 'GC-' . 23;
+		$id = 'globalcollect-' . 23;
 		
 		$this->assertTrue( $adapterInstance->fetchFromLimboAndDequeue( $id ) );
+	}
+	
+	/**
+	 * testFetchFromLimboWithOutSettingDataWithNoOrderIdAndGenerateAnException
+	 *
+	 * @covers Listener_Adapter_Abstract::setLogLevel
+	 * @covers Listener_Adapter_Abstract::openOutputHandle
+	 * @covers Listener_Adapter_Abstract::log
+	 * @covers Listener_Adapter_Abstract::getAdapterType
+	 * @covers Listener_Adapter_Abstract::fetchFromLimbo
+	 * @covers Listener_Adapter_Abstract::stompFetchMessage
+	 * @covers Listener_Adapter_Abstract::messageSanityCheck
+	 * @covers Listener_Adapter_Abstract::connectStomp
+	 * @covers Listener_Adapter_Abstract::stompQueueMessage
+	 * @covers Listener_Adapter_Abstract::setData
+	 */
+	public function testFetchFromLimboWithOutSettingDataWithNoOrderIdAndGenerateAnException() {
+
+		// The parameters to pass to the factory.
+		$parameters = array();
+
+		// The adapter to pass to the factory.
+		$adapter = 'GlobalCollect';
+
+		$adapterInstance = Listener::factory( $adapter, $parameters );
+
+		$this->assertInstanceOf( 'Listener_Adapter_GlobalCollect', $adapterInstance );
+
+		$message = 'The required key is not set in data: ORDERID';
+		$this->setExpectedException( 'Listener_Exception', $message );
+		
+		$id = '';
+		
+		$adapterInstance->fetchFromLimbo( $id );
+		
+	}
+	
+	/**
+	 * testFetchFromLimboWithOutSettingDataAndNoId
+	 *
+	 * @covers Listener_Adapter_Abstract::setLogLevel
+	 * @covers Listener_Adapter_Abstract::openOutputHandle
+	 * @covers Listener_Adapter_Abstract::log
+	 * @covers Listener_Adapter_Abstract::getAdapterType
+	 * @covers Listener_Adapter_Abstract::fetchFromLimbo
+	 * @covers Listener_Adapter_Abstract::stompFetchMessage
+	 * @covers Listener_Adapter_Abstract::messageSanityCheck
+	 * @covers Listener_Adapter_Abstract::connectStomp
+	 * @covers Listener_Adapter_Abstract::stompQueueMessage
+	 * @covers Listener_Adapter_Abstract::setData
+	 */
+	public function testFetchFromLimboWithSettingDataAndAnEmptyOrderId() {
+
+		// The parameters to pass to the factory.
+		$parameters = array();
+
+		// The adapter to pass to the factory.
+		$adapter = 'GlobalCollect';
+
+		$adapterInstance = Listener::factory( $adapter, $parameters );
+
+		$this->assertInstanceOf( 'Listener_Adapter_GlobalCollect', $adapterInstance );
+
+		$message = 'The order_id must be set.';
+		$this->setExpectedException( 'Listener_Exception', $message );
+
+		$_POST = $this->getPostDataForGlobalCollectWithEmptyOrderId();
+
+		$adapterInstance->setData( $_POST );
+		
+		$id = '';
+		
+		$adapterInstance->fetchFromLimbo( $id );
+		
+	}
+	
+	/**
+	 * testFetchFromLimboWithOutSettingDataAndNoId
+	 *
+	 * @covers Listener_Adapter_Abstract::setLogLevel
+	 * @covers Listener_Adapter_Abstract::openOutputHandle
+	 * @covers Listener_Adapter_Abstract::log
+	 * @covers Listener_Adapter_Abstract::getAdapterType
+	 * @covers Listener_Adapter_Abstract::fetchFromLimbo
+	 * @covers Listener_Adapter_Abstract::stompFetchMessage
+	 * @covers Listener_Adapter_Abstract::messageSanityCheck
+	 * @covers Listener_Adapter_Abstract::connectStomp
+	 * @covers Listener_Adapter_Abstract::stompQueueMessage
+	 * @covers Listener_Adapter_Abstract::setData
+	 */
+	public function testFetchFromLimboWithSettingData() {
+
+		// The parameters to pass to the factory.
+		$parameters = array();
+
+		// The adapter to pass to the factory.
+		$adapter = 'GlobalCollect';
+
+		$adapterInstance = Listener::factory( $adapter, $parameters );
+
+		$this->assertInstanceOf( 'Listener_Adapter_GlobalCollect', $adapterInstance );
+
+		//$message = 'The order_id must be set.';
+		//$this->setExpectedException( 'Listener_Exception', $message );
+
+		$_POST = $this->getPostDataForGlobalCollect();
+
+		$adapterInstance->setData( $_POST );
+		
+		$id = '';
+		
+		$adapterInstance->fetchFromLimbo( $id );
 		
 	}
 

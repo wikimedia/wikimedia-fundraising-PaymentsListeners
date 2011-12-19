@@ -48,6 +48,7 @@ class Db_Adapter_Mysqli_InsertTestCase extends QueueHandlingTestCase
 	 * @covers Db_Adapter_Mysqli::getErrorCode
 	 * @covers Db_Adapter_Mysqli::lastInsertId
 	 * @covers Db_Adapter_Mysqli::fetch
+	 * @covers Db_Adapter_Abstract::getResult
 	 * @covers Db_Expression::__construct
 	 * @covers Db_Expression::__toString
 	 *
@@ -183,6 +184,7 @@ class Db_Adapter_Mysqli_InsertTestCase extends QueueHandlingTestCase
 	 * @covers Db_Adapter_Mysqli::getErrorCode
 	 * @covers Db_Adapter_Mysqli::lastInsertId
 	 * @covers Db_Adapter_Mysqli::fetch
+	 * @covers Db_Adapter_Abstract::getResult
 	 * @covers Db_Expression::__construct
 	 * @covers Db_Expression::__toString
 	 *

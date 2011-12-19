@@ -56,4 +56,24 @@ class Listener_Adapter_Abstract_GetAdapterTypeTestCase extends QueueHandlingTest
 
 		$this->assertSame( $adapter, $adapterInstance->getAdapterType() );
 	}
+
+	/**
+	 * testGetAdapterTypeLowerCase
+	 *
+	 * @covers Listener_Adapter_Abstract::getAdapterType
+	 * @covers Listener_Adapter_Abstract::getAdapterTypeLowerCase
+	 */
+	public function testGetAdapterTypeLowerCase() {
+
+		// The parameters to pass to the factory.
+		$parameters = array();
+
+		// The adapter to pass to the factory.
+		$adapter = 'GlobalCollect';
+
+		$adapterInstance = Listener::factory( $adapter, $parameters );
+
+		$this->assertSame( $adapter, $adapterInstance->getAdapterType() );
+		$this->assertSame( strtolower( $adapter ), $adapterInstance->getAdapterTypeLowerCase() );
+	}
 }

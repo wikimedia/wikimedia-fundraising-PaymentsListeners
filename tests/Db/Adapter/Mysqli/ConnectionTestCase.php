@@ -47,12 +47,14 @@ class Db_Adapter_Mysqli_ConnectionTestCase extends QueueHandlingTestCase
 	 * @covers Db_Adapter_Mysqli::setFlags
 	 * @covers Db_Adapter_Abstract::init
 	 * @covers Db_Adapter_Abstract::getHost
+	 * @covers Db_Adapter_Abstract::getDatabase
 	 * @covers Db_Adapter_Abstract::getPassword
 	 * @covers Db_Adapter_Abstract::getUsername
 	 * @covers Db_Adapter_Abstract::getPort
 	 * @covers Db_Adapter_Abstract::getSocket
 	 * @covers Db_Adapter_Abstract::getConnection
 	 * @covers Db_Adapter_Mysqli::isConnected
+	 * @covers Db_Adapter_Mysqli::connect
 	 * @covers Db_Adapter_Abstract::getFlags
 	 * @covers Db_Adapter_Abstract::getCharacterEncoding
 	 * @covers Db_Adapter_Mysqli::connect
@@ -75,6 +77,13 @@ class Db_Adapter_Mysqli_ConnectionTestCase extends QueueHandlingTestCase
 
 		$adapterInstance = Db::factory( $adapter, $parameters );
 
+		$this->assertInstanceOf( 'mysqli', $adapterInstance->getConnection() );
+		
+		// Check to see if there is a connection to the database.
+		$this->assertTrue( $adapterInstance->isConnected() );
+
+		// This is done twice on purpose.
+		// The second attempt should reuse the existing connection.
 		$this->assertInstanceOf( 'mysqli', $adapterInstance->getConnection() );
 		
 		// Check to see if there is a connection to the database.
