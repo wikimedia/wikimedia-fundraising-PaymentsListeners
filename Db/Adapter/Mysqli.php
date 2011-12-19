@@ -164,6 +164,8 @@ class Db_Adapter_Mysqli extends Db_Adapter_Abstract
 	 */
 	public function escape( $value )
 	{
+		$this->connect();
+		
 		return $this->connection->real_escape_string( $value );
 	}
 
