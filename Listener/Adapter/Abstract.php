@@ -1367,13 +1367,19 @@ abstract class Listener_Adapter_Abstract
 	 * @param Stomp_Frame  $msg
 	 */
 	public function stompDequeueMessage( $msg ) {
+		
+		if ( !( $msg instanceof Stomp_Frame ) ) {
+			$message = 'The messages is not an instance of Stomp_Frame: ' . print_r( $msg, true );
+			$this->log( $message, Listener::LOG_LEVEL_ERR );
+			throw new Listener_Exception( $message );
+		}
 
-		$message = 'Attempting to remove message from pending.';
+		$message = 'Attempting to remove message from queue.';
 		$this->log( $message, Listener::LOG_LEVEL_DEBUG );
 
 		$this->stomp->ack( $msg );
 
-		$message = 'The verified message was removed from the pending queue: ' .  print_r( json_decode( $msg, true ), true );
+		$message = 'The verified message was removed from the queue: ' .  print_r( json_decode( $msg, true ), true );
 		$this->log( $message, Listener::LOG_LEVEL_DEBUG );
 		
 		return true;
