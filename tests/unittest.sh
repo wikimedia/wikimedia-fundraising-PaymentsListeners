@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 ################################################################################
 #
 # Wikimedia Foundation
@@ -255,28 +255,28 @@ done
 ################################################################################
 echo ""
 
-echo "SCRIPT PATH:\n\n ${PATH}"
+echo "SCRIPT PATH: ${PATH}"
 
 echo ""
 
-echo "PWD:\n\n `pwd`"
+echo "PWD: `pwd`"
 
 echo ""
 
 COMMAND_OPTIONS="${PHPUNIT_OPTS} ${PHPUNIT_LIST_GROUPS} ${PHPUNIT_COVERAGE} ${PHPUNIT_GROUPS:+--group $PHPUNIT_GROUPS} ${PHPUNIT_FILE}"
-echo "COMMAND:\n\n ${PHPUNIT} ${COMMAND_OPTIONS}"
+echo "COMMAND: ${PHPUNIT} ${COMMAND_OPTIONS}"
 
 echo ""
 
-echo "HTML code coverage link:\n\n ${PHPUNIT_COVERAGE_HTML_LINK}"
+echo "HTML code coverage link: ${PHPUNIT_COVERAGE_HTML_LINK}"
 
 echo ""
 
-echo "Clover code coverage link:\n\n ${PHPUNIT_COVERAGE_CLOVER_LINK}"
+echo "Clover code coverage link: ${PHPUNIT_COVERAGE_CLOVER_LINK}"
 
 echo ""
 
-echo "Testdox code coverage link:\n\n ${PHPUNIT_COVERAGE_TESTDOX_LINK}"
+echo "Testdox code coverage link: ${PHPUNIT_COVERAGE_TESTDOX_LINK}"
 
 echo ""
 
