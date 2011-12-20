@@ -71,7 +71,7 @@ class Listener_Adapter_GlobalCollect_GlobalCollectPaymentMethodsTestCase extends
 			10	=> array(	'paymentProducts' => array(),	'process'	=> false,	'queue' => 'limbo',		'label' => 'Bank refunds',),
 			12	=> array(	'paymentProducts' => array(),	'process'	=> false,	'queue' => 'limbo',		'label' => 'Payouts',),
 			14	=> array(	'paymentProducts' => array(),	'process'	=> false,	'queue' => 'limbo',		'label' => 'Pre-paid methods',),
-			15	=> array(	'paymentProducts' => array(),	'process'	=> false,	'queue' => 'limbo',		'label' => 'Cash',),
+			15	=> array(	'paymentProducts' => array(),	'process'	=> true,	'queue' => 'limbo',		'label' => 'Cash',),
 		);
 
 		$this->assertSame( $paymentMethods, $instance->getPaymentMethods() );
@@ -161,20 +161,39 @@ class Listener_Adapter_GlobalCollect_GlobalCollectPaymentMethodsTestCase extends
 	}
 
 	/**
-	 * testGetProcessDecisionForCashWhichShouldBeFalse
+	 * testGetProcessDecisionForCashWhichShouldBeTrue
 	 *
 	 * @covers Listener_Adapter_GlobalCollectPaymentMethods::__construct
 	 * @covers Listener_Adapter_GlobalCollectPaymentMethods::setPaymentMethods
 	 * @covers Listener_Adapter_GlobalCollectPaymentMethods::getPaymentMethods
 	 * @covers Listener_Adapter_GlobalCollectPaymentMethods::getProcessDecision
 	 */
-	public function testGetProcessDecisionForCashWhichShouldBeFalse() {
+	public function testGetProcessDecisionForCashWhichShouldBeTrue() {
 
 		$instance = new Listener_Adapter_GlobalCollectPaymentMethods();
 
 		$this->assertInstanceOf( 'Listener_Adapter_GlobalCollectPaymentMethods', $instance );
 
 		$paymentMethodId = 15;
+
+		$this->assertTrue( $instance->getProcessDecision( $paymentMethodId ) );
+	}
+
+	/**
+	 * testGetProcessDecisionForPayoutsWhichShouldBeFalse
+	 *
+	 * @covers Listener_Adapter_GlobalCollectPaymentMethods::__construct
+	 * @covers Listener_Adapter_GlobalCollectPaymentMethods::setPaymentMethods
+	 * @covers Listener_Adapter_GlobalCollectPaymentMethods::getPaymentMethods
+	 * @covers Listener_Adapter_GlobalCollectPaymentMethods::getProcessDecision
+	 */
+	public function testGetProcessDecisionForPayoutsWhichShouldBeFalse() {
+
+		$instance = new Listener_Adapter_GlobalCollectPaymentMethods();
+
+		$this->assertInstanceOf( 'Listener_Adapter_GlobalCollectPaymentMethods', $instance );
+
+		$paymentMethodId = 12;
 
 		$this->assertFalse( $instance->getProcessDecision( $paymentMethodId ) );
 	}
