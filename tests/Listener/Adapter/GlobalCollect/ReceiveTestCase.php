@@ -213,7 +213,7 @@ class Listener_Adapter_GlobalCollect_ReceiveTestCase extends QueueHandlingTestCa
 	}
 	
 	/**
-	 * testReceiveValidPostWithAPaymentMethodWeDoNotProcessCash
+	 * testReceiveValidPostWithAPaymentMethodWeDoProcessCash
 	 *
 	 * @covers Listener_Adapter_GlobalCollect::init
 	 * @covers Listener_Adapter_Abstract::receive
@@ -228,7 +228,7 @@ class Listener_Adapter_GlobalCollect_ReceiveTestCase extends QueueHandlingTestCa
 	 * @covers Listener_Adapter_Abstract::pushToVerified
 	 * @covers Listener_Adapter_Abstract::stompDequeueMessage
 	 */
-	public function testReceiveValidPostWithAPaymentMethodWeDoNotProcessCash() {
+	public function testReceiveValidPostWithAPaymentMethodWeDoProcessCash() {
 
 		// The parameters to pass to the factory.
 		$parameters = array();
