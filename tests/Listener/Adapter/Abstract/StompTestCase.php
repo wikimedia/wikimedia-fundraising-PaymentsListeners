@@ -461,12 +461,12 @@ class Listener_Adapter_Abstract_StompTestCase extends QueueHandlingTestCase
 	}
 
 	/**
-	 * testStompDequeueMessageShouldFailWhenAttemptingToRemoveMessagesThatDoNotExist
+	 * testStompDequeueMessageShouldFailWhenAttemptingToRemoveMessagesThatIsNull
 	 *
 	 * @covers Listener_Adapter_Abstract::stompDequeueMessage
 	 */
-	public function testStompDequeueMessageShouldFailWhenAttemptingToRemoveMessagesThatDoNotExist() {
-		$this->markTestIncomplete(TESTS_MESSAGE_NOT_IMPLEMENTED . ' It may not be possible to make Stomp fail if a message does not exist.');
+	public function testStompDequeueMessageShouldFailWhenAttemptingToRemoveMessagesThatIsNull() {
+
 		// The parameters to pass to the factory.
 		$parameters = array(
 			'logLevel' => Listener::LOG_LEVEL_DEBUG,
@@ -477,18 +477,16 @@ class Listener_Adapter_Abstract_StompTestCase extends QueueHandlingTestCase
 
 		$adapterInstance = Listener::factory( $adapter, $parameters );
 
-		// $message = 'The Stomp class does not exist in: ' . $stompPath;
-		// Debug::dump($message, eval(DUMP) . "\$message", false);
+		$msg = null;
+		//$message = 'The messages is not an instance of Stomp_Frame: ' . print_r( $msg, true );
+		$message = 'The messages is not an instance of Stomp_Frame: ';
 
-		// $adapterInstance->setStompPath( $stompPath );
-
-		// $this->setExpectedException( 'Listener_Exception', $message );
+		$this->setExpectedException( 'Listener_Exception', $message );
 		$adapterInstance->connectStomp();
 
 		$this->assertTrue( $adapterInstance->getStomp()->isConnected() );
 
-		$message = 'Attempting to delete a message that does not exist.';
-		$this->assertFalse( $adapterInstance->stompDequeueMessage( null ) );
+		$adapterInstance->stompDequeueMessage( $msg );
 	}
 
 }
