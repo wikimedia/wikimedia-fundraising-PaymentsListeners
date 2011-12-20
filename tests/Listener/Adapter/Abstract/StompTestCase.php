@@ -232,7 +232,7 @@ class Listener_Adapter_Abstract_StompTestCase extends QueueHandlingTestCase
 	}
 
 	/**
-	 * testSetStompConnection
+	 * testSetStompConnectionWithBadActiveMqUrl
 	 *
 	 * @covers Listener_Adapter_Abstract::getStomp
 	 * @covers Listener_Adapter_Abstract::setStomp
@@ -242,7 +242,7 @@ class Listener_Adapter_Abstract_StompTestCase extends QueueHandlingTestCase
 		// The parameters to pass to the factory.
 		$parameters = array(
 			'logLevel' => Listener::LOG_LEVEL_DEBUG,
-			'activeMqStompUri' => 'tcp://localhost:61613666',
+			'activeMqStompUri' => 'tcp://localhost:63000',
 		);
 
 		// The adapter to pass to the factory.
