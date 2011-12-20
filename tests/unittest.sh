@@ -126,14 +126,16 @@ load_configuration()
 	
 	# Load the custom configuration file if it exists
 	if [ -f "${CONFIGURATION_FILE}" ]; then
-		source ${CONFIGURATION_FILE};
+		echo "Loading the configuration file (${CONFIGURATION_FILE}) in: `pwd`"
+		. ${CONFIGURATION_FILE};
 	else
 		
 		# Load the default configuration file
 		CONFIGURATION_FILE="${CONFIGURATION_FILE}.dist"
 	
 		if [ -f "${CONFIGURATION_FILE}" ]; then
-			source ${CONFIGURATION_FILE};
+		echo "Loading the default configuration file (${CONFIGURATION_FILE}.dist) in: `pwd`"
+			. ${CONFIGURATION_FILE};
 		else
 			echo "The default configuration file (${CONFIGURATION_FILE}) is missing from: `pwd`"
 			exit 1;
@@ -253,28 +255,28 @@ done
 ################################################################################
 echo ""
 
-echo "SCRIPT PATH:\n\n${PATH}"
+echo "SCRIPT PATH:\n\n ${PATH}"
 
 echo ""
 
-echo "PWD:\n\n`pwd`"
+echo "PWD:\n\n `pwd`"
 
 echo ""
 
 COMMAND_OPTIONS="${PHPUNIT_OPTS} ${PHPUNIT_LIST_GROUPS} ${PHPUNIT_COVERAGE} ${PHPUNIT_GROUPS:+--group $PHPUNIT_GROUPS} ${PHPUNIT_FILE}"
-echo "COMMAND:\n\n${PHPUNIT} ${COMMAND_OPTIONS}"
+echo "COMMAND:\n\n ${PHPUNIT} ${COMMAND_OPTIONS}"
 
 echo ""
 
-echo "HTML code coverage link:\n\n${PHPUNIT_COVERAGE_HTML_LINK}"
+echo "HTML code coverage link:\n\n ${PHPUNIT_COVERAGE_HTML_LINK}"
 
 echo ""
 
-echo "Clover code coverage link:\n\n${PHPUNIT_COVERAGE_CLOVER_LINK}"
+echo "Clover code coverage link:\n\n ${PHPUNIT_COVERAGE_CLOVER_LINK}"
 
 echo ""
 
-echo "Testdox code coverage link:\n\n${PHPUNIT_COVERAGE_TESTDOX_LINK}"
+echo "Testdox code coverage link:\n\n ${PHPUNIT_COVERAGE_TESTDOX_LINK}"
 
 echo ""
 
