@@ -27,6 +27,8 @@ require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'DatabaseTestCase.php';
 require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'LimboTestCase.php';
 require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'ReceiveTestCase.php';
 
+require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'FullTestCase.php';
+
 /**
  * Listener_Adapter_GlobalCollect_AllTests
  */
@@ -65,6 +67,8 @@ class Listener_Adapter_GlobalCollect_AllTests
 		$suite->addTestSuite( 'Listener_Adapter_GlobalCollect_DatabaseTestCase' );
 		$suite->addTestSuite( 'Listener_Adapter_GlobalCollect_LimboTestCase' );
 		$suite->addTestSuite( 'Listener_Adapter_GlobalCollect_ReceiveTestCase' );
+
+		$suite->addTestSuite( 'Listener_Adapter_GlobalCollect_FullTestCase' );
 
 		return $suite;
 	}
