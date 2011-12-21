@@ -77,7 +77,7 @@ class Listener_Adapter_GlobalCollect_FullTestCase extends QueueHandlingTestCase
 	 * @covers Listener_Adapter_Abstract::getInLimbo
 	 * @covers Listener_Adapter_Abstract::setInLimbo
 	 */
-	public function testSystemWithPscQueueVerify() {
+	public function skip_testSystemWithPscQueueVerify() {
 		
 		// The parameters to pass to the factory.
 		$parameters = array();
@@ -104,7 +104,7 @@ class Listener_Adapter_GlobalCollect_FullTestCase extends QueueHandlingTestCase
 
 		$queue = $adapterInstance->getQueueLimbo();
 
-		$id = $limboMessageData[ $adapterInstance->getLimboIdName() ];
+		$id = $limboMessageData['correlation-id'];
 		
 		// Make sure the message was sent to the queue.
 		$this->assertTrue( $adapterInstance->pushToQueueWithJmsCorrelationId( $limboMessageData, $queue, $id ) );
@@ -147,7 +147,7 @@ class Listener_Adapter_GlobalCollect_FullTestCase extends QueueHandlingTestCase
 	 * @covers Listener_Adapter_Abstract::getInLimbo
 	 * @covers Listener_Adapter_Abstract::setInLimbo
 	 */
-	public function testSystemWithPscDatabaseVerify() {
+	public function skip_testSystemWithPscDatabaseVerify() {
 		
 		// The parameters to pass to the factory.
 		$parameters = array();
@@ -165,7 +165,7 @@ class Listener_Adapter_GlobalCollect_FullTestCase extends QueueHandlingTestCase
 
 		$queue = $adapterInstance->getQueueLimbo();
 
-		$id = $limboMessageData[ $adapterInstance->getLimboIdName() ];
+		$id = $limboMessageData['correlation-id'];
 		
 		// Make sure the message was sent to the queue.
 		$this->assertTrue( $adapterInstance->pushToQueueWithJmsCorrelationId( $limboMessageData, $queue, $id ) );
@@ -179,6 +179,103 @@ class Listener_Adapter_GlobalCollect_FullTestCase extends QueueHandlingTestCase
 		// Make sure there is nothing in the database for this test. This is cleanup from other tests.
 		$this->removeFromDatabaseByOrderId( $adapterInstance->getData( $adapterInstance->getLimboIdName(), true) );
 		
+		$this->assertEquals( 'OK', $adapterInstance->receive( $_POST ) );
+		
+		// Verify message is in the verified queue.
+		
+	}
+	
+	/**
+	 * testSystemWithPscCivicrmDatabaseVerifyAlsoMakeSureMessageWasRemovedFromLimboAndRunDrushLqcTwice
+	 *
+	 * Simulate the form by putting a message in the CiviCRM Limbo table.
+	 * Verify the message and send it to the verified queue.
+	 *
+	 * @todo Add confirmation that the message is in the verified queue.
+	 *
+	 * @covers Listener_Adapter_GlobalCollect::init
+	 * @covers Listener_Adapter_Abstract::receive
+	 * @covers Listener_Adapter_GlobalCollect::getProcessDecision
+	 * @covers Listener_Adapter_GlobalCollect::receiveReturn
+	 * @covers Listener_Adapter_GlobalCollect::parse
+	 * @covers Listener_Adapter_Abstract::pushToPending
+	 * @covers Listener_Adapter_Abstract::messageSanityCheck
+	 * @covers Listener_Adapter_GlobalCollect::checkRequiredFields
+	 * @covers Listener_Adapter_GlobalCollect::verifyPaymentNotification
+	 * @covers Listener_Adapter_Abstract::fetchFromPending
+	 * @covers Listener_Adapter_Abstract::pushToVerified
+	 * @covers Listener_Adapter_Abstract::stompDequeueMessage
+	 * @covers Listener_Adapter_Abstract::getInDatabase
+	 * @covers Listener_Adapter_Abstract::setInDatabase
+	 * @covers Listener_Adapter_Abstract::getInLimbo
+	 * @covers Listener_Adapter_Abstract::setInLimbo
+	 */
+	public function testSystemWithPscCivicrmDatabaseVerifyAlsoMakeSureMessageWasRemovedFromLimboAndRunDrushLqcTwice() {
+		
+		if ( TESTS_PATH_TO_DRUSH_COMMAND == '' ) {
+			$message = 'You must specify a path to drush in CiviCRM with the constant: TESTS_PATH_TO_DRUSH_COMMAND. This constant lives in the file: TestConfiguration.php';
+			$this->markTestSkipped( $message );
+			return;
+		}
+		
+		if ( TESTS_PATH_TO_CIVICRM == '' ) {
+			$message = 'You must specify a path to CiviCRM with the constant: TESTS_PATH_TO_CIVICRM. This constant lives in the file: TestConfiguration.php';
+			$this->markTestSkipped( $message );
+			return;
+		}
+
+		// The parameters to pass to the factory.
+		$parameters = array();
+
+		// The adapter to pass to the factory.
+		$adapter = 'GlobalCollect';
+
+		$adapterInstance = Listener::factory( $adapter, $parameters );
+
+		$this->assertInstanceOf( 'Listener_Adapter_GlobalCollect', $adapterInstance );
+
+		$_POST = $this->getPostDataForGlobalCollect();
+
+		$adapterInstance->setData( $_POST );
+		
+		// Make sure there is nothing in the database for this test. This is cleanup from other tests.
+		$this->removeFromDatabaseByOrderId( $adapterInstance->getData( $adapterInstance->getLimboIdName(), true) );
+
+		// Create a limbo message
+		$limboMessageData = $this->getLimboDataForGlobalCollect();
+		$this->removeFromLimboByOrderId();
+
+		$queue = $adapterInstance->getQueueLimbo();
+
+		$id = $limboMessageData['correlation-id'];
+		
+		// Make sure the message was sent to the queue.
+		$this->assertTrue( $adapterInstance->pushToQueueWithJmsCorrelationId( $limboMessageData, $queue, $id ) );
+		
+		$network = new Mw_Network();
+
+		$command  = '';
+
+		$command .= 'cd ' . TESTS_PATH_TO_CIVICRM . '; ';
+		$command .= TESTS_PATH_TO_DRUSH_COMMAND;
+		//$command .= ' help';
+		$command .= ' lqc';
+		$options = array();
+		$network->terminal( $command, $options );
+
+		$this->assertEmpty( $network->result );
+
+		// Fetch from limbo and get nothing.
+		$this->assertFalse( $adapterInstance->fetchFromLimbo( $id ) );
+		
+		
+		// Run the command again. There should not be anything in limbo.
+		$network->terminal( $command, $options );
+
+		$this->assertEmpty( $network->result );
+
+		$this->assertTrue( $adapterInstance->fetchFromDatabaseByOrderId() );
+
 		$this->assertEquals( 'OK', $adapterInstance->receive( $_POST ) );
 		
 		// Verify message is in the verified queue.

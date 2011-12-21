@@ -47,11 +47,14 @@ abstract class QueueHandlingTestCase extends PHPUnit_Framework_TestCase
 
 		// Everything should be returned as strings since that is how they will be sent by the form
 		$return = array(
-			'MERCHANTID'	=> '9990',
-			'ORDERID'		=> 'globalcollect-' . 23,
-			'AMOUNT'		=> '100',
-			'CURRENCYCODE'	=> 'EUR',
-			'STATUS'		=> '525',
+			'response'					=> '{"MERCHANTID":"9990","ORDERID":"23","EFFORTID":"1","ATTEMPTID":"1","AMOUNT":"100","CURRENCYCODE":"EUR","REFERENCE":"20070406GC19","PAYMENTREFERENCE":"","PAYMENTPRODUCTID":"809","PAYMENTMETHODID":"8","STATUSID":"800","STATUSDATE":"20070406170059","RECEIVEDDATE":"20070406170057"}',
+			'date' 						=> time(),
+			'gateway'					=> 'globalcollect',
+			'gateway_txn_id'			=> '23',
+			'correlation-id'			=> 'globalcollect-23',
+			'payment_method'			=> 'rtbt',
+			'payment_submethod'			=> 'rtbt_ideal',
+			'contribution_tracking_id'	=> '23',
 		);
 
 		if ( is_array( $data ) ) {

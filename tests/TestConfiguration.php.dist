@@ -106,3 +106,17 @@ define( 'TESTS_DB_ADAPTER_SOCKET', '' );
  */
 define( 'TESTS_DB_ADAPTER_DATABASE_FOR_TESTING', 'civicrm' );
 
+/**
+ * TESTS_PATH_TO_DRUSH_COMMAND
+ *
+ * This will execute the drush command. You can change this to the full path.
+ */
+define( 'TESTS_PATH_TO_DRUSH_COMMAND', 'drush' );
+
+/**
+ * TESTS_PATH_TO_CIVICRM
+ *
+ * This is the full path to the CiviCRM installation. This is needed to run drush.
+ */
+define( 'TESTS_PATH_TO_CIVICRM', '' );
+

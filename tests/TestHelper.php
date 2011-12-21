@@ -47,6 +47,11 @@ require_once 'Db.php';
  */
 require_once 'Listener.php';
 
+/**
+ * @see Mw_Network
+ */
+require_once 'library/Mw/Network.php';
+
 /*
  * Load the user-defined test configuration file, if it exists; otherwise, load
  * the default configuration.
