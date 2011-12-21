@@ -249,6 +249,42 @@ class Listener_Adapter_GlobalCollect_ReceiveTestCase extends QueueHandlingTestCa
 	}
 	
 	/**
+	 * testReceiveValidPostWithAPaymentMethodWeDoNotProcessChecks
+	 *
+	 * @covers Listener_Adapter_GlobalCollect::init
+	 * @covers Listener_Adapter_Abstract::receive
+	 * @covers Listener_Adapter_GlobalCollect::getProcessDecision
+	 * @covers Listener_Adapter_GlobalCollect::receiveReturn
+	 * @covers Listener_Adapter_GlobalCollect::parse
+	 * @covers Listener_Adapter_Abstract::pushToPending
+	 * @covers Listener_Adapter_Abstract::messageSanityCheck
+	 * @covers Listener_Adapter_GlobalCollect::checkRequiredFields
+	 * @covers Listener_Adapter_GlobalCollect::verifyPaymentNotification
+	 * @covers Listener_Adapter_Abstract::fetchFromPending
+	 * @covers Listener_Adapter_Abstract::pushToVerified
+	 * @covers Listener_Adapter_Abstract::stompDequeueMessage
+	 */
+	public function testReceiveValidPostWithAPaymentMethodWeDoNotProcessChecks() {
+
+		// The parameters to pass to the factory.
+		$parameters = array();
+
+		// The adapter to pass to the factory.
+		$adapter = 'GlobalCollect';
+
+		$adapterInstance = Listener::factory( $adapter, $parameters );
+
+		$this->assertInstanceOf( 'Listener_Adapter_GlobalCollect', $adapterInstance );
+
+		$data = array();
+		$data['PAYMENTMETHODID'] = 5;
+		$_POST = $this->getPostDataForGlobalCollect( $data );
+		
+		$this->assertEquals( 'OK', $adapterInstance->receive( $_POST ) );
+		
+	}
+	
+	/**
 	 * testReceiveValidPostThatDoesNotExistInLimboOrDatabase
 	 *
 	 * @covers Listener_Adapter_GlobalCollect::init
