@@ -345,7 +345,15 @@ class Db_Adapter_Mysqli extends Db_Adapter_Abstract
 	 */
 	public function query( $query, $options = array() ) {
 		
-		$storeResult = ( isset( $options['storeResult'] ) && $options['storeResult'] ) ? (boolean) $options['storeResult'] : true;  
+		// Get the storeResult value so it can be converted to the proper
+		// integer value for the adapter.
+		if ( isset( $options['storeResult'] ) && $options['storeResult'] ) {
+			$storeResult = (boolean) $options['storeResult'];
+		}
+		else {
+			$storeResult = true;
+		}
+		
 		$storeResult = $storeResult ? MYSQLI_STORE_RESULT : MYSQLI_USE_RESULT;	
 
 		$this->result = $this->getConnection()->query( $query, $storeResult );
