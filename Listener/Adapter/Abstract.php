@@ -1168,21 +1168,6 @@ abstract class Listener_Adapter_Abstract
 	}
 
 	/**
-	 * getRow
-	 *
-	 */
-	public function getRow()
-	{
-		// If Stomp is not instatiated, set it up.
-		if ( empty( $this->row ) ) {
-
-			$this->row = array();
-		}
-
-		return $this->row;
-	}
-
-	/**
 	 * setSettings
 	 *
 	 * Sets settings for the adapter:
