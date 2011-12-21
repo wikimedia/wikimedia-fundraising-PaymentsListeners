@@ -24,6 +24,7 @@ require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'GlobalCollectPaymentMe
 require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'ConstructorTestCase.php';
 require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'CheckRequiredFieldsTestCase.php';
 require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'DatabaseTestCase.php';
+require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'PendingTestCase.php';
 require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'LimboTestCase.php';
 require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'ReceiveTestCase.php';
 
@@ -65,6 +66,7 @@ class Listener_Adapter_GlobalCollect_AllTests
 		$suite->addTestSuite( 'Listener_Adapter_GlobalCollect_CheckRequiredFieldsTestCase' );
 
 		$suite->addTestSuite( 'Listener_Adapter_GlobalCollect_DatabaseTestCase' );
+		$suite->addTestSuite( 'Listener_Adapter_GlobalCollect_PendingTestCase' );
 		$suite->addTestSuite( 'Listener_Adapter_GlobalCollect_LimboTestCase' );
 		$suite->addTestSuite( 'Listener_Adapter_GlobalCollect_ReceiveTestCase' );
 
