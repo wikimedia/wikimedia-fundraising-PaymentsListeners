@@ -1379,7 +1379,7 @@ abstract class Listener_Adapter_Abstract
 
 		$this->stomp->ack( $msg );
 
-		$message = 'The verified message was removed from the queue: ' .  print_r( json_decode( $msg, true ), true );
+		$message = 'The message was removed from the queue: ' .  print_r( json_decode( $msg, true ), true );
 		$this->log( $message, Listener::LOG_LEVEL_DEBUG );
 		
 		return true;
@@ -1402,7 +1402,9 @@ abstract class Listener_Adapter_Abstract
 			$this->log( $message, Listener::LOG_LEVEL_DEBUG );
 		}
 
-		$this->stomp->subscribe( $destination, $properties );
+		$this->connectStomp();
+
+ 		$this->stomp->subscribe( $destination, $properties );
 		$message = 'Attempting to pull queued item.';
 		$this->log( $message, Listener::LOG_LEVEL_DEBUG );
 
