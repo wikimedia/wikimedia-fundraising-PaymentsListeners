@@ -183,6 +183,7 @@ class Listener_Adapter_Abstract_SettingsTestCase extends QueueHandlingTestCase
 	 * @covers Listener_Adapter_GlobalCollect::init
 	 * @covers Listener_Adapter_Abstract::setSettings
 	 * @covers Listener_Adapter_Abstract::getPullFromDatabase
+	 * @covers Listener_Adapter_Abstract::setPullFromDatabase
 	 */
 	public function testSetSettingsWithMissingDbSection() {
 
@@ -207,6 +208,7 @@ class Listener_Adapter_Abstract_SettingsTestCase extends QueueHandlingTestCase
 	 * @covers Listener_Adapter_GlobalCollect::init
 	 * @covers Listener_Adapter_Abstract::setSettings
 	 * @covers Listener_Adapter_Abstract::getPullFromDatabase
+	 * @covers Listener_Adapter_Abstract::setPullFromDatabase
 	 */
 	public function testSetSettingsWithDbSectionDisabled() {
 
@@ -231,6 +233,7 @@ class Listener_Adapter_Abstract_SettingsTestCase extends QueueHandlingTestCase
 	 * @covers Listener_Adapter_GlobalCollect::init
 	 * @covers Listener_Adapter_Abstract::setSettings
 	 * @covers Listener_Adapter_Abstract::getPullFromDatabase
+	 * @covers Listener_Adapter_Abstract::setPullFromDatabase
 	 */
 	public function testSetSettingsWithDbSectionEnabled() {
 
