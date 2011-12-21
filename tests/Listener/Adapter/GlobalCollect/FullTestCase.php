@@ -77,7 +77,7 @@ class Listener_Adapter_GlobalCollect_FullTestCase extends QueueHandlingTestCase
 	 * @covers Listener_Adapter_Abstract::getInLimbo
 	 * @covers Listener_Adapter_Abstract::setInLimbo
 	 */
-	public function skip_testSystemWithPscQueueVerify() {
+	public function testSystemWithPscQueueVerify() {
 		
 		// The parameters to pass to the factory.
 		$parameters = array();
@@ -147,7 +147,7 @@ class Listener_Adapter_GlobalCollect_FullTestCase extends QueueHandlingTestCase
 	 * @covers Listener_Adapter_Abstract::getInLimbo
 	 * @covers Listener_Adapter_Abstract::setInLimbo
 	 */
-	public function skip_testSystemWithPscDatabaseVerify() {
+	public function testSystemWithPscDatabaseVerify() {
 		
 		// The parameters to pass to the factory.
 		$parameters = array();
