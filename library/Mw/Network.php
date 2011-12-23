@@ -51,15 +51,19 @@ class Mw_Network
 	 *
 	 * This executes one terminal command at a time.
 	 *
-	 * @param	string				$command
-	 * @param	array	OPTIONAL	$options
+	 * @param	string	$command	The command to pass to the terminal
+	 * @param	string	$execute	The method to execute on the PHP side to get to the terminal. Defaults to: 'exec'
+	 *
+	 * $execute:
+	 * - 'passthru': @link http://php.net/manual/en/function.passthru.php 
+	 * - 'exec': @link http://php.net/manual/en/function.exec.php 
+	 *
+	 * @return string|boolean Returns @see Mw_Network::$result
 	 */
-	final public function terminal( $command, $options = array() )
+	final public function terminal( $command, $execute = 'exec' )
 	{
-		unset( $options['command'] );
-		extract( $options );
 		
-		$execute = ( isset( $options['execute'] ) && !empty( $options['execute']) ) ? $options['execute'] : 'exec';
+		$execute = empty( $execute ) ? 'exec' : $execute ;
 		
 		$this->output = null;
 		$this->returnValue = null;
