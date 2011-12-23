@@ -1014,6 +1014,12 @@ abstract class Listener_Adapter_Abstract
 	 */
 	public function getLogFile()
 	{
+		if ( empty( $this->logFile ) ) {
+
+			// Create a default log file name
+			$this->setLogFile();
+		}
+		
 		return $this->logFile;
 	}
 
@@ -1044,16 +1050,6 @@ abstract class Listener_Adapter_Abstract
 	 */
 	public function openOutputHandle()
 	{
-		// Check to see if a log file has already been set.
-		$logFile = $this->getLogFile();
-		
-		if ( empty( $logFile ) ) {
-
-			// Create a default log file name
-			$this->setLogFile();
-
-		}
-
 		$this->outputHandle = fopen( $this->getLogFile(), 'a' );
 	}
 
