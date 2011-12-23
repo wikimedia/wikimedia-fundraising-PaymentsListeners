@@ -722,7 +722,9 @@ abstract class Db_Adapter_Abstract
 		}
 		
 		// Convert where to a string 
-		$where = is_array( $where ) ? implode( ' AND ', $where ) : $where ;
+		if ( is_array( $where ) ) {
+			$where = implode( ' AND ', $where );
+		}
 		
 		$set = '';
 		
