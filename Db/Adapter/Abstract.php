@@ -454,8 +454,7 @@ abstract class Db_Adapter_Abstract
 	 * 
 	 * @return integer	Returns the count of affected rows
 	 */
-	public function delete( $table, $key, $id, $options = array())
-	{
+	public function delete( $table, $key, $id, $options = array() ) {
 
 		// Require table
 		if ( empty( $table ) ) {

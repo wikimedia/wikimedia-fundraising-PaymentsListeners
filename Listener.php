@@ -43,8 +43,7 @@ require_once 'Listener/Exception.php';
  * @package		Fundraising_QueueHandling
  * @subpackage	Fundraising_QueueHandling_Listener
  */
-class Listener
-{
+class Listener {
 
 	/**
 	 * The default configuration file
@@ -114,8 +113,7 @@ class Listener
 	 * @param string $adapter The adapter to load
 	 * @return boolean
 	 */
-	public static function isAdapter( $adapter )
-	{
+	public static function isAdapter( $adapter ) {
 		// Debug::dump($adapter, eval(DUMP) . "\$adapter", false);
 		// Debug::dump(self::$adapters, eval(DUMP) . "self::\$adapters", false);
 		return in_array( $adapter, self::$adapters );
@@ -126,8 +124,7 @@ class Listener
 	 *
 	 * @return array
 	 */
-	public static function getAdapters()
-	{
+	public static function getAdapters() {
 		return self::$adapters;
 	}
 
@@ -136,8 +133,7 @@ class Listener
 	 *
 	 * @return string
 	 */
-	public static function getConfigurationFile()
-	{
+	public static function getConfigurationFile() {
 		return self::$configurationFile;
 	}
 
@@ -146,9 +142,10 @@ class Listener
 	 *
 	 * @return string
 	 */
-	public static function setConfigurationFile( $path = '' )
-	{
-		$path = empty( $path ) ? Listener::DEFAULT_CONFIGURATION_FILE : $path;
+	public static function setConfigurationFile( $path = '' ) {
+		if ( !$path ) {
+			$path = Listener::DEFAULT_CONFIGURATION_FILE;
+		}
 		
 		$absolute = ( substr( $path, 0, 1 ) == '/' ) ? true : false;
 		
@@ -171,8 +168,7 @@ class Listener
 	 * @param string $adapter The adapter to load
 	 * @param array $parameters The adapter parameters
 	 */
-	public static function factory( $adapter, $parameters = array() )
-	{
+	public static function factory( $adapter, $parameters = array() ) {
 		/*
 		 * Adapter options must be in the form of an array.
 		 */
