@@ -445,6 +445,7 @@ abstract class Db_Adapter_Abstract
 	 *
 	 * @param string		$table		The table to make an update
 	 * @param string		$key		This is a field in the database table you wish to delete on.
+	 * @param string		$id			This is the id that will be searched with $key on $table.
 	 * @param array			$options	This will be passed to @see Db_Adapter_Abstract::query
 	 * 
 	 * $options:
