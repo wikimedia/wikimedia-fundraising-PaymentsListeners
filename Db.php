@@ -23,11 +23,7 @@
 require_once 'Db/Exception.php';
 
 /**
- *
- * @todo
- * - Implement Abstract
- * - Implement GlobalCollect
- *
+ * Db
  */
 class Db
 {
