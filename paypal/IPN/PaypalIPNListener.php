@@ -371,10 +371,25 @@ class PaypalIPNProcessor {
 			curl_setopt($ch, CURLOPT_POST, 1); 
 			curl_setopt($ch, CURLOPT_POSTFIELDS, $vars);
 		}
-		$data = curl_exec($ch);
-		if (!$data) {
-			$data = curl_error($ch);
-			$this->out( "Curl error: " . $data );
+		
+		$i = 0;
+		
+		while (++$i <= 3){
+			$data = curl_exec($ch);
+			$header = curl_getinfo($ch);
+			
+			if ( $header['http_code'] != 200 && $header['http_code'] != 403 ){
+				//paypal blow'd up.
+				sleep( 1 );
+			}
+			
+			if (!$data) {
+				$data = curl_error($ch);
+				$this->out( "Curl error: " . $data );
+			} else {
+				break;
+			}
+			
 		}
 		curl_close($ch);
 		return $data;
