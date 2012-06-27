@@ -1,16 +1,22 @@
 <?php
 
+/**
+ * should be compatible with pecl Stomp and our vendors/stomp_php library
+ */
 class StompQueue
 {
     function __construct($config)
     {
-        require_once( $config['stomp_path'] );
+        if (!empty($config['stomp_path']))
+            require_once( $config['stomp_path'] );
+
         //attempt to connect, otherwise throw exception and exit
         Logger::log( "Attempting to connect to Stomp listener: {$config['activemq_stomp_uri']}", LOG_LEVEL_DEBUG );
         try {
             //establish stomp connection
             $this->stomp = new Stomp( $config['activemq_stomp_uri'] );
-            $this->stomp->connect();
+            if (method_exists($this->stomp, 'connect'))
+                $this->stomp->connect();
             Logger::log( "Successfully connected to Stomp listener", LOG_LEVEL_DEBUG );
         } catch (Stomp_Exception $e) {
             Logger::log( "Stomp connection failed: " . $e->getMessage() );
@@ -38,9 +44,9 @@ class StompQueue
      * @param bool $msg
      */
     public function dequeue_message( $msg ) {
-        Logger::log( "Attempting to remove message from pending.", LOG_LEVEL_DEBUG );
+        Logger::log( "Attempting to remove message.", LOG_LEVEL_DEBUG );
         if ( !$this->stomp->ack( $msg )) {
-            Logger::log( "There was a problem remoivng the verified message from the pending queue: " . print_r( json_decode( $msg, TRUE )));
+            Logger::log( "There was a problem removing a message from the queue: " . print_r( json_decode( $msg->body, TRUE )));
             return false;
         }
         return true;

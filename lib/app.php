@@ -37,6 +37,8 @@ class BaseListener
 
         $this->tracking = new ContributionTracking($this->config);
         $this->queue = new StompQueue($this->config);
+
+        $this->pop_limbo_msg = FALSE;
     }
 
     function load_config($opts = array())
@@ -92,19 +94,28 @@ class BaseListener
         Logger::log( "Attempting to pull message from pending queue with JMSCorrelationID = " . $this->tx_id, LOG_LEVEL_DEBUG );
         $msg = $this->queue->fetch_message( $this->config['pending_queue'], $properties );
         if ( $msg ) {
-            Logger::log( "Pulled message from pending queue: " . $msg, LOG_LEVEL_DEBUG);
+            Logger::log( "Pulled message from pending queue: " . $msg->body, LOG_LEVEL_DEBUG);
         } else {
             Logger::log( "FAILED retrieving message from pending queue.", LOG_LEVEL_DEBUG );
             return;
         }
         
         // check that the message is legitimate enough to consume
-        if ( !$this->msg_sanity_check( $data )) {
+        if ( !$this->msg_sanity_check( $msg ))
+        {
+            // add to a failed queue
+            $error_message = "Message did not pass sanity check.";
+            $body = json_decode($msg->body);
+            #$body['source_queue'] = $this->config['pending_queue'];
+            $body->error = $error_message;
+            $this->queue->queue_message($this->config['failed_queue'], json_encode($body));
+
             // remove the message from pending queue
             $this->queue->dequeue_message( $msg );
-            Logger::log( "Message did not pass sanity check." );
+
+            Logger::log( $error_message );
             Logger::log( "\$_POST contents: " . print_r( $data, TRUE ), LOG_LEVEL_DEBUG );
-            failmail($data);
+            failmail($data, $this->config['email_recipients'], $this->tx_id);
             return;
         }
 
@@ -119,9 +130,9 @@ class BaseListener
         $this->queue->dequeue_message( $msg );
     }
 
-    function copy_tracking_data($id, &$contribution)
+    function copy_tracking_data(&$contribution)
     {
-        $tracking_data = $this->tracking->get_tracking_data($id);
+        $tracking_data = $this->tracking->get_tracking_data($contribution['gateway_txn_id']);
         if ($tracking_data)
         {
             //$contribution['contribution_tracking_id'] =
@@ -137,7 +148,28 @@ class BaseListener
         }
     }
 
-    public function __destruct() {
+    function merge_limbo_data(&$contribution)
+    {
+        $properties = array(
+            'selector' => "JMSCorrelationID = '{$contribution['gateway']}-{$contribution['gateway_txn_id']}'",
+        );
+        $msg = $this->queue->fetch_message($this->config['limbo_queue'], $properties);
+        if ($msg)
+        {
+            foreach (json_decode($msg->body) as $key => $value)
+            {
+                if (!array_key_exists($key, $contribution))
+                    $contribution[$key] = $value;
+            }
+            $this->pop_limbo_msg = $msg;
+            return true;
+        }
+    }
+
+    function __destruct() {
+        if ($this->pop_limbo_msg)
+            $this->queue->dequeue_message( $this->pop_limbo_msg );
+
         Logger::log( "Exiting gracefully." );
     }
 }

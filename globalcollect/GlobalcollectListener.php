@@ -5,19 +5,19 @@ require_once dirname(__FILE__).'/../lib/app.php';
 class GlobalcollectListener extends BaseListener
 {
     var $param_description = array(
+        'ADDITIONALREFERENCE'  => array('type' => 'string', 'length' => 30),
+        'AMOUNT'               => array('map' => 'amount', 'type' => 'numeric', 'length' => 12),
+        'ATTEMPTID'            => array('map' => 'attempt_id', 'type' => 'numeric', 'length' => 5),
+        'CURRENCYCODE'         => array('map' => 'currency_code', 'type' => 'string', 'length' => 3),
+        'EFFORTID'             => array('map' => 'effort_id', 'type' => 'numeric', 'length' => 5),
         'MERCHANTID'           => array('type' => 'numeric', 'length' => 10),
         'ORDERID'              => array('map' => 'order_id', 'type' => 'numeric', 'length' => 10),
-        'EFFORTID'             => array('map' => 'effort_id', 'type' => 'numeric', 'length' => 5),
-        'ATTEMPTID'            => array('map' => 'attempt_id', 'type' => 'numeric', 'length' => 5),
-        'AMOUNT'               => array('map' => 'amount', 'type' => 'numeric', 'length' => 12),
-        'CURRENCYCODE'         => array('map' => 'currency_code', 'type' => 'string', 'length' => 3),
-        'ADDITIONALREFERENCE'  => array('type' => 'string', 'length' => 30),
-        'PAYMENTREFERENCE'     => array('map' => 'payment_reference', 'type' => 'string', 'length' => 20),
         'PAYMENTMETHODID'      => array('type' => 'numeric', 'length' => 5),
         'PAYMENTPRODUCTID'     => array('map' => 'payment_product', 'type' => 'numeric', 'length' => 5),
-        'STATUSID'             => array('type' => 'numeric', 'length' => 5),
-        'STATUSDATE'           => array('type' => 'numeric', 'length' => 14),
+        'PAYMENTREFERENCE'     => array('map' => 'payment_reference', 'type' => 'string', 'length' => 20),
         'RECEIVEDDATE'         => array('map' => 'date', 'type' => 'numeric', 'length' => 14),
+        'STATUSDATE'           => array('type' => 'numeric', 'length' => 14),
+        'STATUSID'             => array('type' => 'numeric', 'length' => 5),
     );
 
     public function parse_data( $data )
@@ -41,23 +41,16 @@ class GlobalcollectListener extends BaseListener
             }
         }
 
-        $tracking_data = $this->copy_tracking_data($data['XXX'], $contribution);
-        
         $contribution['gateway'] = 'globalcollect';
         $contribution['gateway_txn_id'] = $contribution['order_id'];
+        $this->merge_limbo_data($contribution);
 
-        //$contribution['original_currency'] = $post_data['mc_currency'];
-        //$contribution['original_gross'] = $post_data['mc_gross'];
-        //$contribution['fee'] = $post_data['mc_fee'];  
-        //$contribution['gross'] = $post_data['mc_gross']; 
-        //$contribution['net'] = $contribution['gross'] - $contribution['fee'];
-        //$contribution['date'] = $timestamp;
-        
         return $contribution;
     }
 
     function msg_sanity_check($msg)
     {
-        return TRUE;
+        $body = json_decode($msg->body);
+        return (!empty($body->email));
     }
 }
