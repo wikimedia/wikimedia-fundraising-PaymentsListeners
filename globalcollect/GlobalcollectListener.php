@@ -6,9 +6,9 @@ class GlobalcollectListener extends BaseListener
 {
     var $param_description = array(
         'ADDITIONALREFERENCE'  => array('type' => 'string', 'length' => 30),
-        'AMOUNT'               => array('map' => 'amount', 'type' => 'numeric', 'length' => 12),
+        'AMOUNT'               => array('map' => 'gross', 'type' => 'numeric', 'length' => 12),
         'ATTEMPTID'            => array('map' => 'attempt_id', 'type' => 'numeric', 'length' => 5),
-        'CURRENCYCODE'         => array('map' => 'currency_code', 'type' => 'string', 'length' => 3),
+        'CURRENCYCODE'         => array('map' => 'currency', 'type' => 'string', 'length' => 3),
         'EFFORTID'             => array('map' => 'effort_id', 'type' => 'numeric', 'length' => 5),
         'MERCHANTID'           => array('type' => 'numeric', 'length' => 10),
         'ORDERID'              => array('map' => 'order_id', 'type' => 'numeric', 'length' => 10),
@@ -41,16 +41,18 @@ class GlobalcollectListener extends BaseListener
             }
         }
 
+        $contribution['gross'] = round($contribution['gross'], 2);
         $contribution['gateway'] = 'globalcollect';
         $contribution['gateway_txn_id'] = $contribution['order_id'];
-        $this->merge_limbo_data($contribution);
+        $found_limbo = $this->merge_limbo_data($contribution);
+        if (!$found_limbo)
+            throw new Exception("Unable to proceed without the matching limbo message.");
 
         return $contribution;
     }
 
-    function msg_sanity_check($msg)
+    function msg_sanity_check($contribution)
     {
-        $body = json_decode($msg->body);
-        return (!empty($body->email));
+        return (!empty($contribution['email']));
     }
 }

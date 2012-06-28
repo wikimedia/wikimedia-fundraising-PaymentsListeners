@@ -14,13 +14,17 @@ abstract class PaymentListener
 
     /**
      * Make sure that our criteria are met for a consumable message.  A failure
-     * will condemn the message to the pending queue.
+     * will condemn the message to the pending queue.  This function can either
+     * return FALSE, resulting in a generic error message, or can throw an exception.
      */
-    abstract protected function msg_sanity_check($msg);
+    abstract protected function msg_sanity_check($contribution);
 }
 
 class BaseListener
 {
+    var $pop_limbo_msg;
+    var $pop_pending_msg;
+
     function __construct($opts = array())
     {
         // generate a unique id for this run to ensure we're manipulating the correct message later on
@@ -41,8 +45,6 @@ class BaseListener
 
         $this->tracking = new ContributionTracking($this->config);
         $this->queue = new StompQueue($this->config);
-
-        $this->pop_limbo_msg = FALSE;
     }
 
     protected function load_config($opts = array())
@@ -80,55 +82,65 @@ class BaseListener
 
             $contribution = $this->parse_data( $data );
 
-            //push message to pending queue
-            $headers = array( 'persistent' => 'true', 'JMSCorrelationID' => $this->tx_id );
-            Logger::log( "Setting JMSCorrelationID: $this->tx_id", 'debug' );
-
-            // do the queueing - perhaps move out the tracking checking to its own func?
-            $this->queue->queue_message( $this->config['pending_queue'], json_encode( $contribution ), $headers );
-
-            // define a selector property for pulling a particular msg off the queue
-            $properties = array('selector' => "JMSCorrelationID = '{$this->tx_id}'");
-
-            // pull the message object from the pending queue without completely removing it 
-            Logger::log( "Attempting to pull message from pending queue with JMSCorrelationID = {$this->tx_id}", 'debug' );
-            $msg = $this->queue->fetch_message( $this->config['pending_queue'], $properties );
-            if ( $msg ) {
-                Logger::log( "Pulled message from pending queue: {$msg->body}", 'debug');
-            } else {
-                throw new Exception("FAILED retrieving message from pending queue.");
-            }
+            $msg = $this->queue_pending($contribution);
             
             // check that the message is legitimate enough to consume
-            if ( !$this->msg_sanity_check( $msg ))
-            {
-                // add to a failed queue
-                $error_message = "Message did not pass sanity check.";
-                $body = json_decode($msg->body);
-                $body->error = $error_message;
-                $this->queue->queue_message($this->config['failed_queue'], json_encode($body));
-
-                // remove the message from pending queue
-                $this->queue->dequeue_message( $msg );
-
-                failmail(array(
-                    'data' => $data,
-                    'failed_queue' => $this->config['failed_queue'],
-                    'email_recipients' => $this->config['email_recipients'],
-                    'listener_class' => get_class($this),
-                    'tx_id' => $this->tx_id
-                ));
-                throw new Exception($error_message);
+            if ( !$this->msg_sanity_check( $contribution )) {
+                throw new Exception("Message did not pass sanity check.");
             }
 
             $this->queue->queue_message( $this->config['verified_queue'], $msg->body );
-
-            // remove from pending
-            $this->queue->dequeue_message( $msg );
         } catch (Exception $ex)
         {
             Logger::log($ex->getMessage(), 'err');
+            if ($this->pop_pending_msg)
+            {
+                $body = json_decode($this->pop_pending_msg->body);
+                $body->listener_error = $ex->getMessage();
+                $this->fail($body);
+            }
+            elseif (!empty($data))
+            {
+                $data['listener_error'] = $ex->getMessage();
+                $this->fail($data);
+            }
         }
+    }
+
+    protected function queue_pending($contribution)
+    {
+        //push message to pending queue
+        $headers = array( 'persistent' => 'true', 'JMSCorrelationID' => $this->tx_id );
+        Logger::log( "Setting JMSCorrelationID: $this->tx_id", 'debug' );
+
+        $this->queue->queue_message( $this->config['pending_queue'], json_encode( $contribution ), $headers );
+
+        // define a selector property for pulling a particular msg off the queue
+        $properties = array('selector' => "JMSCorrelationID = '{$this->tx_id}'");
+
+        // pull the message object from the pending queue without completely removing it 
+        Logger::log( "Attempting to pull message from pending queue with JMSCorrelationID = {$this->tx_id}", 'debug' );
+        $msg = $this->queue->fetch_message( $this->config['pending_queue'], $properties );
+        if ( $msg ) {
+            Logger::log( "Pulled message from pending queue: {$msg->body}", 'debug');
+            $this->pop_pending_msg = $msg;
+        } else {
+            throw new Exception("FAILED retrieving message from pending queue.");
+        }
+        return $msg;
+    }
+
+    function fail($data)
+    {
+        $this->queue->queue_message($this->config['failed_queue'], json_encode($data));
+
+        failmail(array(
+            'data' => $data,
+            'failed_queue' => $this->config['failed_queue'],
+            'email_recipients' => $this->config['email_recipients'],
+            'listener_class' => get_class($this),
+            'tx_id' => $this->tx_id
+        ));
     }
 
     protected function copy_tracking_data(&$contribution)
@@ -171,6 +183,8 @@ class BaseListener
     function __destruct() {
         if ($this->pop_limbo_msg)
             $this->queue->dequeue_message( $this->pop_limbo_msg );
+        if ($this->pop_pending_msg)
+            $this->queue->dequeue_message( $this->pop_pending_msg );
 
         Logger::log( "Exiting gracefully." );
     }
