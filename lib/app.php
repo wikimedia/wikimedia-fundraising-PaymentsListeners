@@ -23,14 +23,18 @@ class BaseListener
 {
     function __construct($opts = array())
     {
-        $this->config = $this->load_config($opts);
-        Logger::init($this->config['log_level'], $this->config['log_file']);
+        // generate a unique id for this run to ensure we're manipulating the correct message later on
+        $this->tx_id = time() . '_' . mt_rand();
 
-        foreach ( $this->config as $key => $value ) {
-            // star out passwords in the log!!!!
-            if ( $key == 'contrib_db_password' ) $value = '******';
-            
-            Logger::log( "Setting parameter $key as $value.", LOG_LEVEL_DEBUG );
+        $this->config = $this->load_config($opts);
+        Logger::init($this->config['log_level'], $this->config['log_file'], $this->tx_id);
+
+        foreach ( $this->config as $key => $value )
+        {
+            if (strstr($key, "password"))
+                $value = '******';
+
+            Logger::log( "Setting parameter $key as $value.", 'debug' );
         }
 
         Logger::log( "Loading ".get_class($this)." processor with log level: " . $this->config['log_level'] ); 
@@ -41,16 +45,18 @@ class BaseListener
         $this->pop_limbo_msg = FALSE;
     }
 
-    function load_config($opts = array())
+    protected function load_config($opts = array())
     {
         $rootdir = dirname(__FILE__).'/..';
         global $config_defaults, $config;
         require_once($rootdir.'/config_defaults.php');
         include_once($rootdir.'/config.php');
+
         $out = $config_defaults;
         if (!empty($config))
             $out = array_merge($out, $config);
         $out = array_merge($out, $opts);
+
         return $out;
     }
 
@@ -66,72 +72,68 @@ class BaseListener
      */
     function execute( $data )
     {
-        //make sure we're actually getting something posted to the page.
-        if ( empty( $data )) {
-            Logger::log( "Received an empty object, nothing to verify." );
-            return;
-        }
+        try {
+            //make sure we're actually getting something posted to the page.
+            if ( empty( $data )) {
+                throw new Exception("Received an empty object, nothing to verify.");
+            }
 
-        // generate a unique id for the message to ensure we're manipulating the correct message later on
-        $this->tx_id = time() . '_' . mt_rand(); //should be sufficiently unique...
+            $contribution = $this->parse_data( $data );
 
-        $contribution = $this->parse_data( $data );
+            //push message to pending queue
+            $headers = array( 'persistent' => 'true', 'JMSCorrelationID' => $this->tx_id );
+            Logger::log( "Setting JMSCorrelationID: $this->tx_id", 'debug' );
 
-        //push message to pending queue
-        $headers = array( 'persistent' => 'true', 'JMSCorrelationID' => $this->tx_id );
-        Logger::log( "Setting JMSCorrelationID: $this->tx_id", LOG_LEVEL_DEBUG );
+            // do the queueing - perhaps move out the tracking checking to its own func?
+            $this->queue->queue_message( $this->config['pending_queue'], json_encode( $contribution ), $headers );
 
-        // do the queueing - perhaps move out the tracking checking to its own func?
-        if ( !$this->queue->queue_message( $this->config['pending_queue'], json_encode( $contribution ), $headers )) {
-            Logger::log( "There was a problem queueing the message to the queue: " . $this->config['pending_queue'] );
-            Logger::log( "Message: " . print_r( $contribution, TRUE ), LOG_LEVEL_DEBUG );
-        }
+            // define a selector property for pulling a particular msg off the queue
+            $properties = array('selector' => "JMSCorrelationID = '{$this->tx_id}'");
 
-        // define a selector property for pulling a particular msg off the queue
-        $properties['selector'] = "JMSCorrelationID = '" . $this->tx_id . "'";
+            // pull the message object from the pending queue without completely removing it 
+            Logger::log( "Attempting to pull message from pending queue with JMSCorrelationID = {$this->tx_id}", 'debug' );
+            $msg = $this->queue->fetch_message( $this->config['pending_queue'], $properties );
+            if ( $msg ) {
+                Logger::log( "Pulled message from pending queue: {$msg->body}", 'debug');
+            } else {
+                throw new Exception("FAILED retrieving message from pending queue.");
+            }
+            
+            // check that the message is legitimate enough to consume
+            if ( !$this->msg_sanity_check( $msg ))
+            {
+                // add to a failed queue
+                $error_message = "Message did not pass sanity check.";
+                $body = json_decode($msg->body);
+                $body->error = $error_message;
+                $this->queue->queue_message($this->config['failed_queue'], json_encode($body));
 
-        // pull the message object from the pending queue without completely removing it 
-        Logger::log( "Attempting to pull message from pending queue with JMSCorrelationID = " . $this->tx_id, LOG_LEVEL_DEBUG );
-        $msg = $this->queue->fetch_message( $this->config['pending_queue'], $properties );
-        if ( $msg ) {
-            Logger::log( "Pulled message from pending queue: " . $msg->body, LOG_LEVEL_DEBUG);
-        } else {
-            Logger::log( "FAILED retrieving message from pending queue.", LOG_LEVEL_DEBUG );
-            return;
-        }
-        
-        // check that the message is legitimate enough to consume
-        if ( !$this->msg_sanity_check( $msg ))
-        {
-            // add to a failed queue
-            $error_message = "Message did not pass sanity check.";
-            $body = json_decode($msg->body);
-            #$body['source_queue'] = $this->config['pending_queue'];
-            $body->error = $error_message;
-            $this->queue->queue_message($this->config['failed_queue'], json_encode($body));
+                // remove the message from pending queue
+                $this->queue->dequeue_message( $msg );
 
-            // remove the message from pending queue
+                failmail(array(
+                    'data' => $data,
+                    'failed_queue' => $this->config['failed_queue'],
+                    'email_recipients' => $this->config['email_recipients'],
+                    'listener_class' => get_class($this),
+                    'tx_id' => $this->tx_id
+                ));
+                throw new Exception($error_message);
+            }
+
+            $this->queue->queue_message( $this->config['verified_queue'], $msg->body );
+
+            // remove from pending
             $this->queue->dequeue_message( $msg );
-
-            Logger::log( $error_message );
-            Logger::log( "\$_POST contents: " . print_r( $data, TRUE ), LOG_LEVEL_DEBUG );
-            failmail($data, $this->config['email_recipients'], $this->tx_id);
-            return;
+        } catch (Exception $ex)
+        {
+            Logger::log($ex->getMessage(), 'err');
         }
-
-        // push to verified queue
-        if ( !$this->queue->queue_message( $this->config['verified_queue'], $msg->body )) {
-            Logger::log( "There was a problem queueing the message to the quque: " . $this->config['verified_queue'] );
-            Logger::log( "Message: " . print_r( $contribution, TRUE ), LOG_LEVEL_DEBUG );
-            return;
-        }
-
-        // remove from pending
-        $this->queue->dequeue_message( $msg );
     }
 
-    function copy_tracking_data(&$contribution)
+    protected function copy_tracking_data(&$contribution)
     {
+        # n.b. this function is probably incomplete, and hasn't been used yet
         $tracking_data = $this->tracking->get_tracking_data($contribution['gateway_txn_id']);
         if ($tracking_data)
         {
@@ -148,7 +150,7 @@ class BaseListener
         }
     }
 
-    function merge_limbo_data(&$contribution)
+    protected function merge_limbo_data(&$contribution)
     {
         $properties = array(
             'selector' => "JMSCorrelationID = '{$contribution['gateway']}-{$contribution['gateway_txn_id']}'",

@@ -1,12 +1,13 @@
 <?php
 
 $config_defaults = array(
-    'log_level' => LOG_LEVEL_INFO,
+    'log_level' => 'info',
     'log_file' => 'php://stderr',
 
     'email_recipients' => array('fr_tech@wikimedia.org'),
 
     //'stomp_path' => "../../activemq_stomp/Stomp.php",
+    'stomp_timeout' => 60,
 
     'activemq_stomp_uri' => 'tcp://localhost:61613',
 
