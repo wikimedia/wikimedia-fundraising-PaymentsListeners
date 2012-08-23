@@ -264,14 +264,30 @@ class PaypalIPNProcessor {
 			$this->out( "The message could not be verified by PayPal." );
 			$this->out( "Returned with status: $status", LOG_LEVEL_DEBUG );
 			
+			//prevent emailing donor data
+			$dont_email = array(
+				'address_street',
+				'address_zip',
+				'first_name',
+				'address_name',
+				'payer_email',
+				'last_name',
+			);
+			foreach ( $dont_email as $dont ){
+				if ( array_key_exists( $dont, $post_data ) ){
+					unset($post_data[$dont]);
+				}
+			}
+			
 			// send email to configured recipients notifying them of the PayPal verification failure
 			if ( $this->email_recipients && count( $this->email_recipients )) {
 				$to = implode( ", ", $this->email_recipients );
 				$subject = "IPN Listener verification failure for message " . $this->tx_id;
 				$msg = "Greetings!\n\n";
 				$msg .= "You are receiving this message because a transaction that was psoted to the ";
-				$msg .= "PayPal IPN listener failed PayPal verification.  The contents of the original ";
-				$msg .= "payload are below:\n\n";
+				$msg .= "PayPal IPN listener failed PayPal verification with the following status:\n";
+				$msg .= "'$status'\n\n";
+				$msg .= "The contents of the original payload are below, minus some donor data:\n\n";
 				$msg .= print_r( $post_data, true );
 				$msg .= "\n\n";
 				$msg .= "The IPN listener-assigned trxn id for this transaction is: " . $this->tx_id . "\n\n";
