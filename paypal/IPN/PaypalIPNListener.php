@@ -284,7 +284,7 @@ class PaypalIPNProcessor {
 				$to = implode( ", ", $this->email_recipients );
 				$subject = "IPN Listener verification failure for message " . $this->tx_id;
 				$msg = "Greetings!\n\n";
-				$msg .= "You are receiving this message because a transaction that was psoted to the ";
+				$msg .= "You are receiving this message because a transaction that was posted to the ";
 				$msg .= "PayPal IPN listener failed PayPal verification with the following status:\n";
 				$msg .= "'$status'\n\n";
 				$msg .= "The contents of the original payload are below, minus some donor data:\n\n";
