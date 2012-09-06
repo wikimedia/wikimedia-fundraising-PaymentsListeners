@@ -262,17 +262,18 @@ class PaypalIPNProcessor {
 		$status = null;
 		$tries = 0;
 		$errors_text = '';
-		while ( $status != 'VERIFIED' && $tries < 5 ){
+		while ( $status != 'VERIFIED' && $tries < 7 ){
 			//we were seeing about a 10% total failure rateon each try, so 
-			//5 times should be about .001% failure. 
+			//7 times *should* be about .00001% failure...
 			$status = $this->curl_download( $postback_url, $attr );
 			++$tries;
 			if ( $status != 'VERIFIED' ){
 				$errors_text .= "Attempt $tries came back with a status of $status\n";
+				usleep(250000);
 			}
 		}
 		
-		if ($status != 'VERIFIED' || $tries > 2) { //I don't want to hear about most of them.
+		if ($status != 'VERIFIED' || $tries > 3) { //I don't want to hear about most of them.
 			//send the email.
 			$recovered = false;
 			if ($status != 'VERIFIED'){
@@ -310,7 +311,7 @@ class PaypalIPNProcessor {
 				$msg = "Greetings!\n\n";
 				if ($recovered){
 					$msg .= "You are receiving this message because a transaction that was posted to the ";
-					$msg .= "PayPal IPN listener failed PayPal verification " . $tries - 1 . " times, ";
+					$msg .= "PayPal IPN listener failed PayPal verification " . ( $tries - 1 ) . " times, ";
 					$msg .= "but then magically healed itself on try $tries.\n";
 					$msg .= "...Imagine that.\n";
 					$msg .= "$errors_text\n";
