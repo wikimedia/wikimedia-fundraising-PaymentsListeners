@@ -259,10 +259,28 @@ class PaypalIPNProcessor {
 		$attr[ 'cmd' ] = '_notify-validate';
 							    
 		// send the message back to PayPal for verification
-		$status = $this->curl_download( $postback_url, $attr );
-		if ($status != 'VERIFIED') {
-			$this->out( "The message could not be verified by PayPal." );
-			$this->out( "Returned with status: $status", LOG_LEVEL_DEBUG );
+		$status = null;
+		$tries = 0;
+		$errors_text = '';
+		while ( $status != 'VERIFIED' && $tries < 3 ){
+			$status = $this->curl_download( $postback_url, $attr );
+			++$tries;
+			if ( $status != 'VERIFIED' ){
+				$errors_text .= "Attempt $tries came back with a status of $status\n";
+			}
+		}
+		
+		if ($status != 'VERIFIED' || $tries > 1) {
+			//send the email.
+			$recovered = false;
+			if ($status != 'VERIFIED'){
+				$this->out( "The message could not be verified by PayPal." );
+				$this->out( "Returned with status: $status", LOG_LEVEL_DEBUG );
+			} else {
+				$recovered = true;
+				$this->out( "The message was eventually verified by PayPal." );
+				$this->out( $errors_text, LOG_LEVEL_DEBUG );
+			}
 			
 			//prevent emailing donor data
 			$dont_email = array(
@@ -282,16 +300,30 @@ class PaypalIPNProcessor {
 			// send email to configured recipients notifying them of the PayPal verification failure
 			if ( $this->email_recipients && count( $this->email_recipients )) {
 				$to = implode( ", ", $this->email_recipients );
-				$subject = "IPN Listener verification failure for message " . $this->tx_id;
+				if ($recovered){
+					$subject = "IPN Listener verification failure RECOVERED in $tries for message " . $this->tx_id;
+				} else {
+					$subject = "IPN Listener verification failure for message " . $this->tx_id;
+				}
 				$msg = "Greetings!\n\n";
-				$msg .= "You are receiving this message because a transaction that was posted to the ";
-				$msg .= "PayPal IPN listener failed PayPal verification with the following status:\n";
-				$msg .= "'$status'\n\n";
+				if ($recovered){
+					$msg .= "You are receiving this message because a transaction that was posted to the ";
+					$msg .= "PayPal IPN listener failed PayPal verification $tries times, but then magically healed itself.\n";
+					$msg .= "...Imagine that.\n";
+					$msg .= "$errors_text\n";
+				} else {
+					$msg .= "You are receiving this message because a transaction that was posted to the ";
+					$msg .= "PayPal IPN listener failed PayPal verification with the following status:\n";
+					$msg .= "'$status'\n\n";
+				}
+
 				$msg .= "The contents of the original payload are below, minus some donor data:\n\n";
 				$msg .= print_r( $post_data, true );
 				$msg .= "\n\n";
 				$msg .= "The IPN listener-assigned trxn id for this transaction is: " . $this->tx_id . "\n\n";
-				$msg .= "Good luck figuring out wtf happened!\n\n";
+				if (!$recovered){
+					$msg .= "Good luck figuring out wtf happened!\n\n";
+				}
 				$msg .= "Love always,\n";
 				$msg .= "Your faithful IPN listener";
 				mail( $to, $subject, $msg );
