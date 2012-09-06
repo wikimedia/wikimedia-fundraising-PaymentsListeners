@@ -315,6 +315,7 @@ class PaypalIPNProcessor {
 					$msg .= "You are receiving this message because a transaction that was posted to the ";
 					$msg .= "PayPal IPN listener failed PayPal verification with the following status:\n";
 					$msg .= "'$status'\n\n";
+					$msg .= "Previous Attempts: \n$errors_text\n";
 				}
 
 				$msg .= "The contents of the original payload are below, minus some donor data:\n\n";
