@@ -78,6 +78,16 @@ class PaypalIPNProcessor {
 	 * @var resource a file system pointer resource (usually made with fopen()) 
 	 */
 	protected $output_handle = NULL;
+	
+	/**
+	 * @var int Number of times to retry verification with paypal on failure 
+	 */
+	protected $verification_retry_count = 0;
+	
+	/**
+	 * @var int Number of retries that will trigger an email (fail or eventual pass)
+	 */
+	protected $verification_email_retry_minimum = 0;
 
 	/**
 	 * @var string A unique ID to identify a message
@@ -262,7 +272,7 @@ class PaypalIPNProcessor {
 		$status = null;
 		$tries = 0;
 		$errors_text = '';
-		while ( $status != 'VERIFIED' && $tries < 7 ){
+		while ( $status != 'VERIFIED' && $tries < $this->verification_retry_count ){
 			//we were seeing about a 10% total failure rateon each try, so 
 			//7 times *should* be about .00001% failure...
 			$status = $this->curl_download( $postback_url, $attr );
@@ -273,7 +283,7 @@ class PaypalIPNProcessor {
 			}
 		}
 		
-		if ($status != 'VERIFIED' || $tries > 3) { //I don't want to hear about most of them.
+		if ($status != 'VERIFIED' || $tries > $this->verification_email_retry_minimum ) { //I don't want to hear about most of them.
 			//send the email.
 			$recovered = false;
 			if ($status != 'VERIFIED'){
