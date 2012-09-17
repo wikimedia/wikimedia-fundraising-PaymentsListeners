@@ -267,6 +267,10 @@ class PaypalIPNProcessor {
 		// respond with exact same data/structure + cmd=_notify-validate
 		$attr = $post_data;
 		$attr[ 'cmd' ] = '_notify-validate';
+		$paypal_txn_id = '[No paypal ID found]';
+		if (array_key_exists('txn_id', $post_data)){
+			$paypal_txn_id = '[' . $post_data['txn_id'] . ']';
+		}
 							    
 		// send the message back to PayPal for verification
 		$status = null;
@@ -287,11 +291,11 @@ class PaypalIPNProcessor {
 			//send the email.
 			$recovered = false;
 			if ($status != 'VERIFIED'){
-				$this->out( "The message could not be verified by PayPal." );
+				$this->out( "The message $paypal_txn_id could not be verified by PayPal (in $tries)." );
 				$this->out( "Returned with status: $status", LOG_LEVEL_DEBUG );
 			} else {
 				$recovered = true;
-				$this->out( "The message was eventually verified by PayPal." );
+				$this->out( "The message $paypal_txn_id was eventually verified by PayPal (in $tries)." );
 				$this->out( $errors_text, LOG_LEVEL_DEBUG );
 			}
 			
@@ -316,7 +320,7 @@ class PaypalIPNProcessor {
 				if ($recovered){
 					$subject = "IPN Listener verification failure RECOVERED in $tries for message " . $this->tx_id;
 				} else {
-					$subject = "IPN Listener verification failure for message " . $this->tx_id;
+				$subject = "IPN Listener verification failure for message " . $this->tx_id;
 				}
 				$msg = "Greetings!\n\n";
 				if ($recovered){
@@ -346,8 +350,10 @@ class PaypalIPNProcessor {
 			}
 			
 			return false;
+		} else {
+			$this->out( "The message $paypal_txn_id was verified by PayPal (in $tries - no email)." );
 		}
-
+		
 		return true;
 	}
 
