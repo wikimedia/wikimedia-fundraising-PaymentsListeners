@@ -42,17 +42,14 @@
  *		abstract out the contribution_tracking stuff so this is more flexible?
  */
 
-/** Set available log levels **/
-DEFINE( 'LOG_LEVEL_QUIET', 0 ); // output nothing
-DEFINE( 'LOG_LEVEL_INFO', 1 ); // output minimal info
-DEFINE( 'LOG_LEVEL_DEBUG', 2 ); // output lots of info
+require_once dirname( __FILE__ ) . '/../../lib/logging.php';
 
 class PaypalIPNProcessor {
 
 	/**
 	 * @var string set the apropriate logging level
 	 */
-	protected $log_level = LOG_LEVEL_INFO;
+	protected $log_level;
 	
 	/**
 	 * @var string path to Stomp
@@ -74,11 +71,6 @@ class PaypalIPNProcessor {
 	 */
 	protected $activemq_stomp_uri = 'tcp://localhost:61613';
 
-	/** 
-	 * @var resource a file system pointer resource (usually made with fopen()) 
-	 */
-	protected $output_handle = NULL;
-	
 	/**
 	 * @var int Number of times to retry verification with paypal on failure 
 	 */
@@ -107,16 +99,12 @@ class PaypalIPNProcessor {
 			unset( $opts[ 'log_level'] );
 		}
 
-		// prepare the output log file if necessary
-		if ( array_key_exists( 'output_handle', $opts )) {
-			$this->output_handle = $opts[ 'output_handle' ];
-			unset( $opts[ 'output_handle' ] );
-		}
-
 		// generate a unique id for the message 2 ensure we're manipulating the correct message later on
 		$this->tx_id = time() . '_' . mt_rand(); //should be sufficiently unique...
-		
-		$this->out( "Loading Paypal IPN processor with log level: " . $this->log_level ); 
+
+		Logger::init( get_called_class(), $this->log_level, $this->tx_id );
+
+		Logger::log( 'info', "Loading Paypal IPN processor with log level: " . $this->log_level ); 
 
 		// set parameters
 		foreach ( $opts as $key => $value ) {
@@ -125,7 +113,7 @@ class PaypalIPNProcessor {
 			// star out passwords in the log!!!!
 			if ( $key == 'contrib_db_password' ) $value = '******';
 			
-			$this->out( "Setting parameter $key as $value.", LOG_LEVEL_DEBUG );
+			Logger::log( 'debug', "Setting parameter $key as $value." );
 		}
 
 		//prepare our stomp connection
@@ -149,7 +137,7 @@ class PaypalIPNProcessor {
 
 		//make sure we're actually getting something posted to the page.
 		if ( empty( $data )) {
-			$this->out( "Received an empty object, nothing to verify." );
+			Logger::log( 'info', "Received an empty object, nothing to verify." );
 			return;
 		}
 
@@ -160,24 +148,24 @@ class PaypalIPNProcessor {
 		$contribution = $this->ipn_parse( $data );
 
 		$headers = array( 'persistent' => 'true', 'JMSCorrelationID' => $this->tx_id );
-		$this->out( "Setting JMSCorrelationID: $this->tx_id", LOG_LEVEL_DEBUG );
+		Logger::log( 'debug', "Setting JMSCorrelationID: $this->tx_id" );
 
 		// do the queueing - perhaps move out the tracking checking to its own func?
 		if ( !$this->queue_message( $this->pending_queue, json_encode( $contribution ), $headers )) {
-			$this->out( "There was a problem queueing the message to the queue: " . $this->pending_queue );
-			$this->out( "Message: " . print_r( $contribution, TRUE ), LOG_LEVEL_DEBUG );
+			Logger::log( 'info', "There was a problem queueing the message to the queue: " . $this->pending_queue );
+			Logger::log( 'debug', "Message: " . print_r( $contribution, TRUE ) );
 		}
 
 		// define a selector property for pulling a particular msg off the queue
 		$properties['selector'] = "JMSCorrelationID = '" . $this->tx_id . "'";
 
 		// pull the message object from the pending queue without completely removing it 
-		$this->out( "Attempting to pull mssage from pending queue with JMSCorrelationID = " . $this->tx_id, LOG_LEVEL_DEBUG );
+		Logger::log( 'debug', "Attempting to pull mssage from pending queue with JMSCorrelationID = " . $this->tx_id );
 		$msg = $this->fetch_message( $this->pending_queue, $properties );
 		if ( $msg ) {
-			$this->out( "Pulled message from pending queue: " . $msg, LOG_LEVEL_DEBUG);
+			Logger::log( 'debug', "Pulled message from pending queue: " . $msg);
 		} else {
-			$this->out( "FAILED retrieving message from pending queue.", LOG_LEVEL_DEBUG );
+			Logger::log( 'debug', "FAILED retrieving message from pending queue." );
 			return;
 		}
 		
@@ -185,15 +173,15 @@ class PaypalIPNProcessor {
 		if ( !$this->msg_sanity_check( $data )) {
 			// remove the message from pending queue
 			$this->dequeue_message( $msg );
-			$this->out( "Message did not pass sanity check." );
-			$this->out( "\$_POST contents: " . print_r( $data, TRUE ), LOG_LEVEL_DEBUG );
+			Logger::log( 'info', "Message did not pass sanity check." );
+			Logger::log( 'debug', "\$_POST contents: " . print_r( $data, TRUE ) );
 			return;
 		}
 
 		// push to verified queue
 		if ( !$this->queue_message( $this->verified_queue, $msg->body )) {
-			$this->out( "There was a problem queueing the message to the quque: " . $this->verified_queue );
-			$this->out( "Message: " . print_r( $contribution, TRUE ), LOG_LEVEL_DEBUG );
+			Logger::log( 'info', "There was a problem queueing the message to the quque: " . $this->verified_queue );
+			Logger::log( 'debug', "Message: " . print_r( $contribution, TRUE ) );
 			return;
 		}
 
@@ -234,17 +222,17 @@ class PaypalIPNProcessor {
 		$pass = true;
 		if ( $data[ 'payment_status' ] != 'Completed' ) {
 			// order not completed
-			$this->out( "Message not marked as complete." );
+			Logger::log( 'info', "Message not marked as complete." );
 			$pass = false;
 		}
 
 		if ( $data[ 'mc_gross' ] <= 0 ) {
-			$this->out( "Message has 0 or less in the mc_gross field." );
+			Logger::log( 'info', "Message has 0 or less in the mc_gross field." );
 			$pass = false;
 		}
 
 		if ( is_null( $data[ 'payer_email' ] )) {
-			$this->out( 'Message has no email address.' );
+			Logger::log( 'info', 'Message has no email address.' );
 			$pass = false;
 		}
 		return $pass;
@@ -291,12 +279,12 @@ class PaypalIPNProcessor {
 			//send the email.
 			$recovered = false;
 			if ($status != 'VERIFIED'){
-				$this->out( "The message $paypal_txn_id could not be verified by PayPal (in $tries)." );
-				$this->out( "Returned with status: $status", LOG_LEVEL_DEBUG );
+				Logger::log( 'info', "The message $paypal_txn_id could not be verified by PayPal (in $tries)." );
+				Logger::log( 'debug', "Returned with status: $status" );
 			} else {
 				$recovered = true;
-				$this->out( "The message $paypal_txn_id was eventually verified by PayPal (in $tries)." );
-				$this->out( $errors_text, LOG_LEVEL_DEBUG );
+				Logger::log( 'info', "The message $paypal_txn_id was eventually verified by PayPal (in $tries)." );
+				Logger::log( 'debug', $errors_text );
 			}
 			
 			//prevent emailing donor data
@@ -346,12 +334,12 @@ class PaypalIPNProcessor {
 				$msg .= "Love always,\n";
 				$msg .= "Your faithful IPN listener";
 				mail( $to, $subject, $msg );
-				$this->out( "Verification failure email sent to " . $to );
+				Logger::log( 'info', "Verification failure email sent to " . $to );
 			}
 			
 			return false;
 		} else {
-			$this->out( "The message $paypal_txn_id was verified by PayPal (in $tries - no email)." );
+			Logger::log( 'info', "The message $paypal_txn_id was verified by PayPal (in $tries - no email)." );
 		}
 		
 		return true;
@@ -364,7 +352,7 @@ class PaypalIPNProcessor {
 	 * @return array containing the parsed/formatted message for stuffing into ActiveMQ
 	 */
 	public function ipn_parse( $post_data ) {
-		$this->out( "Attempting to parse: " . print_r( $post_data, TRUE ), LOG_LEVEL_DEBUG );
+		Logger::log( 'debug', "Attempting to parse: " . print_r( $post_data, TRUE ) );
 		$contribution = array();
 
 		$timestamp = strtotime($post_data['payment_date']);
@@ -373,7 +361,7 @@ class PaypalIPNProcessor {
 		$this->contribution_tracking_connection();
 		$tracking_data = $this->get_tracking_data( $post_data['custom'] );
 		if ( !$tracking_data ) { //we have a problem! The received contribution tracking id does not match anything in the db...
-			$this->out( "There is no contribution ID associated with this transaction." );
+			Logger::log( 'info', "There is no contribution ID associated with this transaction." );
 		}
 		$contribution['contribution_tracking_id'] = $post_data['custom'];
 		$contribution['optout'] = $tracking_data['optout'];
@@ -454,7 +442,7 @@ class PaypalIPNProcessor {
 			
 			if (!$data) {
 				$data = curl_error($ch);
-				$this->out( "Curl error: " . $data );
+				Logger::log( 'info', "Curl error: " . $data );
 			} else {
 				break;
 			}
@@ -473,14 +461,14 @@ class PaypalIPNProcessor {
 	protected function set_stomp_connection() {
 		require_once( $this->stomp_path );
 		//attempt to connect, otherwise throw exception and exit
-		$this->out( "Attempting to connect to Stomp listener: {$this->activemq_stomp_uri}", LOG_LEVEL_DEBUG );
+		Logger::log( 'debug', "Attempting to connect to Stomp listener: {$this->activemq_stomp_uri}" );
 		try {
 			//establish stomp connection
 			$this->stomp = new Stomp( $this->activemq_stomp_uri );
 			$this->stomp->connect();
-			$this->out( "Successfully connected to Stomp listener", LOG_LEVEL_DEBUG );
+			Logger::log( 'debug', "Successfully connected to Stomp listener" );
 		} catch (Stomp_Exception $e) {
-			$this->out( "Stomp connection failed: " . $e->getMessage() );
+			Logger::log( 'info', "Stomp connection failed: " . $e->getMessage() );
 			exit(1);
 		}   
 	}
@@ -494,9 +482,9 @@ class PaypalIPNProcessor {
      * @return bool result from send, FALSE on failure
      */
     public function queue_message( $destination, $message, $options = array( 'persistent' => 'true' )) {
-        $this->out( "Attempting to queue message to $destination", LOG_LEVEL_DEBUG );
+        Logger::log( 'debug', "Attempting to queue message to $destination" );
         $sent = $this->stomp->send( $destination, $message, $options );
-        $this->out( "Result of queuing message: $sent", LOG_LEVEL_DEBUG );
+        Logger::log( 'debug', "Result of queuing message: $sent" );
         return $sent;
     }   
 
@@ -505,9 +493,9 @@ class PaypalIPNProcessor {
      * @param bool $msg
      */
     public function dequeue_message( $msg ) {
-    	$this->out( "Attempting to remove message from pending.", LOG_LEVEL_DEBUG );
+    	Logger::log( 'debug', "Attempting to remove message from pending." );
 		if ( !$this->stomp->ack( $msg )) {
-			$this->out( "There was a problem remoivng the verified message from the pending queue: " . print_r( json_decode( $msg, TRUE )));
+			Logger::log( 'info', "There was a problem remoivng the verified message from the pending queue: " . print_r( json_decode( $msg, TRUE )));
 			return false;
 		}
 		return true;
@@ -520,10 +508,10 @@ class PaypalIPNProcessor {
      * @return mixed raw message (Stomp_Frame object) from Stomp client or False if no msg present
 	 */
 	public function fetch_message( $destination, $properties = NULL ) {
-		$this->out( "Attempting to connect to queue at: $destination", LOG_LEVEL_DEBUG );
-		if ( $properties ) $this->out( "With the following properties: " . print_r( $properties, TRUE ));
+		Logger::log( 'debug', "Attempting to connect to queue at: $destination" );
+		if ( $properties ) Logger::log( 'info', "With the following properties: " . print_r( $properties, TRUE ));
 		$this->stomp->subscribe( $destination, $properties );
-		$this->out( "Attempting to pull queued item", LOG_LEVEL_DEBUG );
+		Logger::log( 'debug', "Attempting to pull queued item" );
 		$message = $this->stomp->readFrame();
 		return $message;
 	}
@@ -552,34 +540,14 @@ class PaypalIPNProcessor {
 		//sanitize the $id
 		$id = mysql_real_escape_string( $id );
 		$query = "SELECT * FROM contribution_tracking WHERE id=$id";
-		$this->out( "Preparing to run query on contribution_tracking: $query", LOG_LEVEL_DEBUG );
+		Logger::log( 'debug', "Preparing to run query on contribution_tracking: $query" );
 		$result = mysql_query( $query );
 		$row = mysql_fetch_assoc( $result );
-		$this->out( "Query result: " . print_r( $row, TRUE ), LOG_LEVEL_DEBUG );
+		Logger::log( 'debug', "Query result: " . print_r( $row, TRUE ) );
 		return $row;
 	}
 
-	/**
-	 * Formats text for output.
-	 *
-	 * @param $msg String a message to output.
-	 * @param $level the Level at which the message should be output.
-	 */
-	protected function out( $msg, $level=LOG_LEVEL_INFO ) {
-		$out = NULL;
-
-		// format the output message if the apropriate log level is set
-		if ( $this->log_level >= $level ) $out = date( 'c' ) . "\t" . $this->tx_id . "\t" . $msg . "\n";
-
-		// if we have an output resource handle, write to the resource.  otherwise, echo
-		if ( $this->output_handle ) {
-			fwrite( $this->output_handle, $out );
-		} else {
-			echo $out;
-		}
-	}
-
 	public function __destruct() {
-		$this->out( "Exiting gracefully." );
+		Logger::log( 'info', "Exiting gracefully." );
 	}
 }

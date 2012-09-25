@@ -2,7 +2,6 @@
 
 $config_defaults = array(
     'log_level' => 'info',
-    'log_file' => 'php://stderr',
 
     'email_recipients' => array('fr_tech@wikimedia.org'),
 

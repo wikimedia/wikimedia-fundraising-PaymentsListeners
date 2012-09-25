@@ -51,7 +51,7 @@ class PaypalRecurringIPNProcessor extends PaypalIPNProcessor {
 	 * @return array containing the parsed/formatted message for stuffing into ActiveMQ
 	 */
 	public function ipn_parse( $post_data ) {
-		$this->out( "Attempting to parse: " . print_r( $post_data, TRUE ), LOG_LEVEL_DEBUG );
+		Logger::log( 'debug', "Attempting to parse: " . print_r( $post_data, TRUE ) );
 		return $post_data;
 	}
 }

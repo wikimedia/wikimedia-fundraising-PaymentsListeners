@@ -19,8 +19,8 @@ function failmail( $data = array(), $failed_queue = '', $email_recipients = arra
 	//#2 - If this just mailed a $message with a $subject to some $people, we 
 	//wouldn't need to require so many params. 
 	//...Looks like three, actually. The outside can sort it out on its own. 
-    Logger::log( "The message could not be verified." );
-    #Logger::log( "Returned with status: $status", LOG_LEVEL_DEBUG );
+    Logger::log( 'error', "The message could not be verified." );
+    #Logger::log( 'debug', "Returned with status: $status" );
 	
 	$gateway = strtoupper( $gateway );
     
@@ -46,7 +46,7 @@ Love always,
 Your faithful IPN listener
 EOS;
         mail( $to, $subject, $msg );
-        Logger::log( "Verification failure email sent to " . $to, 'info' );
+        Logger::log( 'info', "Verification failure email sent to " . $to );
         return true;
     }
     throw new Exception("Failed to send failmail!");

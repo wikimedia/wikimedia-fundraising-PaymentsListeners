@@ -33,7 +33,7 @@
             
             if (!$data) {
                 $data = curl_error($ch);
-                Logger::log( "Curl error: " . $data );
+                Logger::log( 'error', "Curl error: " . $data );
             } else {
                 break;
             }

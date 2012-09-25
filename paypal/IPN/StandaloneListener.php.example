@@ -12,17 +12,12 @@
  */
 
 
-// define a file where you can log the output from the listener
-$log_file = "out_" . date( 'Ymd' ) . '.log';
-// create a file resource pointer
-$output_handle = fopen( $log_file, 'a' );
-
 // require the actual listener
 require_once( '/path/to/PaypalIPNListener.php' );
 
 // set some configuration variables (for more info, check in PaypalIPNListener.php
 $config = array(
-  'log_level' => 2, //debug
+  'log_level' => 'debug',
   'stomp_path' => '/path/to/Stomp.php',
   'pending_queue' => '/queue/pending_paypal',
   'verified_queue' => '/queue/verified_paypal',
@@ -31,7 +26,6 @@ $config = array(
   'contrib_db_username' => 'user',
   'contrib_db_password' => 'password',
   'contrib_db_name' => 'drupal',
-  'output_handle' => $output_handle, // filesystem pointer resource for logging output
   'email_recipients' => array( 'test@example.com' ), // email address for recipients of notification emails
 );
 
@@ -44,7 +38,4 @@ $listener->execute( $_POST );
 
 // shutdown the listener
 unset( $listener );
-
-// cleanly close the file pointer for output
-fclose( $output_handle );
 ?>

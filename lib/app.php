@@ -50,17 +50,18 @@ class BaseListener
         $this->tx_id = time() . '_' . mt_rand();
 
         $this->config = $this->load_config($opts);
-        Logger::init($this->config['log_level'], $this->config['log_file'], $this->tx_id);
+
+        Logger::init( get_called_class(), $this->config['log_level'], $this->tx_id );
 
         foreach ( $this->config as $key => $value )
         {
             if (strstr($key, "password"))
                 $value = '******';
 
-            Logger::log( "Setting parameter $key as $value.", 'debug' );
+            Logger::log( 'debug', "Setting parameter $key as $value." );
         }
 
-        Logger::log( "Loading ".get_class($this)." processor with log level: " . $this->config['log_level'] ); 
+        Logger::log( 'info', "Loading ".get_class($this)." processor with log level: " . $this->config['log_level'] ); 
 
         $this->tracking = new ContributionTracking($this->config);
         $this->queue = new StompQueue($this->config);
@@ -111,7 +112,7 @@ class BaseListener
             $this->queue->queue_message( $this->config['verified_queue'], $msg->body );
         } catch (Exception $ex)
         {
-            Logger::log($ex->getMessage(), 'err');
+            Logger::log( 'error', $ex->getMessage() );
             if ($this->pop_pending_msg)
             {
                 $body = json_decode($this->pop_pending_msg->body);
@@ -130,7 +131,7 @@ class BaseListener
     {
         //push message to pending queue
         $headers = array( 'persistent' => 'true', 'JMSCorrelationID' => $this->tx_id );
-        Logger::log( "Setting JMSCorrelationID: $this->tx_id", 'debug' );
+        Logger::log( 'debug', "Setting JMSCorrelationID: $this->tx_id" );
 
         $this->queue->queue_message( $this->config['pending_queue'], json_encode( $contribution ), $headers );
 
@@ -138,10 +139,10 @@ class BaseListener
         $properties = array('selector' => "JMSCorrelationID = '{$this->tx_id}'");
 
         // pull the message object from the pending queue without completely removing it 
-        Logger::log( "Attempting to pull message from pending queue with JMSCorrelationID = {$this->tx_id}", 'debug' );
+        Logger::log( 'debug', "Attempting to pull message from pending queue with JMSCorrelationID = {$this->tx_id}" );
         $msg = $this->queue->fetch_message( $this->config['pending_queue'], $properties );
         if ( $msg ) {
-            Logger::log( "Pulled message from pending queue: {$msg->body}", 'debug');
+            Logger::log( 'debug', "Pulled message from pending queue: {$msg->body}" );
             $this->pop_pending_msg = $msg;
         } else {
             throw new Exception("FAILED retrieving message from pending queue.");
@@ -217,7 +218,7 @@ class BaseListener
         else
         {
             //we have a problem! The received contribution tracking id does not match anything in the db...
-            Logger::log( "There is no contribution ID associated with this transaction." );
+            Logger::log( 'error', "There is no contribution ID associated with this transaction." );
         }
     }
 
@@ -245,6 +246,6 @@ class BaseListener
         if ($this->pop_pending_msg)
             $this->queue->dequeue_message( $this->pop_pending_msg );
 
-        Logger::log( "Exiting gracefully." );
+        Logger::log( 'info', "Exiting gracefully." );
     }
 }
