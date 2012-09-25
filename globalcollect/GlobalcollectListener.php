@@ -4,6 +4,9 @@ require_once dirname(__FILE__).'/../lib/app.php';
 
 class GlobalcollectListener extends BaseListener
 {
+	/**
+	 * All incoming parameters, their expected type, and our normalized key name for them (where applicable)
+	 */
     var $param_description = array(
         'ADDITIONALREFERENCE'  => array('type' => 'string', 'length' => 30),
         'AMOUNT'               => array('map' => 'gross', 'type' => 'numeric', 'length' => 12),
@@ -19,6 +22,28 @@ class GlobalcollectListener extends BaseListener
         'STATUSDATE'           => array('type' => 'numeric', 'length' => 14),
         'STATUSID'             => array('type' => 'numeric', 'length' => 5),
     );
+	
+	/**
+	 * An array of keys (either original message, or our own) that we should always deliberately remove from emails
+	 */
+	var $dont_email = array();
+	
+	/**
+	 * The gateway we are.
+	 */
+	var $gateway = 'globalcollect';
+	
+	/**
+	 * An array of the keys that the gateway could possibly be using for their 
+	 * own primary keys, to identify either the transaction, or the specific 
+	 * message they have just sent us.
+	 * These could be the keys they send us, or our normalized keys.
+	 * These will be listed in order of preference and/or likelihood.
+	 */
+	var $gateway_pks = array(
+		'ORDERID',
+		'order_id',
+	);
 
     public function parse_data( $data )
     {
@@ -42,7 +67,7 @@ class GlobalcollectListener extends BaseListener
         }
 
         $contribution['gross'] = round($contribution['gross'], 2);
-        $contribution['gateway'] = 'globalcollect';
+        $contribution['gateway'] = $this->gateway;
         $contribution['gateway_txn_id'] = $contribution['order_id'];
         $found_limbo = $this->merge_limbo_data($contribution);
         if (!$found_limbo)
