@@ -58,7 +58,7 @@ class BaseListener
             if (strstr($key, "password"))
                 $value = '******';
 
-            Logger::log( 'debug', "Setting parameter $key as $value." );
+            Logger::log( 'debug', "Setting parameter $key as " . print_r( $value, true ) );
         }
 
         Logger::log( 'info', "Loading ".get_class($this)." processor with log level: " . $this->config['log_level'] ); 
@@ -78,6 +78,16 @@ class BaseListener
         if (!empty($config))
             $out = array_merge($out, $config);
         $out = array_merge($out, $opts);
+
+        // global config can be overridden by gateway name, and then
+        // by specific class
+        if ( array_key_exists( $this->gateway, $out ) ) {
+            $out = array_merge( $out, $out[ $this->gateway ] );
+        }
+
+        if ( array_key_exists( get_called_class(), $out ) ) {
+            $out = array_merge( $out, $out[ get_called_class() ] );
+        }
 
         return $out;
     }
