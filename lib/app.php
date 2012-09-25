@@ -25,6 +25,25 @@ class BaseListener
     var $pop_limbo_msg;
     var $pop_pending_msg;
 
+	/**
+	 * An array of keys (either original message, or our own) that we should always deliberately remove from emails
+	 */
+	var $dont_email = array();
+
+	/**
+	 * The gateway we are.
+	 */
+	var $gateway = 'undefined';
+
+	/**
+	 * An array of the keys that the gateway could possibly be using for their
+	 * own primary keys, to identify either the transaction, or the specific
+	 * message they have just sent us.
+	 * These could be the keys they send us, or our normalized keys.
+	 * These will be listed in order of preference and/or likelihood.
+	 */
+	var $gateway_pks = array();
+
     function __construct($opts = array())
     {
         // generate a unique id for this run to ensure we're manipulating the correct message later on
@@ -133,15 +152,55 @@ class BaseListener
     function fail($data)
     {
         $this->queue->queue_message($this->config['failed_queue'], json_encode($data));
-
-        failmail(array(
-            'data' => $data,
-            'failed_queue' => $this->config['failed_queue'],
-            'email_recipients' => $this->config['email_recipients'],
-            'listener_class' => get_class($this),
-            'tx_id' => $this->tx_id
-        ));
+		
+        failmail( 
+			$this->clean_data_for_email( $data ),
+            $this->config['failed_queue'],
+            $this->config['email_recipients'],
+            get_class($this),
+            $this->tx_id,
+			$this->get_gateway_pks( $data ),
+			$this->gateway
+        );
     }
+	
+	/**
+	 * Removes all keys in $this->dont_email from $data. To be used just prior
+	 * to sending a failmail.
+	 * @param array $data
+	 * @return array
+	 */
+	function clean_data_for_email( $data ){
+		if ( !empty( $this->dont_email ) && is_array( $this->dont_email ) ){
+			foreach ( $this->dont_email as $dont ){
+				unset( $data[$dont] );
+			}
+		}
+		return $data;
+	}
+	
+
+	/**
+	 * Get the primary keys by which the gateway will be able to uniquely 
+	 * identify a transaction or message. Very useful for failmail to know this 
+	 * and present it prominently. 
+	 * @param array $data A message we are trying to process. Could be anywhere 
+	 * from the original message, to a normalized thing we're trying to tell 
+	 * ourselves.  
+	 * @return array The primary key(s) that can be used to identify the message
+	 * or transaction we're working on.
+	 */
+	function get_gateway_pks( $data ){
+		$pks = array();
+		if ( !empty( $this->gateway_pks ) && is_array( $this->gateway_pks ) ){
+			foreach ( $data as $key => $val ){
+				if ( in_array( $key, $this->gateway_pks ) ){
+					$pks[$key] = $val;
+				}
+			}
+		}
+		return $pks;
+	}
 
     protected function copy_tracking_data(&$contribution)
     {
