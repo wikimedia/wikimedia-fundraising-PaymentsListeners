@@ -8,7 +8,7 @@
      * @param $vars Array of POST variables
      * @return String containing the output returned from Server
      */
-    public function curl_download( $url, $vars = NULL ) {
+    function curl_download( $url, $vars = NULL ) {
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_HEADER, 0); 
