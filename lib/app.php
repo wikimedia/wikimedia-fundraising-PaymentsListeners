@@ -22,8 +22,7 @@ abstract class PaymentListener
 
 class BaseListener
 {
-    var $pop_limbo_msg;
-    var $pop_pending_msg;
+    protected $pop_msgs = array();
 
 	/**
 	 * An array of keys (either original message, or our own) that we should always deliberately remove from emails
@@ -112,27 +111,26 @@ class BaseListener
 
             $contribution = $this->parse_data( $data );
 
-            $msg = $this->queue_pending($contribution);
-            
+            $this->queue_pending( $contribution );
+
             // check that the message is legitimate enough to consume
             if ( !$this->msg_sanity_check( $contribution )) {
                 throw new Exception("Message did not pass sanity check.");
             }
 
-            $this->queue->queue_message( $this->config['verified_queue'], $msg->body );
+            $this->queue->queue_message( $this->config['verified_queue'], $contribution );
         } catch (Exception $ex)
         {
             Logger::log( 'error', $ex->getMessage() );
-            if ($this->pop_pending_msg)
+            if ( !empty( $contribution ) )
             {
-                $body = json_decode($this->pop_pending_msg->body);
-                $body->listener_error = $ex->getMessage();
-                $this->fail($body);
+                $contribution['listener_error'] = $ex->getMessage();
+                $this->fail( $contribution );
             }
             elseif (!empty($data))
             {
                 $data['listener_error'] = $ex->getMessage();
-                $this->fail($data);
+                $this->fail( $data );
             }
         }
     }
@@ -145,25 +143,16 @@ class BaseListener
 
         $this->queue->queue_message( $this->config['pending_queue'], json_encode( $contribution ), $headers );
 
-        // define a selector property for pulling a particular msg off the queue
-        $properties = array('selector' => "JMSCorrelationID = '{$this->tx_id}'");
-
-        // pull the message object from the pending queue without completely removing it 
-        Logger::log( 'debug', "Attempting to pull message from pending queue with JMSCorrelationID = {$this->tx_id}" );
-        $msg = $this->queue->fetch_message( $this->config['pending_queue'], $properties );
-        if ( $msg ) {
-            Logger::log( 'debug', "Pulled message from pending queue: {$msg->body}" );
-            $this->pop_pending_msg = $msg;
-        } else {
-            throw new Exception("FAILED retrieving message from pending queue.");
-        }
-        return $msg;
+        $this->pop_msgs[] = array(
+            'queue' => $this->config['pending_queue'],
+            'JMSCorrelationID' => $this->tx_id,
+        );
     }
 
     function fail($data)
     {
         $this->queue->queue_message($this->config['failed_queue'], json_encode($data));
-		
+
         failmail( 
 			$this->clean_data_for_email( $data ),
             $this->config['failed_queue'],
@@ -174,7 +163,7 @@ class BaseListener
 			$this->gateway
         );
     }
-	
+
 	/**
 	 * Removes all keys in $this->dont_email from $data. To be used just prior
 	 * to sending a failmail.
@@ -189,7 +178,6 @@ class BaseListener
 		}
 		return $data;
 	}
-	
 
 	/**
 	 * Get the primary keys by which the gateway will be able to uniquely 
@@ -245,16 +233,15 @@ class BaseListener
                 if (!array_key_exists($key, $contribution))
                     $contribution[$key] = $value;
             }
-            $this->pop_limbo_msg = $msg;
+            $this->pop_msgs[] = $msg;
             return true;
         }
     }
 
     function __destruct() {
-        if ($this->pop_limbo_msg)
-            $this->queue->dequeue_message( $this->pop_limbo_msg );
-        if ($this->pop_pending_msg)
-            $this->queue->dequeue_message( $this->pop_pending_msg );
+        foreach ($this->pop_msgs as $msg ) {
+            $this->queue->dequeue_message( $msg );
+        }
 
         Logger::log( 'info', "Exiting gracefully." );
     }

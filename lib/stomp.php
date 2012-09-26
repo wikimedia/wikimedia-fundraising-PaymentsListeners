@@ -32,12 +32,13 @@ class StompQueue
      * @param $options array of additional Stomp options
      * @return bool result from send, FALSE on failure
      */
-    public function queue_message( $destination, $message, $options = array( 'persistent' => 'true' ))
+    public function queue_message( $destination, $message, $headers = array( 'persistent' => 'true' ) )
     {
         Logger::log( 'debug', "Attempting to queue message to $destination" );
-        $sent = $this->stomp->send( $destination, $message, $options );
-        if (!$sent)
-            throw new Exception("There was a problem queueing a message: {$destination} -- {$message}");
+        $sent = $this->stomp->send( $destination, $message, $headers );
+        if (!$sent) {
+            throw new Exception( "There was a problem queueing a message: {$destination} -- " . print_r( $message, true ) );
+        }
     }   
 
     /**
@@ -46,11 +47,19 @@ class StompQueue
      */
     public function dequeue_message( $msg ) {
         Logger::log( 'debug', "Attempting to remove message." );
-        if ( !$this->stomp->ack( $msg )) {
-            throw new Exception("There was a problem removing a message from the queue: " . print_r( $msg, TRUE ));
+
+        if ( is_array( $msg ) ) {
+            // we must search for the message by headers
+            $queue = $msg['queue'];
+            unset( $msg['queue'] );
+            $msg = $this->fetch_message( $queue, $msg );
+        }
+
+        if ( !$msg || !$this->stomp->ack( $msg )) {
+            throw new Exception( "There was a problem removing a message from the queue: " . print_r( $msg, TRUE ) );
         }
     }
-    
+
     /**
      * Fetch latest raw message from a queue
      *
