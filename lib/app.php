@@ -104,6 +104,8 @@ class BaseListener
     function execute( $data )
     {
         try {
+            $this->validate_remote_ip();
+
             //make sure we're actually getting something posted to the page.
             if ( empty( $data )) {
                 throw new Exception("Received an empty object, nothing to verify.");
@@ -133,6 +135,46 @@ class BaseListener
                 $this->fail( $data );
             }
         }
+    }
+
+    protected function validate_remote_ip() {
+        if ( empty( $this->config['ip_whitelist'] ) ) {
+            Logger::log( 'info', "No IP whitelist specified." );
+            return;
+        }
+        $headers = getallheaders();
+        if ( !$headers || !array_key_exists( 'X-Real-IP', $headers ) ) {
+            throw new Exception( "Unexpected platform issue when trying to get remote box's IP" );
+        }
+        $remote_ip = $headers['X-Real-IP'];
+
+        if( !filter_var( $remote_ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 ) ){
+            throw new Exception( "Bizarre remote IP address: {$remote_ip}" );
+        }
+
+        foreach( (array)$this->config['ip_whitelist'] as $ip ){
+            if( $remote_ip === $ip ){
+                return;
+            }
+            if( count( explode( '/', $ip ) ) === 2 ){
+                list( $network_ip, $block ) = explode( '/', $ip );
+                if( !filter_var( $network_ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 ) || !filter_var( $block, FILTER_VALIDATE_INT, array( 'min_range' => 0, 'max_range' => 32 ) ) ){
+                    throw new Exception( "IP whitelist contains garbage: {$ip}" );
+                }
+                // check the address to make sure it is a proper network address
+                $network_long = ip2long( $network_ip );
+                $mask_long = ~ ( pow( 2, ( 32 - $block ) ) - 1 );
+
+                $remote_long = ip2long( $remote_ip );
+
+                if( ( $remote_long & $mask_long ) === ( $network_long & $mask_long ) ){
+                    return; // the remote IP address is in this range
+                }
+            }
+        }
+
+        // we have fallen through everything in the whitelist, throw
+        throw new Exception( "Received a connection from a bogus IP: {$remote_ip}, agent: {$_SERVER['HTTP_USER_AGENT']}" );
     }
 
     protected function queue_pending($contribution)
