@@ -680,6 +680,14 @@ class PaypalIPNProcessor {
      * @return bool result from send, FALSE on failure
      */
     public function queue_message( $destination, $message, $options = array( 'persistent' => 'true' )) {
+        $options = $options + array(
+            'source_name' => 'PayPal IPN (legacy)',
+            'source_type' => 'listener',
+            'source_host' => gethostname(),
+            'source_run_id' => getmypid(),
+            'source_version' => 'legacy',
+            'source_enqueued_time' => time(),
+        );
         $this->out( "Attempting to queue message to $destination", LOG_LEVEL_DEBUG );
         $sent = $this->stomp->send( $destination, $message, $options );
         $this->out( "Result of queuing message: $sent", LOG_LEVEL_DEBUG );
