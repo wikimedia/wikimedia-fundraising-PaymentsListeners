@@ -17,4 +17,4 @@ $listener->execute( $_POST );
 unset( $listener );
 
 // cleanly close the file pointer for output
-close( $config['output_handle'] );
+fclose( $config['output_handle'] );
