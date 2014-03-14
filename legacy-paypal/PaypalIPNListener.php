@@ -281,7 +281,7 @@ class PaypalIPNProcessor {
 
 		// push to verified queue
 		if ( !$this->queue_message( $this->verified_queue, $msg->body )) {
-			$this->out( "There was a problem queueing the message to the quque: " . $this->verified_queue );
+			$this->out( "There was a problem queueing the message to the queue: " . $this->verified_queue );
 			$this->out( "Message: " . print_r( $contribution, TRUE ), LOG_LEVEL_DEBUG );
 			return;
 		}
@@ -696,7 +696,7 @@ class PaypalIPNProcessor {
 
     /**
      * Remove a message from the queue.
-     * @param bool $msg
+     * @param Stomp_Frame $msg
      */
     public function dequeue_message( $msg ) {
     	$this->out( "Attempting to remove message from pending.", LOG_LEVEL_DEBUG );
