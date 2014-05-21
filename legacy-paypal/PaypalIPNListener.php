@@ -25,21 +25,12 @@
  *  pending_queue => the queue to push pending items to
  *  verified_queue => the queue to push verfiied items to
  *  activemq_stomp_uri => the URI for the activemq broker
- *  contrib_db_host => the hostname where the contribution_tracking table lives
- *  contrib_db_username => the username for the db where contribution_tracking lives
- *  contrib_db_password => the pw for accessing the db where contribution_tracking lives
- *  conrtib_db_name => the db name where contribution_tracking lives
- *
- * Note that the contrib_db* variables are likely of no use to you, unless you're using CiviCRM with Drupal and
- * are using a special contribution tracking module... So if you're not doing that, you can likely 
- * leave those out of your config.
  *
  * PayPal IPN docs: https://cms.paypal.com/us/cgi-bin/?&cmd=_render-content&content_ID=developer/e_howto_admin_IPNIntro
  *
  * @author Arthur Richards <arichards@wikimedia.org>
  * @TODO: 
  *		add output for DB connection/query
- *		abstract out the contribution_tracking stuff so this is more flexible?
  */
 
 /** Set available log levels **/
@@ -251,7 +242,7 @@ class PaypalIPNProcessor {
 			return; // do not execute the rest
 		}
 
-		// do the queueing - perhaps move out the tracking checking to its own func?
+		// do the queueing
 		if ( !$this->queue_message( $this->pending_queue, json_encode( $contribution ), $headers )) {
 			$this->out( "There was a problem queueing the message to the queue: " . $this->pending_queue );
 			$this->out( "Message: " . print_r( $contribution, TRUE ), LOG_LEVEL_DEBUG );
@@ -544,18 +535,7 @@ class PaypalIPNProcessor {
 			return $post_data;
 		}
 
-		// get the database connection to the tracking table
-		$this->contribution_tracking_connection();
-		$tracking_data = $this->get_tracking_data( $post_data['custom'] );
-		if ( !$tracking_data ) { //we have a problem! The received contribution tracking id does not match anything in the db...
-			$this->out( "There is no contribution ID associated with this transaction." );
-		}
-		$contribution['contribution_tracking_id'] = $post_data['custom'];
-		$contribution['optout'] = $tracking_data['optout'];
-		$contribution['anonymous'] = $tracking_data['anonymous'];
-		$contribution['comment'] = $tracking_data['note'];
 		$contribution['email'] = $post_data['payer_email'];
-		$contribution['language'] = $tracking_data['language'];
 		
 		// Premium info
 		$contribution['size'] = $post_data['option_selection1'];
@@ -720,37 +700,6 @@ class PaypalIPNProcessor {
 		$this->out( "Attempting to pull queued item", LOG_LEVEL_DEBUG );
 		$message = $this->stomp->readFrame();
 		return $message;
-	}
-
-	/**
-	 * Establish a connection with the contribution database.
-	 *
-	 * The properties contrib_db_host, contrib_db_username, contrib_db_password and 
-	 * contrib_db_name should be set prior to the execution of this method.
-	 */
-	protected function contribution_tracking_connection() {
-		$this->contrib_db = mysql_connect(
-			$this->contrib_db_host,
-			$this->contrib_db_username,
-			$this->contrib_db_password );
-		mysql_select_db( $this->contrib_db_name, $this->contrib_db );
-	}
-
-	/**
-	 * Fetches tracking data we need to for this transaction from the contribution_tracking table
-	 * 
-	 * @param int the ID of the transaction we care about
-	 * @return array containing the key=>value pairs of data from the contribution_tracking table
-	 */
-	protected function get_tracking_data( $id ) {
-		//sanitize the $id
-		$id = mysql_real_escape_string( $id );
-		$query = "SELECT * FROM contribution_tracking WHERE id=$id";
-		$this->out( "Preparing to run query on contribution_tracking: $query", LOG_LEVEL_DEBUG );
-		$result = mysql_query( $query );
-		$row = mysql_fetch_assoc( $result );
-		$this->out( "Query result: " . print_r( $row, TRUE ), LOG_LEVEL_DEBUG );
-		return $row;
 	}
 
 	/**
