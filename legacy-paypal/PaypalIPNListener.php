@@ -343,9 +343,9 @@ class PaypalIPNProcessor {
 	 */
 	public function ipn_verify( $post_data ) {
 		// url to respond to paypal with verification response
-		$postback_url = 'https://www.paypal.com/cgi-bin/webscr'; // should this be configurable?
+		$postback_url = $this->postback_url;
 		if ( isset( $post_data[ 'test_ipn' ] )) {
-			$postback_url = 'https://www.sandbox.paypal.com/cgi-bin/webscr';
+			$postback_url = $this->test_postback_url;
 		}
 
 		if( array_key_exists( "receiver_email", $post_data ) && $post_data["receiver_email"] != $this->receiver_email ){
