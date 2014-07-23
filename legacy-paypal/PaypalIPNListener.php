@@ -535,6 +535,7 @@ class PaypalIPNProcessor {
 			return $post_data;
 		}
 
+		$contribution['contribution_tracking_id'] = $post_data['custom'];
 		$contribution['email'] = $post_data['payer_email'];
 		
 		// Premium info
