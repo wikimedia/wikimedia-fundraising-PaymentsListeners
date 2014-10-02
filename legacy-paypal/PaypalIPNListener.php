@@ -521,6 +521,7 @@ class PaypalIPNProcessor {
 
 			$contribution['gateway_parent_id'] = $post_data['parent_txn_id'];
 			$contribution['gateway_refund_id'] = $post_data['txn_id'];
+			// FIXME: GROSS.
 			$contribution['gross_currency'] = $post_data['mc_currency'];
 			$contribution['type'] = $post_data['reason_code'];
 		}
@@ -567,10 +568,9 @@ class PaypalIPNProcessor {
 		
 		$contribution['gateway'] = ( strlen( $post_data[ 'gateway' ] )) ? $post_data[ 'gateway' ] : 'paypal';
 		$contribution['gateway_txn_id'] = $post_data['txn_id'];
-		$contribution['original_currency'] = $post_data['mc_currency'];
-		$contribution['original_gross'] = $post_data['mc_gross'];
+		$contribution['currency'] = $post_data['mc_currency'];
+		$contribution['gross'] = $post_data['mc_gross'];
 		$contribution['fee'] = $post_data['mc_fee'];  
-		$contribution['gross'] = $post_data['mc_gross']; 
 		$contribution['net'] = $contribution['gross'] - $contribution['fee'];
 		$contribution['date'] = $timestamp;
 		
