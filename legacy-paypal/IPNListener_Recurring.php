@@ -1,8 +1,5 @@
 <?php
 
-// FIXME: emergency shutdown duct tape:
-exit(0);
-
 $conf_path = '/etc/fundraising/legacy_paypal_config.php';
 
 require_once( $conf_path );
